@@ -29,6 +29,11 @@
   .animate-fade-in {
     animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
+  
+  /* Khắc phục lỗi chữ/icon trong suốt do bg-main đổi thành transparent */
+  .text-bg-main {
+    color: #0a0a0a !important;
+  }
 }
 
 @keyframes fadeIn {
