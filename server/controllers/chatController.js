@@ -69,7 +69,7 @@ Phong cách trả lời:
 - Nếu thông tin không có trong danh sách trên, hãy khuyên khách hàng để lại thông tin ở mục Liên hệ (Contact) trên website để được hỗ trợ chi tiết.
 `;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: DYNAMIC_SYSTEM_PROMPT });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", systemInstruction: DYNAMIC_SYSTEM_PROMPT });
 
     // Format history for Gemini API
     let history = messages.slice(0, -1).map(msg => ({
@@ -97,6 +97,6 @@ Phong cách trả lời:
     res.json({ reply: response.text() });
   } catch (error) {
     console.error('Chat error:', error);
-    res.status(500).json({ error: 'Đã xảy ra lỗi khi xử lý tin nhắn của bạn.' });
+    res.status(500).json({ error: 'Lỗi Chatbot: ' + (error.message || error.toString()) });
   }
 };
