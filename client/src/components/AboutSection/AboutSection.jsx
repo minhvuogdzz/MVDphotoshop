@@ -82,7 +82,7 @@ const AboutSection = () => {
               >
                 {data.images.map((img, index) => (
                   <SwiperSlide key={index}>
-                    <div className="group overflow-hidden rounded-2xl border border-glass h-[400px]">
+                    <div className="group overflow-hidden rounded-2xl border border-glass aspect-[4/6]">
                       <img 
                         src={img} 
                         alt={`CV Image ${index + 1}`} 
@@ -93,7 +93,7 @@ const AboutSection = () => {
                 ))}
               </Swiper>
             ) : (
-              <div className="h-[400px] flex items-center justify-center border border-dashed border-glass rounded-2xl">
+              <div className="aspect-[4/6] flex items-center justify-center border border-dashed border-glass rounded-2xl">
                 <p className="text-text-secondary">Chưa có ảnh trong thư viện</p>
               </div>
             )}
