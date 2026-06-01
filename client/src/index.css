@@ -51,23 +51,30 @@
 }
 
 /* Custom Swiper Navigation */
+/* Make Swiper static so buttons can escape its overflow: hidden */
+.swiper {
+  position: static !important;
+}
+
 .swiper-button-next,
 .swiper-button-prev {
-  width: 50px !important;
-  height: 50px !important;
-  background: rgba(18, 18, 18, 0.7) !important;
+  width: 48px !important;
+  height: 48px !important;
+  padding: 12px !important; /* p-3 */
+  background: rgba(18, 18, 18, 0.8) !important;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   color: #c09b68 !important;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   transition: all 0.3s ease;
+  z-index: 100 !important;
 }
 
 .swiper-button-next:after,
 .swiper-button-prev:after {
-  font-size: 20px !important;
-  font-weight: bold;
+  font-size: 14px !important; /* thu nhỏ icon bên trong */
+  font-weight: 900;
 }
 
 .swiper-button-next:hover,
@@ -79,10 +86,10 @@
 
 /* Push to edges */
 .swiper-button-next {
-  right: 4rem !important;
+  right: -2.5rem !important; /* Bật hẳn ra ngoài */
 }
 .swiper-button-prev {
-  left: 4rem !important;
+  left: -2.5rem !important; /* Bật hẳn ra ngoài */
 }
 
 /* Hide on mobile */
