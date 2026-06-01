@@ -93,7 +93,7 @@ const Admin = () => {
 
     setIsUploading(true);
     try {
-      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
+      const options = { maxSizeMB: 1.2, maxWidthOrHeight: 2000, useWebWorker: true };
       const compressedFile = await imageCompression(file, options);
       
       const form = new FormData();
@@ -125,7 +125,7 @@ const Admin = () => {
     setIsUploading(true);
     try {
       const form = new FormData();
-      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
+      const options = { maxSizeMB: 1.2, maxWidthOrHeight: 2000, useWebWorker: true };
       
       for (let i = 0; i < files.length; i++) {
         const compressedFile = await imageCompression(files[i], options);
