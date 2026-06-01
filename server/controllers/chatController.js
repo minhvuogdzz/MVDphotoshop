@@ -97,6 +97,12 @@ Phong cách trả lời:
     res.json({ reply: response.text() });
   } catch (error) {
     console.error('Chat error:', error);
-    res.status(500).json({ error: 'Lỗi Chatbot: ' + (error.message || error.toString()) });
+    
+    let errorMessage = error.message || error.toString();
+    if (errorMessage.includes('User location is not supported')) {
+      errorMessage = 'Máy chủ (Server) hiện tại đang đặt ở khu vực không được Google Gemini hỗ trợ (thường là Châu Âu). Vui lòng chuyển server sang vùng US hoặc Singapore.';
+    }
+
+    res.status(500).json({ error: 'Lỗi Chatbot: ' + errorMessage });
   }
 };
