@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-primary bg-bg-main text-text-primary leading-relaxed antialiased overflow-x-hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-secondary font-semibold leading-tight;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-bg-glass backdrop-blur-md border border-glass shadow-glass;
+  }
+
+  .container-custom {
+    @apply max-w-[1200px] mx-auto px-6;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@layer utilities {
+  .swiper-slide-active .slide-bg {
+    transform: scale(1.05);
+  }
+}
+
+.swiper-pagination-progressbar {
+  background: rgba(255, 255, 255, 0.2) !important;
+  top: auto !important;
+  bottom: 0 !important;
+  height: 4px !important;
+}
+
+.swiper-pagination-progressbar .swiper-pagination-progressbar-fill {
+  background: #c09b68 !important;
+}

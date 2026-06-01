@@ -1,0 +1,439 @@
+import { useState, useEffect, useRef } from 'react';
+import api from '../services/api';
+
+const Admin = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('hero');
+
+  // Form & List states
+  const [dataList, setDataList] = useState([]);
+  const [formData, setFormData] = useState({});
+  const [message, setMessage] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // File upload state
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (token) setIsAuthenticated(true);
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [activeTab, isAuthenticated]);
+
+  const fetchData = async () => {
+    try {
+      const { data } = await api.get(`/${activeTab}`);
+      if (Array.isArray(data)) {
+        setDataList(data);
+        setFormData({});
+      } else {
+        setDataList([]);
+        setFormData(data || {});
+      }
+      setMessage('');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await api.post('/auth/login', { password });
+      if (data.success) {
+        localStorage.setItem('adminToken', data.token);
+        setIsAuthenticated(true);
+      }
+    } catch (err) {
+      setError('Mật khẩu không chính xác');
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('adminToken');
+    setIsAuthenticated(false);
+  };
+
+  // Upload handler
+  const handleFileUpload = async (e, fieldName, isArray = true) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const form = new FormData();
+    form.append('image', file);
+
+    try {
+      const { data } = await api.post('/upload', form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (isArray) {
+        const newArr = formData[fieldName] ? [...formData[fieldName], data.url] : [data.url];
+        setFormData({ ...formData, [fieldName]: newArr });
+      } else {
+        setFormData({ ...formData, [fieldName]: data.url });
+      }
+      setMessage('Tải ảnh thành công!');
+    } catch (err) {
+      setMessage('Lỗi khi tải ảnh. ' + err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Multiple Upload handler
+  const handleMultipleFileUpload = async (e, fieldArrayName) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    const form = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      form.append('images', files[i]);
+    }
+
+    try {
+      const { data } = await api.post('/upload-multiple', form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      // Append URLs to the specific array field
+      const newArr = formData[fieldArrayName] ? [...formData[fieldArrayName], ...data.urls] : [...data.urls];
+      setFormData({ ...formData, [fieldArrayName]: newArr });
+      setMessage(`Đã tải lên ${data.urls.length} ảnh thành công!`);
+    } catch (err) {
+      setMessage('Lỗi khi tải ảnh. ' + err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSaveObject = async (e) => {
+    e.preventDefault();
+    try {
+      const dataToSave = { ...formData };
+      
+      // Parse array fields if they are strings (modified during edit)
+      const parseArray = (val) => {
+        if (typeof val === 'string') {
+          return val.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        return val;
+      };
+
+      if (activeTab === 'services') {
+        dataToSave.features = parseArray(dataToSave.features);
+      }
+      if (activeTab === 'about') {
+        dataToSave.skills = parseArray(dataToSave.skills);
+      }
+      if (dataToSave.images !== undefined) dataToSave.images = parseArray(dataToSave.images);
+      if (dataToSave.backgroundUrls !== undefined) dataToSave.backgroundUrls = parseArray(dataToSave.backgroundUrls);
+
+      await api.post(`/${activeTab}`, dataToSave);
+      setMessage('Đã lưu thành công!');
+      if (['portfolio', 'services', 'testimonials', 'faq'].includes(activeTab)) {
+        setIsModalOpen(false);
+        fetchData(); // reload list
+      }
+    } catch (err) {
+      setMessage('Lỗi khi lưu!');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!id) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa mục này không?')) return;
+    try {
+      await api.delete(`/${activeTab}/${id}`);
+      setMessage('Đã xóa thành công!');
+      fetchData(); // reload list
+    } catch (err) {
+      setMessage('Lỗi khi xóa!');
+    }
+  };
+
+  const openAddModal = () => {
+    setFormData({});
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (item) => {
+    setFormData(item);
+    setIsModalOpen(true);
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-bg-main">
+        <div className="glass-panel p-10 rounded-2xl w-full max-w-[400px]">
+          <h2 className="mb-6 text-center text-2xl font-secondary text-accent">Admin Login</h2>
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <input 
+              type="password" 
+              placeholder="Nhập mật mã" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              className="w-full bg-white/5 border border-glass rounded-lg py-3 px-4 text-white focus:outline-none focus:border-accent transition-colors"
+            />
+            {error && <p className="text-[#ff6b6b] text-sm">{error}</p>}
+            <button type="submit" className="p-3 bg-accent text-bg-main font-semibold rounded-lg transition-colors hover:bg-accent-hover">Xác minh</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  const isListType = ['portfolio', 'services', 'testimonials', 'faq'].includes(activeTab);
+
+  const inputStyle = "w-full bg-white/5 border border-glass text-white rounded-lg p-3 outline-none focus:border-accent transition-colors";
+
+  return (
+    <div className="pt-[88px] min-h-screen flex bg-bg-main">
+      {/* Sidebar */}
+      <div className="w-[250px] bg-bg-secondary border-r border-glass p-6 flex flex-col">
+        <h3 className="mb-8 text-accent text-xl font-secondary">Quản trị hệ thống</h3>
+        <div className="flex flex-col gap-3 flex-1">
+          {[
+            { id: 'hero', label: 'Hero Section' },
+            { id: 'portfolio', label: 'Portfolio (Bộ ảnh)' },
+            { id: 'services', label: 'Dịch vụ & Bảng giá' },
+            { id: 'about', label: 'Giới thiệu (About)' },
+            { id: 'testimonials', label: 'Đánh giá khách hàng' },
+            { id: 'faq', label: 'Câu hỏi thường gặp' }
+          ].map(tab => (
+            <button 
+              key={tab.id} 
+              onClick={() => setActiveTab(tab.id)} 
+              className={`p-3 text-left rounded-lg transition-colors border ${activeTab === tab.id ? 'bg-accent/10 text-accent border-accent' : 'text-text-primary border-transparent hover:bg-white/5'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <button onClick={logout} className="p-3 bg-white/5 rounded-lg text-[#ff6b6b] hover:bg-[#ff6b6b]/10 transition-colors">Đăng xuất</button>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 p-10 overflow-y-auto">
+        <h2 className="mb-4 text-3xl font-secondary">Quản lý {activeTab}</h2>
+        {message && <div className="p-3 bg-accent/20 text-accent rounded-lg mb-6">{message}</div>}
+        
+        <div className="glass-panel p-8 rounded-xl">
+          {isListType ? (
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl">Danh sách dữ liệu</h3>
+                <button onClick={openAddModal} className="px-4 py-2 bg-accent text-bg-main rounded-lg font-bold hover:bg-accent-hover transition-colors">+ Thêm mới</button>
+              </div>
+              
+              <div className="grid gap-4">
+                {dataList.length === 0 ? (
+                  <p className="text-text-secondary">Chưa có dữ liệu nào. Vui lòng thêm mới hoặc dữ liệu mặc định sẽ được hiển thị trên web.</p>
+                ) : (
+                  dataList.map((item, index) => (
+                    <div key={index} className="p-4 bg-white/5 rounded-lg flex justify-between items-center">
+                      <div><strong>{item.title || item.name || item.question || item.customerName || `Mục ${index + 1}`}</strong></div>
+                      <div className="flex gap-2">
+                        <button onClick={() => openEditModal(item)} className="text-accent border border-accent bg-transparent px-3 py-1.5 rounded hover:bg-accent hover:text-bg-main transition-colors">Sửa</button>
+                        {item._id && (
+                          <button onClick={() => handleDelete(item._id)} className="text-[#ff6b6b] border border-[#ff6b6b] bg-transparent px-3 py-1.5 rounded hover:bg-[#ff6b6b] hover:text-white transition-colors">Xóa</button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSaveObject} className="flex flex-col gap-6">
+              <div>
+                <label className="block mb-2 text-text-secondary">Tiêu đề chính (Title)</label>
+                <input type="text" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className={inputStyle} required />
+              </div>
+              
+              {activeTab === 'hero' && (
+                <>
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Phụ đề (Subtitle)</label>
+                    <textarea value={formData.subtitle || ''} onChange={e => setFormData({...formData, subtitle: e.target.value})} className={inputStyle} />
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Hình nền (Nhập link Web hoặc Tải lên từ máy)</label>
+                    <div className="flex gap-2 mb-2">
+                      <input type="text" placeholder="Nhập đường dẫn hình ảnh..." value={Array.isArray(formData.backgroundUrls) ? formData.backgroundUrls.join(', ') : (formData.backgroundUrls || '')} onChange={e => setFormData({...formData, backgroundUrls: e.target.value})} className={inputStyle} />
+                    </div>
+                    <div className="flex items-center gap-4 mt-3">
+                      <input type="file" accept="image/*" ref={fileInputRef} onChange={e => handleFileUpload(e, 'backgroundUrls')} className="hidden" />
+                      <button type="button" onClick={() => fileInputRef.current.click()} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                        {isUploading ? 'Đang tải lên và nén...' : 'Tải lên từ máy tính (Max nén 600KB)'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'about' && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block mb-2 text-text-secondary">Tiêu đề (Title)</label>
+                      <input type="text" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className={inputStyle} required />
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-text-secondary">Tên người sửa (Name)</label>
+                      <input type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className={inputStyle} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Nội dung giới thiệu (Description)</label>
+                    <textarea rows="4" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} className={inputStyle} required />
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Học vấn / Kinh nghiệm (Education)</label>
+                    <textarea rows="3" value={formData.education || ''} onChange={e => setFormData({...formData, education: e.target.value})} className={inputStyle} />
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Kỹ năng chuyên môn (cách nhau bởi dấu phẩy)</label>
+                    <input type="text" value={formData.skills || ''} onChange={e => setFormData({...formData, skills: e.target.value})} className={inputStyle} placeholder="VD: Photoshop, Lightroom, Retouching..." />
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Thư viện ảnh CV (Ảnh dự án, quá trình làm việc)</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {(formData.images || []).map((img, idx) => (
+                        <div key={idx} className="relative group">
+                          <img src={img} alt="CV Image" className="w-20 h-20 object-cover rounded-lg border border-glass" />
+                          <button type="button" onClick={() => setFormData({...formData, images: formData.images.filter((_, i) => i !== idx)})} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <input 
+                        type="file" 
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => handleMultipleFileUpload(e, 'images')}
+                        disabled={isUploading}
+                        className="text-sm text-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-bg-main hover:file:bg-accent-hover"
+                      />
+                      {isUploading && <span className="text-accent text-sm animate-pulse">Đang nén & tải ảnh...</span>}
+                    </div>
+                  </div>
+                </>
+              )}
+              <button type="submit" className="px-6 py-3 bg-accent text-bg-main rounded-lg font-bold hover:bg-accent-hover transition-colors self-start">Lưu thay đổi</button>
+            </form>
+          )}
+        </div>
+      </div>
+
+      {/* Generic Modal for Lists */}
+      {isModalOpen && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black/80 z-[1000] flex items-center justify-center p-4">
+          <div className="glass-panel w-full max-w-[600px] p-8 rounded-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="mb-6 text-2xl text-accent font-secondary">{formData._id ? 'Chỉnh sửa' : 'Thêm mới'} {activeTab}</h3>
+            <form onSubmit={handleSaveObject} className="flex flex-col gap-4">
+              
+              {activeTab === 'portfolio' && (
+                <>
+                  <input type="text" placeholder="Tên bộ ảnh" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className={inputStyle} required />
+                  <select value={formData.category || 'Beauty'} onChange={e => setFormData({...formData, category: e.target.value})} className={inputStyle}>
+                    <option value="Beauty" className="text-black">Beauty</option>
+                    <option value="Concept nàng thơ" className="text-black">Concept nàng thơ</option>
+                    <option value="Couple / Gia đình" className="text-black">Couple / Gia đình</option>
+                    <option value="Khác" className="text-black">Khác</option>
+                  </select>
+                  <input type="text" placeholder="Địa điểm (Location)" value={formData.location || ''} onChange={e => setFormData({...formData, location: e.target.value})} className={inputStyle} />
+                  
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Ảnh bìa (Cover Image)</label>
+                    <input type="text" placeholder="Link ảnh tĩnh / Link Drive" value={formData.coverImage || ''} onChange={e => setFormData({...formData, coverImage: e.target.value})} className={inputStyle} />
+                    <div className="flex items-center gap-4 mt-3">
+                      <input type="file" accept="image/*" id="upload-cover" onChange={e => handleFileUpload(e, 'coverImage', false)} className="hidden" />
+                      <button type="button" onClick={() => document.getElementById('upload-cover').click()} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                        {isUploading ? 'Đang xử lý...' : 'Tải lên Ảnh Bìa (Nén < 600KB)'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Các ảnh chi tiết của bộ ảnh (Gallery)</label>
+                    <textarea rows="3" placeholder="Danh sách URL ảnh (cách nhau dấu phẩy)" value={Array.isArray(formData.images) ? formData.images.join(', ') : (formData.images || '')} onChange={e => setFormData({...formData, images: e.target.value})} className={inputStyle} />
+                    <div className="flex items-center gap-4 mt-3">
+                      <input type="file" accept="image/*" multiple id="upload-gallery" onChange={e => handleMultipleFileUpload(e, 'images')} className="hidden" />
+                      <button type="button" onClick={() => document.getElementById('upload-gallery').click()} className="px-4 py-2 bg-accent text-bg-main font-bold rounded-lg hover:bg-accent-hover transition-colors">
+                        {isUploading ? 'Đang tải và nén ảnh...' : 'Quét tải lên nhiều ảnh (Max 20 ảnh/lần)'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'services' && (
+                <>
+                  <input type="text" placeholder="Tên dịch vụ" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className={inputStyle} required />
+                  <select value={formData.type || 'Gói sửa'} onChange={e => setFormData({...formData, type: e.target.value})} className={inputStyle}>
+                    <option value="Gói sửa" className="text-black">Gói sửa</option>
+                    <option value="Dịch vụ sửa" className="text-black">Dịch vụ sửa</option>
+                  </select>
+                  <input type="text" placeholder="Giá (VD: Bắt đầu từ 500k)" value={formData.price || ''} onChange={e => setFormData({...formData, price: e.target.value})} className={inputStyle} />
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Ảnh bìa (Link ảnh hoặc tải lên)</label>
+                    <input type="text" placeholder="Link ảnh bìa dịch vụ" value={formData.image || ''} onChange={e => setFormData({...formData, image: e.target.value})} className={inputStyle} />
+                    <div className="flex items-center gap-4 mt-3">
+                      <input type="file" accept="image/*" id="upload-service-image" onChange={e => handleFileUpload(e, 'image', false)} className="hidden" />
+                      <button type="button" onClick={() => document.getElementById('upload-service-image').click()} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                        {isUploading ? 'Đang xử lý...' : 'Tải lên Ảnh Bìa (Nén < 600KB)'}
+                      </button>
+                    </div>
+                  </div>
+                  <textarea placeholder="Chi tiết dịch vụ (cách nhau dấu phẩy)" value={Array.isArray(formData.details) ? formData.details.join(', ') : (formData.details || '')} onChange={e => setFormData({...formData, details: e.target.value})} className={inputStyle} />
+                </>
+              )}
+
+              {activeTab === 'testimonials' && (
+                <>
+                  <input type="text" placeholder="Tên khách hàng" value={formData.customerName || ''} onChange={e => setFormData({...formData, customerName: e.target.value})} className={inputStyle} required />
+                  <textarea placeholder="Lời nhận xét" value={formData.quote || ''} onChange={e => setFormData({...formData, quote: e.target.value})} className={inputStyle} required />
+                  
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Ảnh đại diện khách hàng</label>
+                    <input type="text" placeholder="Link ảnh khách hàng" value={formData.image || ''} onChange={e => setFormData({...formData, image: e.target.value})} className={inputStyle} />
+                    <div className="flex items-center gap-4 mt-3">
+                      <input type="file" accept="image/*" id="upload-testimonial-image" onChange={e => handleFileUpload(e, 'image', false)} className="hidden" />
+                      <button type="button" onClick={() => document.getElementById('upload-testimonial-image').click()} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                        {isUploading ? 'Đang xử lý...' : 'Tải lên Ảnh Khách Hàng (Nén < 600KB)'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'faq' && (
+                <>
+                  <input type="text" placeholder="Câu hỏi" value={formData.question || ''} onChange={e => setFormData({...formData, question: e.target.value})} className={inputStyle} required />
+                  <textarea placeholder="Câu trả lời" value={formData.answer || ''} onChange={e => setFormData({...formData, answer: e.target.value})} className={inputStyle} required rows="5" />
+                </>
+              )}
+
+              <div className="flex gap-4 mt-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 p-3 bg-transparent border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors">Hủy</button>
+                <button type="submit" className="flex-1 p-3 bg-accent text-bg-main font-bold rounded-lg hover:bg-accent-hover transition-colors">Lưu dữ liệu</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Admin;
