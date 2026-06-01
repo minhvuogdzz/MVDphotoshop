@@ -1,11 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+import imageCompression from 'browser-image-compression';
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('hero');
+
+  // Cache data
+  const [allData, setAllData] = useState({
+    hero: null,
+    portfolio: [],
+    services: [],
+    about: null,
+    testimonials: [],
+    faq: []
+  });
 
   // Form & List states
   const [dataList, setDataList] = useState([]);
@@ -24,13 +35,13 @@ const Admin = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchData();
+      fetchAllData();
     }
-  }, [activeTab, isAuthenticated]);
+  }, [isAuthenticated]);
 
-  const fetchData = async () => {
-    try {
-      const { data } = await api.get(`/${activeTab}`);
+  useEffect(() => {
+    if (isAuthenticated && allData[activeTab] !== undefined) {
+      const data = allData[activeTab];
       if (Array.isArray(data)) {
         setDataList(data);
         setFormData({});
@@ -39,6 +50,19 @@ const Admin = () => {
         setFormData(data || {});
       }
       setMessage('');
+    }
+  }, [activeTab, allData, isAuthenticated]);
+
+  const fetchAllData = async () => {
+    try {
+      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq'];
+      const responses = await Promise.all(endpoints.map(ep => api.get(`/${ep}`)));
+      
+      const newData = {};
+      endpoints.forEach((ep, index) => {
+        newData[ep] = responses[index].data;
+      });
+      setAllData(newData);
     } catch (err) {
       console.error(err);
     }
@@ -68,10 +92,13 @@ const Admin = () => {
     if (!file) return;
 
     setIsUploading(true);
-    const form = new FormData();
-    form.append('image', file);
-
     try {
+      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
+      const compressedFile = await imageCompression(file, options);
+      
+      const form = new FormData();
+      form.append('image', compressedFile);
+
       const { data } = await api.post('/upload', form, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -96,12 +123,15 @@ const Admin = () => {
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
-    const form = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      form.append('images', files[i]);
-    }
-
     try {
+      const form = new FormData();
+      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
+      
+      for (let i = 0; i < files.length; i++) {
+        const compressedFile = await imageCompression(files[i], options);
+        form.append('images', compressedFile);
+      }
+
       const { data } = await api.post('/upload-multiple', form, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -142,8 +172,8 @@ const Admin = () => {
       setMessage('Đã lưu thành công!');
       if (['portfolio', 'services', 'testimonials', 'faq'].includes(activeTab)) {
         setIsModalOpen(false);
-        fetchData(); // reload list
       }
+      fetchAllData(); // reload list silently
     } catch (err) {
       setMessage('Lỗi khi lưu!');
     }
@@ -155,7 +185,7 @@ const Admin = () => {
     try {
       await api.delete(`/${activeTab}/${id}`);
       setMessage('Đã xóa thành công!');
-      fetchData(); // reload list
+      fetchAllData(); // reload list silently
     } catch (err) {
       setMessage('Lỗi khi xóa!');
     }
