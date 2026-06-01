@@ -42,16 +42,16 @@ const AboutSection = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Cột thông tin CV */}
-          <div className="lg:col-span-5 glass-panel p-8 rounded-2xl">
+          <div className="lg:col-span-6 glass-panel p-8 rounded-2xl">
             <h3 className="font-secondary text-3xl mb-2 text-white">{data.name || 'Hồ sơ chuyên gia'}</h3>
             <p className="text-accent uppercase tracking-widest text-sm mb-6 font-semibold">Chuyên viên Retouching</p>
             
-            <p className="text-text-secondary leading-relaxed mb-8">{data.description}</p>
+            <p className="text-text-secondary leading-relaxed mb-8 whitespace-pre-line">{data.description}</p>
             
             {data.education && (
               <div className="mb-8">
                 <h4 className="text-white font-semibold mb-3 border-b border-glass pb-2 inline-block">Học vấn & Kinh nghiệm</h4>
-                <p className="text-text-secondary">{data.education}</p>
+                <p className="text-text-secondary whitespace-pre-line">{data.education}</p>
               </div>
             )}
 
@@ -70,16 +70,12 @@ const AboutSection = () => {
           </div>
 
           {/* Cột Slider Ảnh */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-6">
             {data.images && data.images.length > 0 ? (
               <Swiper
                 modules={[Pagination, Autoplay]}
                 spaceBetween={20}
                 slidesPerView={1}
-                breakpoints={{
-                  640: { slidesPerView: 2 },
-                  1024: { slidesPerView: 3 },
-                }}
                 autoplay={{ delay: 3000, disableOnInteraction: false }}
                 pagination={{ clickable: true, dynamicBullets: true }}
                 className="w-full pb-12"
