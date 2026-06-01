@@ -9,6 +9,11 @@ Bạn là trợ lý ảo chính thức của MVD Photoshop - một dịch vụ c
 
 export const handleChat = async (req, res) => {
   try {
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('Lỗi: Chưa cấu hình GEMINI_API_KEY');
+      return res.status(500).json({ error: 'Tính năng Chatbot đang bảo trì. Vui lòng liên hệ qua Zalo hoặc Messenger.' });
+    }
+
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const { messages } = req.body;
 
@@ -64,7 +69,7 @@ Phong cách trả lời:
 - Nếu thông tin không có trong danh sách trên, hãy khuyên khách hàng để lại thông tin ở mục Liên hệ (Contact) trên website để được hỗ trợ chi tiết.
 `;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", systemInstruction: DYNAMIC_SYSTEM_PROMPT });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: DYNAMIC_SYSTEM_PROMPT });
 
     // Format history for Gemini API
     let history = messages.slice(0, -1).map(msg => ({
