@@ -9,13 +9,23 @@ const ContactSection = () => {
     e.preventDefault();
     setStatus('Đang gửi...');
     try {
-      const { data } = await api.post('/contact', formData);
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Đã có lỗi xảy ra');
+      }
+
       if (data.success) {
         setStatus('Gửi thành công! Chúng tôi sẽ liên hệ sớm.');
         setFormData({ name: '', phone: '', date: '', email: '', message: '' });
       }
     } catch (err) {
-      setStatus('Lỗi: ' + (err.response?.data?.error || err.message));
+      setStatus('Lỗi: ' + err.message);
     }
   };
 

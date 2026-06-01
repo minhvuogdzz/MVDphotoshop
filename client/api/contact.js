@@ -1,17 +1,20 @@
 import nodemailer from 'nodemailer';
 
-export const handleContact = async (req, res) => {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   const { name, phone, email, date, message } = req.body;
 
   if (!name || !phone || !email) {
     return res.status(400).json({ error: 'Vui lòng điền đủ Họ tên, SĐT và Email' });
   }
 
-  // Check if credentials are set
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error("Missing EMAIL_USER or EMAIL_PASS in .env");
+    console.error("Missing EMAIL_USER or EMAIL_PASS in Vercel environment variables");
     return res.status(500).json({ 
-      error: 'Hệ thống gửi mail chưa được thiết lập. Chủ website cần cấu hình EMAIL_USER và EMAIL_PASS trong file .env.'
+      error: 'Hệ thống gửi mail chưa được thiết lập. Chủ website cần cấu hình EMAIL_USER và EMAIL_PASS trên Vercel.'
     });
   }
 
@@ -66,4 +69,4 @@ export const handleContact = async (req, res) => {
     console.error('Error sending email:', error);
     res.status(500).json({ error: 'Gửi mail thất bại: ' + error.message });
   }
-};
+}
