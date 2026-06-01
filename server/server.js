@@ -11,6 +11,7 @@ import { login } from './controllers/authController.js';
 import { handleChat } from './controllers/chatController.js';
 import { handleContact } from './controllers/contactController.js';
 import { requireAuth } from './middlewares/authMiddleware.js';
+import { v2 as cloudinary } from 'cloudinary';
 
 // Models
 import Hero from './models/Hero.js';
@@ -21,6 +22,12 @@ import Testimonial from './models/Testimonial.js';
 import FAQ from './models/FAQ.js';
 
 dotenv.config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +43,22 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+const streamUploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    let stream = cloudinary.uploader.upload_stream(
+      { folder: "mvd-portfolio" },
+      (error, result) => {
+        if (result) {
+          resolve(result);
+        } else {
+          reject(error);
+        }
+      }
+    );
+    stream.end(buffer);
+  });
+};
+
 // Routes
 // Upload
 app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) => {
@@ -43,27 +66,15 @@ app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) =>
     if (!req.file) {
       return res.status(400).json({ error: 'No image uploaded' });
     }
-    
-    // Ensure uploads directory exists
-    const uploadsDir = path.join(__dirname, 'public/uploads');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    const filename = `mvd-${Date.now()}.webp`;
-    const outputPath = path.join(uploadsDir, filename);
 
     // Compress with sharp (max 1920px width, webp 80% quality -> usually < 600kb)
-    await sharp(req.file.buffer)
+    const webpBuffer = await sharp(req.file.buffer)
       .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 80 })
-      .toFile(outputPath);
+      .toBuffer();
 
-    // Return the URL relative to the server port 5001
-    // Actually just return the path /uploads/filename, frontend can use baseURL
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const fileUrl = `${protocol}://${req.get('host')}/uploads/${filename}`;
-    res.json({ url: fileUrl });
+    const result = await streamUploadToCloudinary(webpBuffer);
+    res.json({ url: result.secure_url });
   } catch (err) {
     console.error('Upload Error:', err);
     res.status(500).json({ error: err.message });
@@ -76,23 +87,15 @@ app.post('/api/upload-multiple', requireAuth, upload.array('images', 20), async 
       return res.status(400).json({ error: 'No images uploaded' });
     }
 
-    const uploadsDir = path.join(__dirname, 'public/uploads');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
     const urls = [];
     for (const file of req.files) {
-      const filename = `mvd-${Date.now()}-${Math.round(Math.random() * 1000)}.webp`;
-      const outputPath = path.join(uploadsDir, filename);
-
-      await sharp(file.buffer)
+      const webpBuffer = await sharp(file.buffer)
         .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 80 })
-        .toFile(outputPath);
+        .toBuffer();
 
-      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-      urls.push(`${protocol}://${req.get('host')}/uploads/${filename}`);
+      const result = await streamUploadToCloudinary(webpBuffer);
+      urls.push(result.secure_url);
     }
 
     res.json({ urls });
