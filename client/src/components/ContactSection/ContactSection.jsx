@@ -9,18 +9,28 @@ const ContactSection = () => {
     e.preventDefault();
     setStatus('Đang gửi...');
     try {
-      const response = await fetch('/api/contact', {
+      const response = await fetch('https://formsubmit.co/ajax/ougvn.it2@gmail.com', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          "Họ và tên": formData.name,
+          "Số điện thoại": formData.phone,
+          "Email": formData.email,
+          "Ngày dự kiến": formData.date || "Không có",
+          "Lời nhắn": formData.message || "Không có",
+          "_subject": `[MVD Photoshop] Yêu cầu tư vấn mới từ ${formData.name}`
+        })
       });
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'Đã có lỗi xảy ra');
+        throw new Error(data.message || 'Đã có lỗi xảy ra');
       }
 
-      if (data.success) {
+      if (data.success === "true") {
         setStatus('Gửi thành công! Chúng tôi sẽ liên hệ sớm.');
         setFormData({ name: '', phone: '', date: '', email: '', message: '' });
       }
