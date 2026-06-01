@@ -49,3 +49,46 @@
 .swiper-pagination-progressbar .swiper-pagination-progressbar-fill {
   background: #c09b68 !important;
 }
+
+/* Custom Swiper Navigation */
+.swiper-button-next,
+.swiper-button-prev {
+  width: 50px !important;
+  height: 50px !important;
+  background: rgba(18, 18, 18, 0.7) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: #c09b68 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+  font-size: 20px !important;
+  font-weight: bold;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+  background: #c09b68 !important;
+  color: #121212 !important;
+  box-shadow: 0 0 20px rgba(192, 155, 104, 0.6);
+}
+
+/* Push to edges */
+.swiper-button-next {
+  right: 4rem !important;
+}
+.swiper-button-prev {
+  left: 4rem !important;
+}
+
+/* Hide on mobile */
+@media (max-width: 768px) {
+  .swiper-button-next,
+  .swiper-button-prev {
+    display: none !important;
+  }
+}
