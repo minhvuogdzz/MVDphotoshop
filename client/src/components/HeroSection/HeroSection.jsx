@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import api from '../../services/api';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -9,6 +10,7 @@ import 'swiper/css/effect-fade';
 
 const HeroSection = () => {
   const [heroData, setHeroData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchHero = async () => {
@@ -17,6 +19,8 @@ const HeroSection = () => {
         setHeroData(data);
       } catch (err) {
         console.error('Failed to fetch hero data', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchHero();
@@ -38,9 +42,13 @@ const HeroSection = () => {
   const backgrounds = rawBackgrounds.filter(bg => bg && bg.trim() !== '');
 
   return (
-    <section className="relative h-screen min-h-[600px] w-full flex items-center overflow-hidden">
-      <Swiper
-        modules={[Pagination, Autoplay, EffectFade]}
+    <section className="relative h-screen min-h-[600px] w-full flex items-center justify-center overflow-hidden">
+      {loading ? (
+        <LoadingSpinner />
+      ) : (
+        <>
+          <Swiper
+            modules={[Pagination, Autoplay, EffectFade]}
         effect="fade"
         autoplay={{ delay: 5000, disableOnInteraction: false }}
         pagination={{ type: 'progressbar' }}
@@ -68,7 +76,9 @@ const HeroSection = () => {
         >
           {data.ctaText}
         </a>
-      </div>
+        </div>
+        </>
+      )}
     </section>
   );
 };

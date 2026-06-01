@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 const FAQSection = () => {
   const [faqs, setFaqs] = useState([]);
   const [activeFAQ, setActiveFAQ] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFAQs = async () => {
@@ -12,6 +14,8 @@ const FAQSection = () => {
         setFaqs(data);
       } catch (err) {
         console.error('Failed to fetch FAQs', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchFAQs();
@@ -33,7 +37,10 @@ const FAQSection = () => {
           <h2 className="text-[40px] mb-4 text-accent">Câu hỏi thường gặp</h2>
         </div>
 
-        <div className="flex flex-col gap-4">
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <div className="flex flex-col gap-4">
           {data.map(faq => (
             <div key={faq._id} className="border-b border-glass pb-4 transition-all duration-200 hover:border-accent">
               <button 
@@ -46,6 +53,7 @@ const FAQSection = () => {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {activeFAQ && (

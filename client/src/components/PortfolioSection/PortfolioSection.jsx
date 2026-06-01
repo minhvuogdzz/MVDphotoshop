@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import api from '../../services/api';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -10,6 +11,7 @@ import 'swiper/css/pagination';
 const PortfolioSection = () => {
   const [portfolios, setPortfolios] = useState([]);
   const [activeTab, setActiveTab] = useState('Tất cả');
+  const [loading, setLoading] = useState(true);
   
   // Lightbox states
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -23,6 +25,8 @@ const PortfolioSection = () => {
         setPortfolios(data);
       } catch (err) {
         console.error('Failed to fetch portfolios', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchPortfolios();
@@ -70,7 +74,11 @@ const PortfolioSection = () => {
           <p className="text-text-secondary max-w-[600px] mx-auto">Khám phá những dự án nổi bật được thực hiện bằng tâm huyết.</p>
         </div>
 
-        <div className="flex justify-center flex-wrap gap-4 mb-12">
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <>
+            <div className="flex justify-center flex-wrap gap-4 mb-12">
           {categories.map(cat => (
             <button
               key={cat}
@@ -128,6 +136,8 @@ const PortfolioSection = () => {
         <div className="text-center mt-10">
           <a href="/projects" className="inline-block px-8 py-3 border border-accent text-accent rounded-full font-medium transition-all duration-200 hover:bg-accent hover:text-bg-main">Xem toàn bộ dự án</a>
         </div>
+          </>
+        )}
       </div>
 
       {/* Lightbox Modal */}

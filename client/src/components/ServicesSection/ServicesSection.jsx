@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
+import LoadingSpinner from '../common/LoadingSpinner';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Navigation, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -8,6 +9,7 @@ import 'swiper/css/navigation';
 
 const ServicesSection = () => {
   const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -16,6 +18,8 @@ const ServicesSection = () => {
         setServices(data);
       } catch (err) {
         console.error('Failed to fetch services', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchServices();
@@ -58,7 +62,10 @@ const ServicesSection = () => {
           <p className="text-text-secondary max-w-[600px] mx-auto">Mang đến những giải pháp hậu kì hoàn hảo nhất cho từng bức ảnh của bạn.</p>
         </div>
 
-        <div className="relative px-2 sm:px-12">
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <div className="relative px-2 sm:px-12">
           <Swiper
             modules={[Pagination, Navigation, Autoplay]}
             spaceBetween={30}
@@ -102,6 +109,7 @@ const ServicesSection = () => {
             ))}
           </Swiper>
         </div>
+        )}
       </div>
     </section>
   );

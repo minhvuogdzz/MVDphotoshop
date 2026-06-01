@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay } from 'swiper/modules';
 import api from '../../services/api';
+import LoadingSpinner from '../common/LoadingSpinner';
 import 'swiper/css';
 import 'swiper/css/navigation';
 
 const TestimonialSection = () => {
   const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -15,6 +17,8 @@ const TestimonialSection = () => {
         setTestimonials(data);
       } catch (err) {
         console.error('Failed to fetch testimonials', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchTestimonials();
@@ -37,7 +41,10 @@ const TestimonialSection = () => {
           <p className="text-text-secondary max-w-[600px] mx-auto">Sự hài lòng của bạn là nguồn cảm hứng lớn nhất của chúng tôi.</p>
         </div>
 
-        <div className="relative px-2 sm:px-12">
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <div className="relative px-2 sm:px-12">
           <Swiper
             modules={[Navigation, Autoplay]}
             navigation
@@ -67,6 +74,7 @@ const TestimonialSection = () => {
             ))}
           </Swiper>
         </div>
+        )}
       </div>
     </section>
   );

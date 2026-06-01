@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import api from '../../services/api';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
 
 const AboutSection = () => {
   const [aboutData, setAboutData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAbout = async () => {
@@ -16,6 +18,8 @@ const AboutSection = () => {
         setAboutData(data);
       } catch (err) {
         console.error('Failed to fetch about data', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchAbout();
@@ -40,9 +44,12 @@ const AboutSection = () => {
           <div className="w-[60px] h-1 bg-accent mb-8 mx-auto"></div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Cột thông tin CV */}
-          <div className="lg:col-span-6 glass-panel p-8 rounded-2xl lg:sticky lg:top-28 lg:self-start">
+          <div className="lg:col-span-6 glass-panel p-8 rounded-2xl">
             <h3 className="font-secondary text-3xl mb-2 text-white">{data.name || 'Hồ sơ chuyên gia'}</h3>
             <p className="text-accent uppercase tracking-widest text-sm mb-6 font-semibold">Chuyên viên Retouching</p>
             
@@ -70,7 +77,7 @@ const AboutSection = () => {
           </div>
 
           {/* Cột Slider Ảnh */}
-          <div className="lg:col-span-6 lg:sticky lg:top-28 lg:self-start">
+          <div className="lg:col-span-6">
             {data.images && data.images.length > 0 ? (
               <Swiper
                 modules={[Pagination, Autoplay]}
@@ -98,7 +105,7 @@ const AboutSection = () => {
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
     </section>
   );
