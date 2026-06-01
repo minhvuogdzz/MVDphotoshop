@@ -70,7 +70,7 @@ const ServicesSection = () => {
             pagination={{ clickable: true }}
             navigation
             autoplay={{ delay: 3000, disableOnInteraction: false }}
-            className="pb-16"
+            className="pb-16 nav-swiper"
           >
             {data.map(service => (
               <SwiperSlide key={service._id} className="h-auto">

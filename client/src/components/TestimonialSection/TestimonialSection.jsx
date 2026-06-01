@@ -48,7 +48,7 @@ const TestimonialSection = () => {
               768: { slidesPerView: 2 },
               1024: { slidesPerView: 3 }
             }}
-            className="pb-12 !px-4"
+            className="pb-12 !px-4 nav-swiper"
           >
             {data.map(testi => (
               <SwiperSlide key={testi._id}>

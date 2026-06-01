@@ -52,7 +52,7 @@
 
 /* Custom Swiper Navigation */
 /* Make Swiper static so buttons can escape its overflow: hidden */
-.swiper {
+.nav-swiper {
   position: static !important;
 }
 
