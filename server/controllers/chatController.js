@@ -106,3 +106,55 @@ Phong cách trả lời:
     res.status(500).json({ error: 'Lỗi Chatbot: ' + errorMessage });
   }
 };
+
+export const getChatContext = async (req, res) => {
+  try {
+    const services = await Service.find();
+    const faqs = await FAQ.find();
+    const aboutData = await About.findOne();
+
+    let servicesText = "Thông tin bảng giá và dịch vụ hiện tại:\n";
+    if (services.length > 0) {
+      services.forEach(s => {
+        servicesText += `- ${s.name} (${s.type}): ${s.price}. Chi tiết: ${s.details ? s.details.join(', ') : ''}\n`;
+      });
+    } else {
+      servicesText += "- Hiện chưa có thông tin dịch vụ trên hệ thống.\n";
+    }
+
+    let faqsText = "\nCâu hỏi thường gặp (FAQ):\n";
+    if (faqs.length > 0) {
+      faqs.forEach(f => {
+        faqsText += `- Q: ${f.question}\n  A: ${f.answer}\n`;
+      });
+    }
+
+    let aboutText = "\nThông tin về chuyên gia Retouching (người thực hiện dịch vụ):\n";
+    if (aboutData) {
+      aboutText += `- Tên: ${aboutData.name || 'Đang cập nhật'}\n`;
+      aboutText += `- Kinh nghiệm/Học vấn: ${aboutData.education || 'Đang cập nhật'}\n`;
+      aboutText += `- Kỹ năng: ${aboutData.skills ? aboutData.skills.join(', ') : 'Đang cập nhật'}\n`;
+      aboutText += `- Thông tin thêm: ${aboutData.description || ''}\n`;
+    }
+
+    const DYNAMIC_SYSTEM_PROMPT = `
+${BASE_PROMPT}
+
+[DỮ LIỆU ĐỘNG TỪ WEBSITE]
+${servicesText}
+${faqsText}
+${aboutText}
+[KẾT THÚC DỮ LIỆU ĐỘNG]
+
+Phong cách trả lời: 
+- Xưng hô là "Em" và "Anh/Chị", hoặc "MVD Photoshop" và "Anh/Chị".
+- Thái độ nhiệt tình, thân thiện, chuyên nghiệp, luôn sẵn sàng hỗ trợ.
+- Ngắn gọn, súc tích, đi thẳng vào vấn đề. Nếu khách hàng hỏi giá, CHỈ BÁO GIÁ dựa theo thông tin trong phần DỮ LIỆU ĐỘNG TỪ WEBSITE ở trên. Không tự bịa ra mức giá khác.
+- Nếu thông tin không có trong danh sách trên, hãy khuyên khách hàng để lại thông tin ở mục Liên hệ (Contact) trên website để được hỗ trợ chi tiết.
+`;
+    res.json({ systemInstruction: DYNAMIC_SYSTEM_PROMPT });
+  } catch (error) {
+    console.error('Lỗi khi lấy context chatbot:', error);
+    res.status(500).json({ error: 'Không thể lấy dữ liệu Chatbot' });
+  }
+};

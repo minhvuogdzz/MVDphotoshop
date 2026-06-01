@@ -28,7 +28,19 @@ const Chatbot = ({ onClose }) => {
 
     try {
       const newHistory = [...messages, userMessage];
-      const { data } = await api.post('/chat', { messages: newHistory });
+      
+      // Gọi trực tiếp Vercel Serverless Function thay vì Render backend
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newHistory })
+      });
+      
+      if (!response.ok) {
+        throw new Error('API error');
+      }
+      
+      const data = await response.json();
       
       setMessages(prev => [...prev, { role: 'model', content: data.reply }]);
     } catch (err) {

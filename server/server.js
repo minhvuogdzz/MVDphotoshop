@@ -8,7 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { login } from './controllers/authController.js';
-import { handleChat } from './controllers/chatController.js';
+import { handleChat, getChatContext } from './controllers/chatController.js';
 import { handleContact } from './controllers/contactController.js';
 import { requireAuth } from './middlewares/authMiddleware.js';
 import { v2 as cloudinary } from 'cloudinary';
@@ -110,6 +110,7 @@ app.post('/api/auth/login', login);
 
 // Chat
 app.post('/api/chat', handleChat);
+app.get('/api/chat-context', getChatContext);
 
 // Contact
 app.post('/api/contact', handleContact);
