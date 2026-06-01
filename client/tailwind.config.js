@@ -7,9 +7,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        'bg-main': '#0a0a0a',
-        'bg-secondary': '#141414',
-        'bg-glass': 'rgba(20, 20, 20, 0.6)',
+        'bg-main': 'transparent',
+        'bg-secondary': 'rgba(0, 0, 0, 0.2)',
+        'bg-glass': 'rgba(30, 25, 20, 0.65)',
         'text-primary': '#ffffff',
         'text-secondary': '#a3a3a3',
         accent: '#c09b68',

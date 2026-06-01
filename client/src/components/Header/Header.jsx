@@ -78,7 +78,7 @@ const Header = () => {
       </div>
       
       {/* Mobile Sidebar */}
-      <div className={`fixed top-0 right-0 h-screen w-[280px] bg-bg-main border-l border-glass shadow-2xl transform transition-transform duration-300 ease-in-out z-[200] ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-screen w-[280px] bg-[#1a1715] border-l border-glass shadow-2xl transform transition-transform duration-300 ease-in-out z-[200] ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="p-6 flex justify-end">
           <button className="text-text-secondary hover:text-accent" onClick={() => setIsMobileMenuOpen(false)}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
