@@ -61,7 +61,8 @@ app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) =>
 
     // Return the URL relative to the server port 5001
     // Actually just return the path /uploads/filename, frontend can use baseURL
-    const fileUrl = `http://localhost:5001/uploads/${filename}`;
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const fileUrl = `${protocol}://${req.get('host')}/uploads/${filename}`;
     res.json({ url: fileUrl });
   } catch (err) {
     console.error('Upload Error:', err);
@@ -90,7 +91,8 @@ app.post('/api/upload-multiple', requireAuth, upload.array('images', 20), async 
         .webp({ quality: 80 })
         .toFile(outputPath);
 
-      urls.push(`http://localhost:5001/uploads/${filename}`);
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      urls.push(`${protocol}://${req.get('host')}/uploads/${filename}`);
     }
 
     res.json({ urls });
