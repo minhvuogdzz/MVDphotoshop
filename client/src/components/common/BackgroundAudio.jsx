@@ -25,7 +25,10 @@ const BackgroundAudio = () => {
     // A global click listener to start audio if not playing (common workaround for autoplay block)
     const handleFirstInteraction = () => {
       if (!hasInteracted && audio.paused) {
-        audio.play().then(() => setIsPlaying(true)).catch(() => {});
+        audio.play().then(() => {
+          setIsPlaying(true);
+          window.dispatchEvent(new CustomEvent('musicStarted'));
+        }).catch(() => {});
         setHasInteracted(true);
       }
     };
@@ -43,7 +46,12 @@ const BackgroundAudio = () => {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play();
+        audioRef.current.play().then(() => {
+          if (!hasInteracted) {
+            window.dispatchEvent(new CustomEvent('musicStarted'));
+            setHasInteracted(true);
+          }
+        }).catch(() => {});
       }
       setIsPlaying(!isPlaying);
     }
