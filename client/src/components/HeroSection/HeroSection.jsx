@@ -20,7 +20,7 @@ const HeroSection = () => {
   const gridItems = data.gridItems || Array(10).fill({ image1: '', image2: '' });
 
   return (
-    <section className="relative min-h-[100vh] w-full flex items-center justify-center overflow-hidden bg-bg-main pt-[88px] pb-10">
+    <section className="relative min-h-[100vh] w-full flex items-center justify-center overflow-hidden bg-black pt-[88px] pb-10">
       {loading ? (
         <LoadingSpinner />
       ) : (
@@ -42,7 +42,7 @@ const HeroSection = () => {
                 const img2 = item.image2 || `https://images.unsplash.com/photo-${1500000000000 + index + 10}?w=500&auto=format&fit=crop`;
 
                 return (
-                  <div key={index} className={`w-full aspect-[4/5] rounded-none overflow-hidden bg-bg-main ${visibilityClass}`}>
+                  <div key={index} className={`w-full aspect-[4/5] rounded-none overflow-hidden bg-black ${visibilityClass}`}>
                     <Swiper
                       modules={[Autoplay, EffectCube]}
                       effect="cube"
