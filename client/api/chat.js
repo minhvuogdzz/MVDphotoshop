@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", systemInstruction });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction });
 
     // Giới hạn history để tránh vượt token limit
     const trimmedMessages = messages.length > MAX_HISTORY_MESSAGES 
