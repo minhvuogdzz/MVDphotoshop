@@ -164,7 +164,7 @@ const Admin = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      const newGridItems = [...(formData.gridItems || Array(10).fill({ image1: '', image2: '' }))];
+      const newGridItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '' }))];
       newGridItems[index] = { ...newGridItems[index], [imageField]: data.url };
       
       setFormData({ ...formData, gridItems: newGridItems });
@@ -281,7 +281,7 @@ const Admin = () => {
       return;
     }
 
-    const newGridItems = [...(formData.gridItems || Array(10).fill({ image1: '', image2: '' }))];
+    const newGridItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '' }))];
     const draggedItem = newGridItems[heroDragItem.current];
     newGridItems.splice(heroDragItem.current, 1);
     newGridItems.splice(heroDragOverItem.current, 0, draggedItem);
@@ -419,7 +419,7 @@ const Admin = () => {
                     <p className="text-sm text-text-secondary mb-4">Lưu ý: Khung 1-4 hiện trên Mobile. Khung 1-6 hiện trên Tablet. Cả 10 khung hiện trên Máy tính.</p>
                     
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      {(formData.gridItems || Array(10).fill({ image1: '', image2: '' })).map((item, index) => (
+                      {((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '' })).map((item, index) => (
                         <div 
                           key={index}
                           className="bg-white/5 border border-glass p-3 rounded-lg flex flex-col gap-3 cursor-grab hover:bg-white/10 transition-colors"
@@ -447,7 +447,7 @@ const Admin = () => {
                               placeholder="URL Ảnh 1" 
                               value={item.image1 || ''} 
                               onChange={(e) => {
-                                const newItems = [...(formData.gridItems || Array(10).fill({ image1: '', image2: '' }))];
+                                const newItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '' }))];
                                 newItems[index] = { ...newItems[index], image1: e.target.value };
                                 setFormData({ ...formData, gridItems: newItems });
                               }}
@@ -472,7 +472,7 @@ const Admin = () => {
                               placeholder="URL Ảnh 2" 
                               value={item.image2 || ''} 
                               onChange={(e) => {
-                                const newItems = [...(formData.gridItems || Array(10).fill({ image1: '', image2: '' }))];
+                                const newItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '' }))];
                                 newItems[index] = { ...newItems[index], image2: e.target.value };
                                 setFormData({ ...formData, gridItems: newItems });
                               }}
