@@ -77,7 +77,7 @@ const Chatbot = ({ onClose }) => {
         ? 'Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng và thử lại.'
         : err.message?.includes('token') || err.message?.includes('limit')
           ? 'Cuộc hội thoại quá dài. Bạn hãy bắt đầu cuộc trò chuyện mới nhé!'
-          : 'Xin lỗi, hệ thống đang gặp chút sự cố. Vui lòng thử lại sau nhé!';
+          : err.message || 'Xin lỗi, hệ thống đang gặp chút sự cố. Vui lòng thử lại sau nhé!';
       
       setMessages(prev => [...prev, { role: 'model', content: errorMessage }]);
     } finally {
