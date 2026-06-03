@@ -35,7 +35,7 @@ const Header = () => {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 w-full z-[100] transition-all duration-400 ease-in-out ${scrolled ? 'py-4 bg-bg-glass backdrop-blur-md border-b border-glass' : 'py-6 bg-transparent'}`}>
+      <header className={`fixed top-0 left-0 w-full z-[100] transition-all duration-400 ease-in-out ${scrolled ? 'py-4 bg-bg-glass backdrop-blur-md border-b border-glass shadow-[0_10px_30px_rgba(0,0,0,0.3)]' : 'py-6 bg-transparent'}`}>
         <div className="container-custom flex justify-between items-center">
           <a href="/" className="font-secondary text-2xl font-bold tracking-wide">
             MVD<span className="font-normal italic text-accent ml-2">Photoshop</span>
