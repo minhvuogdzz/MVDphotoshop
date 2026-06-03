@@ -14,16 +14,14 @@ const HeroSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Ensure we have exactly 10 items in the grid if empty
-HeroSchema.pre('save', function(next) {
-  if (!this.gridItems || this.gridItems.length === 0) {
-    this.gridItems = Array(10).fill({ image1: '', image2: '' });
-  } else if (this.gridItems.length < 10) {
-    const missing = 10 - this.gridItems.length;
-    this.gridItems = [...this.gridItems, ...Array(missing).fill({ image1: '', image2: '' })];
-  } else if (this.gridItems.length > 10) {
-    this.gridItems = this.gridItems.slice(0, 10);
+HeroSchema.pre('save', function() {
+  if (!this.gridItems) this.gridItems = [];
+  while (this.gridItems.length < 10) {
+    this.gridItems.push({ image1: '', image2: '' });
   }
-  next();
+  if (this.gridItems.length > 10) {
+    this.gridItems.splice(10);
+  }
 });
 
 export default mongoose.model('Hero', HeroSchema);
