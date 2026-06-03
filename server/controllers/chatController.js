@@ -69,7 +69,7 @@ Phong cách trả lời:
 - Nếu thông tin không có trong danh sách trên, hãy khuyên khách hàng để lại thông tin ở mục Liên hệ (Contact) trên website để được hỗ trợ chi tiết.
 `;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: DYNAMIC_SYSTEM_PROMPT });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", systemInstruction: DYNAMIC_SYSTEM_PROMPT });
 
     // Giới hạn history tối đa 10 messages gần nhất để tránh vượt token limit
     const MAX_HISTORY = 10;

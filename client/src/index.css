@@ -32,6 +32,11 @@ html.light {
   --sidebar-bg: #f0ece6;
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* Offset for fixed header */
+}
+
 @layer base {
   body {
     @apply font-primary leading-relaxed antialiased overflow-x-hidden;
@@ -46,6 +51,18 @@ html.light {
     @apply font-secondary font-semibold leading-tight;
     color: var(--text-primary);
   }
+}
+
+/* ==================== SCROLL REVEAL ==================== */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-on-scroll.reveal-active {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @layer components {
