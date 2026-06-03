@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useData } from '../../contexts/DataContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 const FAQSection = () => {
   const { faq, loading } = useData();
   const [activeFAQ, setActiveFAQ] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const data = faq || [];
 
@@ -34,17 +40,18 @@ const FAQSection = () => {
         )}
       </div>
 
-      {activeFAQ && (
-        <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 backdrop-blur-sm z-[2000] flex items-center justify-center p-4 animate-[fadeIn_0.3s_ease]" onClick={() => setActiveFAQ(null)}>
-          <div className="glass-panel w-full max-w-[600px] p-10 rounded-2xl relative animate-[slideUp_0.4s_ease]" onClick={e => e.stopPropagation()}>
+      {mounted && activeFAQ && createPortal(
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black/40 backdrop-blur-xl z-[2000] flex items-center justify-center p-4" onClick={() => setActiveFAQ(null)}>
+          <div className="glass-panel w-full max-w-[600px] p-10 rounded-2xl relative animate-fade-in shadow-[0_20px_50px_rgba(0,0,0,0.5)]" onClick={e => e.stopPropagation()}>
             <button className="absolute top-6 right-6 bg-transparent border-none text-text-secondary cursor-pointer transition-colors duration-200 hover:text-accent" onClick={() => setActiveFAQ(null)}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
             <h3 className="font-secondary text-[28px] text-accent mb-6 pr-8 leading-tight">{activeFAQ.question}</h3>
             <div className="w-[40px] h-1 bg-accent mb-6"></div>
-            <p className="text-text-secondary text-lg leading-relaxed">{activeFAQ.answer}</p>
+            <p className="text-text-primary text-lg leading-relaxed">{activeFAQ.answer}</p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );
