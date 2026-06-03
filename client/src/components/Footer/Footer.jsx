@@ -2,7 +2,7 @@ const Footer = () => {
   return (
     <footer className="pt-24 pb-8 bg-bg-secondary border-t border-glass">
       <div className="container-custom flex flex-col md:flex-row justify-between items-center gap-8 mb-16">
-        <div class="max-sm:text-center">
+        <div className="max-sm:text-center">
           <h3 className="font-secondary text-2xl font-bold mb-4">MVD<span className="font-normal italic text-accent ml-2">Photoshop</span></h3>
           <p className="text-text-secondary max-w-[300px]">Lưu giữ những khoảnh khắc vượt thời gian qua từng đường nét hậu kì.</p>
         </div>

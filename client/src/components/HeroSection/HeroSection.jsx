@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay, EffectFade } from 'swiper/modules';
-import api from '../../services/api';
+import { useData } from '../../contexts/DataContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 import 'swiper/css';
@@ -9,34 +8,17 @@ import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 
 const HeroSection = () => {
-  const [heroData, setHeroData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { hero, loading } = useData();
 
-  useEffect(() => {
-    const fetchHero = async () => {
-      try {
-        const { data } = await api.get('/hero');
-        setHeroData(data);
-      } catch (err) {
-        console.error('Failed to fetch hero data', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHero();
-  }, []);
-
-  const defaultHero = {
+  const data = hero?.title ? hero : {
     title: 'Lưu giữ những khoảnh khắc vượt thời gian',
     subtitle: 'Photoshop, blending và Retouch ảnh chân dung, nàng thơ, ảnh cưới',
-    backgroundUrls: [
-    ],
+    backgroundUrls: [],
     ctaText: 'Xem Portfolio',
     ctaLink: '#portfolio'
   };
 
-  const data = heroData?.title ? heroData : defaultHero;
-  const rawBackgrounds = data.backgroundUrls?.length ? data.backgroundUrls : defaultHero.backgroundUrls;
+  const rawBackgrounds = data.backgroundUrls?.length ? data.backgroundUrls : [];
   const backgrounds = rawBackgrounds.filter(bg => bg && bg.trim() !== '');
 
   return (

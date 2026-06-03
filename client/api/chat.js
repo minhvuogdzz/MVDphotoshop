@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+const MAX_HISTORY_MESSAGES = 10;
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -27,18 +29,23 @@ export default async function handler(req, res) {
         systemInstruction = contextData.systemInstruction;
       } else {
         console.warn("Không thể lấy context từ Render, dùng context mặc định");
-        systemInstruction = "Bạn là trợ lý ảo chính thức của MVD Photoshop.";
+        systemInstruction = "Bạn là trợ lý ảo chính thức của MVD Photoshop. Trả lời ngắn gọn, thân thiện.";
       }
     } catch (err) {
       console.error("Lỗi khi fetch context từ Render:", err);
-      systemInstruction = "Bạn là trợ lý ảo chính thức của MVD Photoshop.";
+      systemInstruction = "Bạn là trợ lý ảo chính thức của MVD Photoshop. Trả lời ngắn gọn, thân thiện.";
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", systemInstruction });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", systemInstruction });
+
+    // Giới hạn history để tránh vượt token limit
+    const trimmedMessages = messages.length > MAX_HISTORY_MESSAGES 
+      ? messages.slice(-MAX_HISTORY_MESSAGES) 
+      : messages;
 
     // Format history for Gemini API
-    let history = messages.slice(0, -1).map(msg => ({
+    let history = trimmedMessages.slice(0, -1).map(msg => ({
       role: msg.role === 'user' ? 'user' : 'model',
       parts: [{ text: msg.content }]
     }));
@@ -48,21 +55,49 @@ export default async function handler(req, res) {
       history.shift();
     }
 
-    const currentMessage = messages[messages.length - 1].content;
+    // Đảm bảo lịch sử luân phiên user/model
+    const cleanHistory = [];
+    let lastRole = null;
+    for (const entry of history) {
+      if (entry.role !== lastRole) {
+        cleanHistory.push(entry);
+        lastRole = entry.role;
+      }
+    }
+
+    const currentMessage = trimmedMessages[trimmedMessages.length - 1].content;
 
     const chat = model.startChat({
-      history,
+      history: cleanHistory,
       generationConfig: {
-        maxOutputTokens: 500,
+        maxOutputTokens: 1024,
       },
     });
 
     const result = await chat.sendMessage(currentMessage);
     const response = await result.response;
+    const text = response.text();
 
-    res.json({ reply: response.text() });
+    if (!text) {
+      return res.status(500).json({ error: 'AI không trả lời được. Vui lòng thử lại.' });
+    }
+
+    res.json({ reply: text });
   } catch (error) {
     console.error('Chat error:', error);
-    res.status(500).json({ error: 'Lỗi Chatbot Vercel: ' + (error.message || error.toString()) });
+    
+    let errorMessage = error.message || error.toString();
+    
+    if (errorMessage.includes('SAFETY')) {
+      return res.status(400).json({ error: 'Tin nhắn không phù hợp. Vui lòng thử câu hỏi khác.' });
+    }
+    if (errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
+      return res.status(429).json({ error: 'Hệ thống đang quá tải. Vui lòng thử lại sau vài phút.' });
+    }
+    if (errorMessage.includes('User location is not supported')) {
+      return res.status(500).json({ error: 'Máy chủ đang ở vùng không được hỗ trợ. Vui lòng liên hệ qua Zalo.' });
+    }
+    
+    res.status(500).json({ error: 'Chatbot đang gặp sự cố. Vui lòng thử lại sau.' });
   }
 }

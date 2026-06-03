@@ -1,34 +1,12 @@
-import { useState, useEffect } from 'react';
-import api from '../../services/api';
+import { useState } from 'react';
+import { useData } from '../../contexts/DataContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 const FAQSection = () => {
-  const [faqs, setFaqs] = useState([]);
+  const { faq, loading } = useData();
   const [activeFAQ, setActiveFAQ] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchFAQs = async () => {
-      try {
-        const { data } = await api.get('/faq');
-        setFaqs(data);
-      } catch (err) {
-        console.error('Failed to fetch FAQs', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFAQs();
-  }, []);
-
-  const defaultFaqs = [
-    { _id: 1, question: 'Thời gian hoàn thành bộ ảnh là bao lâu?', answer: 'Thông thường, thời gian hậu kì và hoàn thiện bộ ảnh sẽ mất từ 3 đến 7 ngày làm việc tùy thuộc vào số lượng và mức độ phức tạp của ảnh. Tuy nhiên, nếu bạn cần gấp, chúng tôi có gói dịch vụ Express (có phụ phí) hỗ trợ hoàn thiện trong 24-48 giờ.' },
-    { _id: 2, question: 'Tôi có thể yêu cầu chỉnh sửa lại sau khi nhận ảnh không?', answer: 'Có, mỗi gói dịch vụ đều hỗ trợ chỉnh sửa lại miễn phí từ 1 đến 2 lần nếu bạn chưa ưng ý về các chi tiết nhỏ. Sau số lần này hoặc yêu cầu sửa đổi lớn, chúng tôi sẽ tính phí chỉnh sửa phát sinh tùy theo thực tế.' },
-    { _id: 3, question: 'Làm sao để tôi gửi ảnh gốc cho bạn?', answer: 'Bạn có thể tải toàn bộ ảnh gốc lên Google Drive cá nhân, tạo thư mục riêng và gửi link cho chúng tôi với quyền truy cập "Bất kỳ ai có liên kết". Chúng tôi sẽ trực tiếp lấy file gốc chất lượng cao từ đó để thao tác.' },
-    { _id: 4, question: 'Có hỗ trợ trả file định dạng PSD không?', answer: 'Mặc định file giao phẩm cuối cùng là JPEG chất lượng cao (hoặc TIFF nếu có yêu cầu từ đầu). Việc giao file nguồn PSD (kèm đầy đủ các layer hậu kì) sẽ có mức giá riêng vì đây thuộc về bản quyền chất xám, mong bạn thông cảm.' },
-  ];
-
-  const data = faqs.length > 0 ? faqs : defaultFaqs;
+  const data = faq || [];
 
   return (
     <section className="py-[100px] bg-bg-main relative">

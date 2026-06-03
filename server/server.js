@@ -7,6 +7,8 @@ import sharp from 'sharp';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import { login } from './controllers/authController.js';
 import { handleChat, getChatContext } from './controllers/chatController.js';
 import { handleContact } from './controllers/contactController.js';
@@ -33,6 +35,30 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const server = http.createServer(app);
+
+// Socket.IO Setup
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  },
+  transports: ['websocket', 'polling']
+});
+
+io.on('connection', (socket) => {
+  console.log('🔌 Client connected:', socket.id);
+  
+  socket.on('disconnect', () => {
+    console.log('🔌 Client disconnected:', socket.id);
+  });
+});
+
+// Helper: emit data update event
+const emitDataUpdate = (section) => {
+  io.emit('data-updated', { section, timestamp: Date.now() });
+  console.log(`📡 Emitted data-updated for: ${section}`);
+};
 
 // Middlewares
 app.use(cors());
@@ -134,6 +160,7 @@ app.post('/api/hero', requireAuth, async (req, res) => {
       hero = new Hero(req.body);
     }
     await hero.save();
+    emitDataUpdate('hero');
     res.json(hero);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -158,6 +185,7 @@ app.post('/api/portfolio', requireAuth, async (req, res) => {
       portfolio = new Portfolio(req.body);
       await portfolio.save();
     }
+    emitDataUpdate('portfolio');
     res.json(portfolio);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -166,6 +194,7 @@ app.post('/api/portfolio', requireAuth, async (req, res) => {
 app.delete('/api/portfolio/:id', requireAuth, async (req, res) => {
   try {
     await Portfolio.findByIdAndDelete(req.params.id);
+    emitDataUpdate('portfolio');
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -190,6 +219,7 @@ app.post('/api/services', requireAuth, async (req, res) => {
       service = new Service(req.body);
       await service.save();
     }
+    emitDataUpdate('services');
     res.json(service);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -198,6 +228,7 @@ app.post('/api/services', requireAuth, async (req, res) => {
 app.delete('/api/services/:id', requireAuth, async (req, res) => {
   try {
     await Service.findByIdAndDelete(req.params.id);
+    emitDataUpdate('services');
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -222,6 +253,7 @@ app.post('/api/about', requireAuth, async (req, res) => {
       about = new About(req.body);
     }
     await about.save();
+    emitDataUpdate('about');
     res.json(about);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -246,6 +278,7 @@ app.post('/api/testimonials', requireAuth, async (req, res) => {
       testimonial = new Testimonial(req.body);
       await testimonial.save();
     }
+    emitDataUpdate('testimonials');
     res.json(testimonial);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -254,6 +287,7 @@ app.post('/api/testimonials', requireAuth, async (req, res) => {
 app.delete('/api/testimonials/:id', requireAuth, async (req, res) => {
   try {
     await Testimonial.findByIdAndDelete(req.params.id);
+    emitDataUpdate('testimonials');
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -278,6 +312,7 @@ app.post('/api/faq', requireAuth, async (req, res) => {
       faq = new FAQ(req.body);
       await faq.save();
     }
+    emitDataUpdate('faq');
     res.json(faq);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -286,6 +321,7 @@ app.post('/api/faq', requireAuth, async (req, res) => {
 app.delete('/api/faq/:id', requireAuth, async (req, res) => {
   try {
     await FAQ.findByIdAndDelete(req.params.id);
+    emitDataUpdate('faq');
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -295,7 +331,7 @@ app.delete('/api/faq/:id', requireAuth, async (req, res) => {
 // Connect to MongoDB & Start Server
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 

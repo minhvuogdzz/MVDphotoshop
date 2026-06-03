@@ -1,31 +1,15 @@
-import { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
-import api from '../../services/api';
+import { useData } from '../../contexts/DataContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
 
 const AboutSection = () => {
-  const [aboutData, setAboutData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { about, loading } = useData();
 
-  useEffect(() => {
-    const fetchAbout = async () => {
-      try {
-        const { data } = await api.get('/about');
-        setAboutData(data);
-      } catch (err) {
-        console.error('Failed to fetch about data', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAbout();
-  }, []);
-
-  const defaultAbout = {
+  const data = about?.title ? about : {
     title: 'Câu chuyện thương hiệu',
     name: 'Nguyễn Văn A',
     description: 'Với hơn 5 năm kinh nghiệm trong lĩnh vực Retouching, tôi luôn tâm niệm rằng mỗi bức ảnh đều mang một linh hồn và một câu chuyện riêng. Công việc của tôi không chỉ là chỉnh sửa cho đẹp, mà là thổi hồn vào bức ảnh, tôn vinh những vẻ đẹp chân thật và lưu giữ trọn vẹn những cảm xúc khoảnh khắc.',
@@ -33,8 +17,6 @@ const AboutSection = () => {
     education: 'Cử nhân Thiết kế Đồ họa - Đại học Mỹ thuật Công nghiệp',
     images: []
   };
-
-  const data = aboutData?.title ? aboutData : defaultAbout;
 
   return (
     <section id="about" className="py-[100px] bg-bg-main border-y border-glass relative">
@@ -94,6 +76,7 @@ const AboutSection = () => {
                         src={img} 
                         alt={`CV Image ${index + 1}`} 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        loading="lazy"
                       />
                     </div>
                   </SwiperSlide>

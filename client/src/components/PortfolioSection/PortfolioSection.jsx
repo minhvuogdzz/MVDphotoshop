@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
-import api from '../../services/api';
+import { useData } from '../../contexts/DataContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 import 'swiper/css';
@@ -9,39 +9,15 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 const PortfolioSection = () => {
-  const [portfolios, setPortfolios] = useState([]);
+  const { portfolio, loading } = useData();
   const [activeTab, setActiveTab] = useState('Tất cả');
-  const [loading, setLoading] = useState(true);
   
   // Lightbox states
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentGallery, setCurrentGallery] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  
-  useEffect(() => {
-    const fetchPortfolios = async () => {
-      try {
-        const { data } = await api.get('/portfolio');
-        setPortfolios(data);
-      } catch (err) {
-        console.error('Failed to fetch portfolios', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPortfolios();
-  }, []);
 
-  // Dummy data if API is empty
-  const defaultData = [
-    { _id: 1, title: 'Summer Vibe', category: 'Beauty', location: 'Studio', coverImage: 'https://images.unsplash.com/photo-1512413914619-14a87a6078ac?w=500&auto=format&fit=crop', images: ['https://images.unsplash.com/photo-1512413914619-14a87a6078ac?w=1200', 'https://images.unsplash.com/photo-1524504280099-c1249bbd25f1?w=1200'] },
-    { _id: 2, title: 'Nàng thơ Mộc Châu', category: 'Concept nàng thơ', location: 'Mộc Châu', coverImage: 'https://images.unsplash.com/photo-1524504280099-c1249bbd25f1?w=500&auto=format&fit=crop', images: ['https://images.unsplash.com/photo-1524504280099-c1249bbd25f1?w=1200'] },
-    { _id: 3, title: 'Sweet Love', category: 'Couple / Gia đình', location: 'Đà Lạt', coverImage: 'https://images.unsplash.com/photo-1518193855018-05fc08595cb6?w=500&auto=format&fit=crop', images: ['https://images.unsplash.com/photo-1518193855018-05fc08595cb6?w=1200'] },
-    { _id: 4, title: 'Retro Chic', category: 'Beauty', location: 'Hà Nội', coverImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop', images: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200'] },
-    { _id: 5, title: 'Mùa thu', category: 'Concept nàng thơ', location: 'Hà Nội', coverImage: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop', images: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=1200'] },
-  ];
-
-  const displayData = portfolios.length > 0 ? portfolios : defaultData;
+  const displayData = portfolio || [];
   const categories = ['Tất cả', ...new Set(displayData.map(item => item.category))];
   
   const filteredData = activeTab === 'Tất cả' 
@@ -49,7 +25,6 @@ const PortfolioSection = () => {
     : displayData.filter(item => item.category === activeTab);
 
   const openLightbox = (item) => {
-    // If no images inside, just show the cover image
     const gallery = (item.images && item.images.length > 0) ? item.images : [item.coverImage];
     setCurrentGallery(gallery);
     setCurrentIndex(0);
@@ -113,7 +88,8 @@ const PortfolioSection = () => {
                   <img 
                     src={item.coverImage || (item.images && item.images[0])} 
                     alt={item.title} 
-                    className="w-full aspect-[4/6] object-cover block transition-transform duration-400 group-hover:scale-105" 
+                    className="w-full aspect-[4/6] object-cover block transition-transform duration-400 group-hover:scale-105"
+                    loading="lazy"
                   />
                   <div className="absolute top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm opacity-0 transition-all duration-400 flex flex-col justify-center items-center p-6 text-center group-hover:opacity-100">
                     <div className="translate-y-5 transition-transform duration-400 group-hover:translate-y-0">

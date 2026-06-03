@@ -69,10 +69,14 @@ Phong cách trả lời:
 - Nếu thông tin không có trong danh sách trên, hãy khuyên khách hàng để lại thông tin ở mục Liên hệ (Contact) trên website để được hỗ trợ chi tiết.
 `;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", systemInstruction: DYNAMIC_SYSTEM_PROMPT });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", systemInstruction: DYNAMIC_SYSTEM_PROMPT });
+
+    // Giới hạn history tối đa 10 messages gần nhất để tránh vượt token limit
+    const MAX_HISTORY = 10;
+    const trimmedMessages = messages.length > MAX_HISTORY ? messages.slice(-MAX_HISTORY) : messages;
 
     // Format history for Gemini API
-    let history = messages.slice(0, -1).map(msg => ({
+    let history = trimmedMessages.slice(0, -1).map(msg => ({
       role: msg.role === 'user' ? 'user' : 'model',
       parts: [{ text: msg.content }]
     }));
@@ -82,12 +86,22 @@ Phong cách trả lời:
       history.shift();
     }
 
-    const currentMessage = messages[messages.length - 1].content;
+    // Đảm bảo lịch sử luân phiên user/model
+    const cleanHistory = [];
+    let lastRole = null;
+    for (const entry of history) {
+      if (entry.role !== lastRole) {
+        cleanHistory.push(entry);
+        lastRole = entry.role;
+      }
+    }
+
+    const currentMessage = trimmedMessages[trimmedMessages.length - 1].content;
 
     const chat = model.startChat({
-      history,
+      history: cleanHistory,
       generationConfig: {
-        maxOutputTokens: 500,
+        maxOutputTokens: 1024,
       },
     });
 
@@ -100,10 +114,16 @@ Phong cách trả lời:
     
     let errorMessage = error.message || error.toString();
     if (errorMessage.includes('User location is not supported')) {
-      errorMessage = 'Máy chủ (Server) hiện tại đang đặt ở khu vực không được Google Gemini hỗ trợ (thường là Châu Âu). Vui lòng chuyển server sang vùng US hoặc Singapore.';
+      return res.status(500).json({ error: 'Máy chủ đang ở vùng không được hỗ trợ. Vui lòng liên hệ qua Zalo.' });
+    }
+    if (errorMessage.includes('SAFETY')) {
+      return res.status(400).json({ error: 'Tin nhắn không phù hợp. Vui lòng thử câu hỏi khác.' });
+    }
+    if (errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
+      return res.status(429).json({ error: 'Hệ thống đang quá tải. Vui lòng thử lại sau vài phút.' });
     }
 
-    res.status(500).json({ error: 'Lỗi Chatbot: ' + errorMessage });
+    res.status(500).json({ error: 'Chatbot đang gặp sự cố. Vui lòng thử lại sau.' });
   }
 };
 

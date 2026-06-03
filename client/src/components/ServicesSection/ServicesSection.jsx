@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import api from '../../services/api';
+import { useData } from '../../contexts/DataContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Navigation, Autoplay } from 'swiper/modules';
@@ -8,51 +7,9 @@ import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
 const ServicesSection = () => {
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { services, loading } = useData();
 
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const { data } = await api.get('/services');
-        setServices(data);
-      } catch (err) {
-        console.error('Failed to fetch services', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchServices();
-  }, []);
-
-  const defaultServices = [
-    {
-      _id: 1,
-      name: 'Gói Chân Dung',
-      type: 'Gói sửa',
-      image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop',
-      price: 'Bắt đầu từ 500.000đ',
-      details: ['Sửa 20 ảnh chi tiết', 'Tặng thêm 2 ảnh', 'Bảo hành link ảnh 1 năm']
-    },
-    {
-      _id: 2,
-      name: 'Gói Ảnh Cưới',
-      type: 'Gói sửa',
-      image: 'https://images.unsplash.com/photo-1518193855018-05fc08595cb6?w=500&auto=format&fit=crop',
-      price: 'Bắt đầu từ 1.500.000đ',
-      details: ['Sửa 50 ảnh chi tiết', 'Làm da cao cấp', 'Blend màu nghệ thuật', 'Bảo hành link ảnh 2 năm']
-    },
-    {
-      _id: 3,
-      name: 'Phục Hồi Ảnh Cũ',
-      type: 'Dịch vụ sửa',
-      image: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=500&auto=format&fit=crop',
-      price: 'Liên hệ',
-      details: ['Phục hồi chi tiết', 'Lên màu ảnh đen trắng', 'Giao file chất lượng cao']
-    }
-  ];
-
-  const data = services.length > 0 ? services : defaultServices;
+  const data = services || [];
 
   return (
     <section id="services" className="py-[100px] bg-bg-secondary">
@@ -83,7 +40,7 @@ const ServicesSection = () => {
               <SwiperSlide key={service._id} className="h-auto">
                 <div className="glass-panel rounded-2xl overflow-hidden flex flex-col h-full transition-transform duration-400 hover:-translate-y-2">
                   <div className="relative h-[250px] overflow-hidden shrink-0">
-                    <img src={service.image} alt={service.name} className="w-full h-full object-cover transition-transform duration-400 hover:scale-110" />
+                    <img src={service.image} alt={service.name} className="w-full h-full object-cover transition-transform duration-400 hover:scale-110" loading="lazy" />
                     <span className="absolute top-4 right-4 bg-bg-glass backdrop-blur-sm text-accent px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wider">{service.type}</span>
                   </div>
                   

@@ -2,22 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==================== THEME VARIABLES ==================== */
+:root {
+  /* Dark Mode (default) */
+  --bg-main: #0a0a0a;
+  --bg-secondary: rgba(0, 0, 0, 0.2);
+  --bg-glass: rgba(30, 25, 20, 0.65);
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --accent: #c09b68;
+  --accent-hover: #e0b67e;
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  --body-bg: radial-gradient(circle at top center, #2e2621 0%, #151515 50%, #0a0a0a 100%);
+  --sidebar-bg: #1a1715;
+}
+
+html.light {
+  --bg-main: #f8f6f3;
+  --bg-secondary: rgba(0, 0, 0, 0.03);
+  --bg-glass: rgba(255, 255, 255, 0.75);
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b6b;
+  --accent: #b38850;
+  --accent-hover: #c9a06a;
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
+  --body-bg: linear-gradient(135deg, #faf8f5 0%, #f0ece6 50%, #e8e2d8 100%);
+  --sidebar-bg: #f0ece6;
+}
+
 @layer base {
   body {
-    @apply font-primary text-text-primary leading-relaxed antialiased overflow-x-hidden;
-    background: radial-gradient(circle at top center, #2e2621 0%, #151515 50%, #0a0a0a 100%);
+    @apply font-primary leading-relaxed antialiased overflow-x-hidden;
+    color: var(--text-primary);
+    background: var(--body-bg);
     background-attachment: fixed;
     min-height: 100vh;
+    transition: background 0.4s ease, color 0.3s ease;
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-secondary font-semibold leading-tight;
+    color: var(--text-primary);
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-bg-glass backdrop-blur-md border border-glass shadow-glass;
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: background 0.3s ease, border-color 0.3s ease;
   }
 
   .container-custom {
@@ -32,12 +70,109 @@
   
   /* Khắc phục lỗi chữ/icon trong suốt do bg-main đổi thành transparent */
   .text-bg-main {
-    color: #0a0a0a !important;
+    color: var(--bg-main) !important;
+  }
+
+  /* Override Tailwind color utilities for theming */
+  .text-text-primary {
+    color: var(--text-primary) !important;
+  }
+  .text-text-secondary {
+    color: var(--text-secondary) !important;
+  }
+  .text-accent {
+    color: var(--accent) !important;
+  }
+  .bg-accent {
+    background-color: var(--accent) !important;
+  }
+  .bg-accent\/10 {
+    background-color: color-mix(in srgb, var(--accent) 10%, transparent) !important;
+  }
+  .bg-accent\/20 {
+    background-color: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+  }
+  .border-accent {
+    border-color: var(--accent) !important;
+  }
+  .bg-bg-main {
+    background-color: var(--bg-main) !important;
+  }
+  .bg-bg-secondary {
+    background-color: var(--bg-secondary) !important;
+  }
+  .bg-bg-glass {
+    background-color: var(--bg-glass) !important;
+  }
+  .border-glass {
+    border-color: var(--glass-border) !important;
+  }
+  .text-white {
+    color: var(--text-primary) !important;
   }
 }
 
+/* ==================== Light mode specific overrides ==================== */
+html.light .bg-white\/5,
+html.light .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .hover\:bg-white\/20:hover {
+  background-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+html.light .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .bg-black\/60,
+html.light .bg-black\/70,
+html.light .bg-black\/80 {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Light mode mobile sidebar */
+html.light .bg-\[\#1a1715\] {
+  background-color: var(--sidebar-bg) !important;
+}
+
+/* Light mode hover:bg-accent text fix */
+html.light .hover\:bg-accent:hover {
+  background-color: var(--accent) !important;
+}
+
+html.light .hover\:text-accent:hover {
+  color: var(--accent) !important;
+}
+
+html.light .bg-accent-hover,
+html.light .hover\:bg-accent-hover:hover {
+  background-color: var(--accent-hover) !important;
+}
+
+/* Light mode chatbot */
+html.light .bg-white\/50 {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Light mode glass panel enhancements */
+html.light .glass-panel {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -47,6 +182,7 @@
   }
 }
 
+/* ==================== SWIPER STYLES ==================== */
 .swiper-pagination-progressbar {
   background: rgba(255, 255, 255, 0.2) !important;
   top: auto !important;
@@ -54,8 +190,12 @@
   height: 4px !important;
 }
 
+html.light .swiper-pagination-progressbar {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
 .swiper-pagination-progressbar .swiper-pagination-progressbar-fill {
-  background: #c09b68 !important;
+  background: var(--accent) !important;
 }
 
 /* Custom Swiper Navigation */
@@ -71,12 +211,18 @@
   padding: 12px !important; /* p-3 */
   background: rgba(18, 18, 18, 0.8) !important;
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
   border-radius: 50%;
-  color: #c09b68 !important;
+  color: var(--accent) !important;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   transition: all 0.3s ease;
   z-index: 100 !important;
+}
+
+html.light .swiper-button-next,
+html.light .swiper-button-prev {
+  background: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .swiper-button-next:after,
@@ -87,8 +233,8 @@
 
 .swiper-button-next:hover,
 .swiper-button-prev:hover {
-  background: #c09b68 !important;
-  color: #121212 !important;
+  background: var(--accent) !important;
+  color: var(--bg-main) !important;
   box-shadow: 0 0 20px rgba(192, 155, 104, 0.6);
 }
 
