@@ -42,7 +42,7 @@ const HeroSection = () => {
                 const img2 = item.image2 || `https://images.unsplash.com/photo-${1500000000000 + index + 10}?w=500&auto=format&fit=crop`;
 
                 return (
-                  <div key={index} className={`w-full aspect-[4/5] rounded-none overflow-hidden bg-black ${visibilityClass}`}>
+                  <div key={index} className={`w-full aspect-[4/6] rounded-none overflow-hidden bg-black ${visibilityClass}`}>
                     <Swiper
                       modules={[Autoplay, EffectCube]}
                       effect="cube"
@@ -85,7 +85,7 @@ const HeroSection = () => {
             </p>
             <a
               href={data.ctaLink}
-              className="animate-fade-in inline-block bg-accent text-bg-main px-10 py-4 rounded-full font-bold text-base uppercase tracking-widest transition-all duration-400 opacity-0 hover:bg-accent-hover hover:-translate-y-1 shadow-[0_0_20px_rgba(192,155,104,0.6)] hover:shadow-[0_0_30px_rgba(192,155,104,0.9)]"
+              className="animate-fade-in inline-block bg-accent text-black px-10 py-4 rounded-full font-bold text-base uppercase tracking-widest transition-all duration-400 opacity-0 hover:bg-accent-hover hover:-translate-y-1 shadow-[0_0_20px_rgba(192,155,104,0.6)] hover:shadow-[0_0_30px_rgba(192,155,104,0.9)]"
               style={{ animationDelay: '0.4s' }}
             >
               {data.ctaText}
