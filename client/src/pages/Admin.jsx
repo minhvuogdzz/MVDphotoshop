@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
 import imageCompression from 'browser-image-compression';
 
@@ -191,16 +191,35 @@ const Admin = () => {
     }
   };
 
-  // Reorder handler for portfolio items
-  const moveItem = async (index, direction) => {
+  // Drag-and-drop reorder for portfolio items
+  const dragItem = useRef(null);
+  const dragOverItem = useRef(null);
+
+  const handleDragStart = (index) => {
+    dragItem.current = index;
+  };
+
+  const handleDragEnter = (index) => {
+    dragOverItem.current = index;
+  };
+
+  const handleDragEnd = useCallback(async () => {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    if (dragItem.current === dragOverItem.current) {
+      dragItem.current = null;
+      dragOverItem.current = null;
+      return;
+    }
+
     const newList = [...dataList];
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= newList.length) return;
+    const draggedItem = newList[dragItem.current];
+    newList.splice(dragItem.current, 1);
+    newList.splice(dragOverItem.current, 0, draggedItem);
     
-    // Swap items
-    [newList[index], newList[targetIndex]] = [newList[targetIndex], newList[index]];
     setDataList(newList);
-    
+    dragItem.current = null;
+    dragOverItem.current = null;
+
     // Save new order to server
     try {
       const items = newList.map((item, i) => ({ id: item._id, order: i }));
@@ -209,9 +228,9 @@ const Admin = () => {
       setMessage('Đã sắp xếp lại thành công!');
     } catch (err) {
       setMessage('Lỗi khi sắp xếp!');
-      fetchAllData(); // revert on error
+      fetchAllData();
     }
-  };
+  }, [dataList]);
 
   const openAddModal = () => {
     setFormData({});
@@ -292,13 +311,19 @@ const Admin = () => {
                   <p className="text-text-secondary">Chưa có dữ liệu nào. Vui lòng thêm mới hoặc dữ liệu mặc định sẽ được hiển thị trên web.</p>
                 ) : (
                   dataList.map((item, index) => (
-                    <div key={item._id || index} className="p-4 bg-white/5 rounded-lg flex justify-between items-center">
+                    <div 
+                      key={item._id || index} 
+                      className={`p-4 bg-white/5 rounded-lg flex justify-between items-center transition-all duration-200 ${activeTab === 'portfolio' ? 'hover:bg-white/10' : ''}`}
+                      draggable={activeTab === 'portfolio'}
+                      onDragStart={() => handleDragStart(index)}
+                      onDragEnter={() => handleDragEnter(index)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => e.preventDefault()}
+                      style={activeTab === 'portfolio' ? { cursor: 'grab' } : {}}
+                    >
                       <div className="flex items-center gap-3">
                         {activeTab === 'portfolio' && (
-                          <div className="flex flex-col gap-1">
-                            <button onClick={() => moveItem(index, -1)} disabled={index === 0} className={`w-7 h-7 flex items-center justify-center rounded text-sm transition-colors ${index === 0 ? 'opacity-30 cursor-not-allowed text-text-secondary' : 'bg-white/10 text-accent hover:bg-accent hover:text-bg-main'}`}>▲</button>
-                            <button onClick={() => moveItem(index, 1)} disabled={index === dataList.length - 1} className={`w-7 h-7 flex items-center justify-center rounded text-sm transition-colors ${index === dataList.length - 1 ? 'opacity-30 cursor-not-allowed text-text-secondary' : 'bg-white/10 text-accent hover:bg-accent hover:text-bg-main'}`}>▼</button>
-                          </div>
+                          <span className="text-text-secondary text-lg select-none" title="Kéo thả để sắp xếp">☰</span>
                         )}
                         <div>
                           <strong>{item.title || item.name || item.question || item.customerName || `Mục ${index + 1}`}</strong>
