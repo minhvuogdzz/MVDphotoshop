@@ -8,7 +8,10 @@ const DEFAULT_DATA = {
   hero: {
     title: 'Lưu giữ những khoảnh khắc vượt thời gian',
     subtitle: 'Photoshop, blending và Retouch ảnh chân dung, nàng thơ, ảnh cưới',
-    backgroundUrls: [],
+    gridItems: Array.from({ length: 10 }, (_, i) => ({
+      image1: `https://images.unsplash.com/photo-${1500000000000 + i}?w=500&auto=format&fit=crop`,
+      image2: `https://images.unsplash.com/photo-${1500000000000 + i + 10}?w=500&auto=format&fit=crop`
+    })),
     ctaText: 'Xem Portfolio',
     ctaLink: '#portfolio'
   },
