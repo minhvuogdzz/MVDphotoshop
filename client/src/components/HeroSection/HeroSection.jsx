@@ -26,8 +26,8 @@ const HeroSection = () => {
       ) : (
         <>
           {/* Background Grid */}
-          <div className="absolute top-0 left-0 w-full h-full z-0 p-2 opacity-60">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 h-full">
+          <div className="absolute top-0 left-0 w-full h-full z-0 p-1 opacity-80">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1 h-full">
               {gridItems.map((item, index) => {
                 // Determine visibility based on breakpoints
                 // Mobile: 2x2 = 4 items (0,1,2,3)
@@ -42,7 +42,7 @@ const HeroSection = () => {
                 const img2 = item.image2 || `https://images.unsplash.com/photo-${1500000000000 + index + 10}?w=500&auto=format&fit=crop`;
 
                 return (
-                  <div key={index} className={`w-full aspect-[4/5] rounded-xl overflow-hidden ${visibilityClass}`}>
+                  <div key={index} className={`w-full aspect-[4/5] rounded-none overflow-hidden ${visibilityClass}`}>
                     <Swiper
                       modules={[Autoplay, EffectCube]}
                       effect="cube"
@@ -76,7 +76,7 @@ const HeroSection = () => {
           </div>
 
           {/* Floating Content Overlay */}
-          <div className="container-custom relative z-20 text-center max-w-[800px] mx-auto bg-black/40 backdrop-blur-md p-8 md:p-12 rounded-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          <div className="container-custom relative z-20 text-center max-w-[800px] mx-auto bg-black/20 backdrop-blur-sm p-8 md:p-12 rounded-3xl border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <h1 className="animate-fade-in text-[clamp(36px,5vw,64px)] mb-6 opacity-0 text-[#ffffff] drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
               {data.title}
             </h1>
