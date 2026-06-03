@@ -26,8 +26,8 @@ const HeroSection = () => {
       ) : (
         <>
           {/* Background Grid */}
-          <div className="absolute top-0 left-0 w-full h-full z-0 p-[2px] opacity-80 bg-black">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-[2px] h-full bg-black">
+          <div className="absolute top-0 left-0 w-full h-full z-0 p-[2px] opacity-80 bg-black flex items-center justify-center">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-[2px] w-full bg-black">
               {gridItems.map((item, index) => {
                 // Determine visibility based on breakpoints
                 // Mobile: 2x2 = 4 items (0,1,2,3)
