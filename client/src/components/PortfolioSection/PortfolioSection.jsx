@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import { useData } from '../../contexts/DataContext';
@@ -11,11 +12,16 @@ import 'swiper/css/pagination';
 const PortfolioSection = () => {
   const { portfolio, loading } = useData();
   const [activeTab, setActiveTab] = useState('Tất cả');
+  const [mounted, setMounted] = useState(false);
   
   // Lightbox states
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentGallery, setCurrentGallery] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const displayData = portfolio || [];
   const categories = ['Tất cả', ...new Set(displayData.map(item => item.category))];
@@ -117,9 +123,9 @@ const PortfolioSection = () => {
       </div>
 
       {/* Lightbox Modal */}
-      {isLightboxOpen && (
+      {mounted && isLightboxOpen && createPortal(
         <div 
-          className="fixed top-0 left-0 w-screen h-screen bg-black/95 z-[2000] flex items-center justify-center backdrop-blur-sm animate-[fadeIn_0.3s_ease]" 
+          className="fixed top-0 left-0 w-screen h-screen bg-black/60 backdrop-blur-2xl z-[2000] flex items-center justify-center animate-fade-in" 
           onClick={() => setIsLightboxOpen(false)}
         >
           <button 
@@ -132,18 +138,18 @@ const PortfolioSection = () => {
           <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             {currentGallery.length > 1 && (
               <button 
-                className="absolute left-8 top-1/2 -translate-y-1/2 bg-white/10 border-none text-white text-4xl w-16 h-16 flex items-center justify-center rounded-full cursor-pointer z-[2010] transition-all duration-200 hover:bg-accent hover:text-bg-main" 
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/10 border border-white/20 text-white text-4xl w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full cursor-pointer z-[2010] transition-all duration-200 hover:bg-accent hover:text-bg-main shadow-[0_4px_20px_rgba(0,0,0,0.5)]" 
                 onClick={prevImage}
               >
                 ‹
               </button>
             )}
             
-            <img src={currentGallery[currentIndex]} alt="Enlarged view" className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.5)]" />
+            <img src={currentGallery[currentIndex]} alt="Enlarged view" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.8)]" />
             
             {currentGallery.length > 1 && (
               <button 
-                className="absolute right-8 top-1/2 -translate-y-1/2 bg-white/10 border-none text-white text-4xl w-16 h-16 flex items-center justify-center rounded-full cursor-pointer z-[2010] transition-all duration-200 hover:bg-accent hover:text-bg-main" 
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/10 border border-white/20 text-white text-4xl w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full cursor-pointer z-[2010] transition-all duration-200 hover:bg-accent hover:text-bg-main shadow-[0_4px_20px_rgba(0,0,0,0.5)]" 
                 onClick={nextImage}
               >
                 ›
@@ -151,12 +157,13 @@ const PortfolioSection = () => {
             )}
             
             {currentGallery.length > 1 && (
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70 text-base tracking-[2px]">
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md px-6 py-2 rounded-full text-white font-medium tracking-[2px] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                 {currentIndex + 1} / {currentGallery.length}
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );
