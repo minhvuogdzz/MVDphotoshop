@@ -19,4 +19,19 @@ api.interceptors.request.use(
   }
 );
 
+// Add a response interceptor to handle expired tokens
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('adminToken');
+      // If we are already on the admin page, reload to show login screen
+      if (window.location.pathname.includes('/admin')) {
+        window.location.reload();
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
