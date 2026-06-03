@@ -9,7 +9,7 @@ const BackgroundAudio = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    let interactionEvents = ['click', 'scroll', 'mousemove', 'touchstart', 'keydown'];
+    let interactionEvents = ['click', 'touchstart', 'keydown'];
     
     const tryPlayMusic = () => {
       if (!hasInteracted) {
@@ -58,7 +58,7 @@ const BackgroundAudio = () => {
       
       <button 
         onClick={togglePlay}
-        className="fixed bottom-6 right-6 z-[100] w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer shadow-lg hover:bg-black/80 transition-all group"
+        className="fixed bottom-6 left-6 z-[100] w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer shadow-lg hover:bg-black/80 transition-all group"
         aria-label="Toggle Background Music"
       >
         <div className={`text-accent transition-transform duration-[3000ms] ease-linear ${isPlaying ? 'animate-spin-slow' : ''}`}>

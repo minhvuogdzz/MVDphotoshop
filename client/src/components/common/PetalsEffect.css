@@ -2,17 +2,24 @@
   pointer-events: none;
 }
 
-.petal {
+.petal-wrapper {
   position: absolute;
   top: -10%;
+  animation-name: fall;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  will-change: transform;
+}
+
+.petal {
   background-color: #ffb3c6; /* Soft pink rose color */
   border-radius: 15% 50% 50% 50%;
-  box-shadow: inset 0 0 10px rgba(200, 50, 80, 0.5);
-  animation-name: fall, sway;
-  animation-iteration-count: infinite, infinite;
-  animation-timing-function: linear, ease-in-out;
+  animation-name: sway;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
   transform-origin: center;
   opacity: 0.8;
+  will-change: transform;
 }
 
 /* Add a slight curve to the petal to make it look 3D */
@@ -29,26 +36,24 @@
 
 @keyframes fall {
   0% {
-    top: -10%;
-    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+    transform: translateY(0vh);
   }
   100% {
-    top: 110%;
-    transform: rotateX(720deg) rotateY(360deg) rotateZ(360deg);
+    transform: translateY(120vh);
   }
 }
 
 @keyframes sway {
   0%, 100% {
-    margin-left: 0;
+    transform: translateX(0px) rotate3d(1, 1, 1, 0deg);
   }
   25% {
-    margin-left: 120px;
+    transform: translateX(120px) rotate3d(1, 1, 1, 90deg);
   }
   50% {
-    margin-left: -120px;
+    transform: translateX(-120px) rotate3d(1, 1, 1, 180deg);
   }
   75% {
-    margin-left: 80px;
+    transform: translateX(80px) rotate3d(1, 1, 1, 270deg);
   }
 }

@@ -21,8 +21,8 @@ const PetalsEffect = () => {
   useEffect(() => {
     if (!showPetals) return;
 
-    // Generate 30 petals with random properties
-    const newPetals = Array.from({ length: 30 }).map((_, i) => {
+    // Generate 15 petals with random properties to reduce DOM nodes
+    const newPetals = Array.from({ length: 15 }).map((_, i) => {
       const size = Math.random() * 15 + 10; // 10px to 25px
       const left = Math.random() * 100; // 0% to 100%
       // Make animation faster (15s to 30s) and sway (4s to 8s)
@@ -33,12 +33,16 @@ const PetalsEffect = () => {
 
       return {
         id: i,
-        style: {
+        wrapperStyle: {
+          left: `${left}%`,
+          animationDuration: `${duration}s`,
+          animationDelay: `${delay}s`,
+        },
+        innerStyle: {
           width: `${size}px`,
           height: `${size}px`,
-          left: `${left}%`,
-          animationDuration: `${duration}s, ${swayDuration}s`, // fall, sway
-          animationDelay: `${delay}s, ${delay}s`,
+          animationDuration: `${swayDuration}s`,
+          animationDelay: `${delay}s`,
           transform: `rotate(${rotate}deg)`,
         }
       };
@@ -49,9 +53,11 @@ const PetalsEffect = () => {
   if (!showPetals) return null;
 
   return (
-    <div className="petals-container pointer-events-none fixed inset-0 z-50 overflow-hidden">
+    <div className="petals-container pointer-events-none fixed inset-0 z-[50] overflow-hidden">
       {petals.map((petal) => (
-        <div key={petal.id} className="petal" style={petal.style}></div>
+        <div key={petal.id} className="petal-wrapper" style={petal.wrapperStyle}>
+          <div className="petal" style={petal.innerStyle}></div>
+        </div>
       ))}
     </div>
   );
