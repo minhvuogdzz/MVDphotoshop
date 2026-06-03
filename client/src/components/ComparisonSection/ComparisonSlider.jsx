@@ -1,11 +1,27 @@
-import { useState } from 'react';
+import { useRef, useEffect } from 'react';
 
 const ComparisonSlider = ({ beforeImage, afterImage, title }) => {
-  const [sliderPosition, setSliderPosition] = useState(50);
+  const foregroundRef = useRef(null);
+  const handleRef = useRef(null);
+  const inputRef = useRef(null);
 
-  const handleSliderChange = (event) => {
-    setSliderPosition(event.target.value);
+  const handleInput = (e) => {
+    const val = e.target.value;
+    if (foregroundRef.current) {
+      foregroundRef.current.style.clipPath = `inset(0 ${100 - val}% 0 0)`;
+    }
+    if (handleRef.current) {
+      handleRef.current.style.left = `calc(${val}% - 2px)`;
+    }
   };
+
+  useEffect(() => {
+    const inputEl = inputRef.current;
+    if (inputEl) {
+      inputEl.addEventListener('input', handleInput);
+      return () => inputEl.removeEventListener('input', handleInput);
+    }
+  }, []);
 
   return (
     <div className="flex flex-col gap-4">
@@ -20,33 +36,34 @@ const ComparisonSlider = ({ beforeImage, afterImage, title }) => {
         
         {/* Foreground Image: Before (Visible on the left, clipped on the right) */}
         <img 
+          ref={foregroundRef}
           src={beforeImage} 
           alt="Before" 
           className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
-          style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+          style={{ clipPath: 'inset(0 50% 0 0)' }}
           draggable={false}
         />
         
         {/* Native Range Input for ultra-smooth drag (invisible but functional) */}
         <input
+          ref={inputRef}
           type="range"
           min="0"
           max="100"
-          value={sliderPosition}
-          onChange={handleSliderChange}
-          className="absolute top-0 left-0 w-full h-full opacity-0 cursor-ew-resize z-20 m-0 p-0"
+          defaultValue="50"
+          className="absolute top-0 left-0 w-full h-full opacity-0 cursor-ew-resize z-20 m-0 p-0 touch-none"
         />
 
         {/* Slider Line & Handle (Visuals) */}
         <div 
-          className="absolute top-0 bottom-0 w-1 bg-white/80 pointer-events-none shadow-[0_0_10px_rgba(0,0,0,0.5)] z-10"
-          style={{ left: `calc(${sliderPosition}% - 2px)` }}
+          ref={handleRef}
+          className="absolute top-0 bottom-0 w-[3px] bg-accent pointer-events-none shadow-[0_0_10px_rgba(192,155,104,0.6)] z-10"
+          style={{ left: 'calc(50% - 1.5px)' }}
         >
           {/* Handle icon */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-[0_0_15px_rgba(0,0,0,0.5)] flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-800">
-              <polyline points="15 18 9 12 15 6"></polyline>
-              <polyline points="9 18 15 12 9 6" style={{ transform: 'translateX(6px)' }}></polyline>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-bg-main/80 backdrop-blur border border-accent rounded-full shadow-[0_0_20px_rgba(192,155,104,0.5)] flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 17l-5-5 5-5M14 17l5-5-5-5" />
             </svg>
           </div>
         </div>
