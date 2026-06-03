@@ -1,61 +1,45 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 
 const ComparisonSlider = ({ beforeImage, afterImage, title }) => {
   const [sliderPosition, setSliderPosition] = useState(50);
-  const containerRef = useRef(null);
-  
-  const handleMove = (event) => {
-    if (!containerRef.current) return;
-    
-    let clientX;
-    if (event.touches) {
-      clientX = event.touches[0].clientX;
-    } else {
-      clientX = event.clientX;
-    }
-    
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const position = Math.max(0, Math.min(100, (x / rect.width) * 100));
-    setSliderPosition(position);
-  };
 
-  const handleDrag = (e) => {
-    // Only handle if button is pressed or touch is active
-    if (e.buttons !== 1 && e.type !== 'touchmove') return;
-    handleMove(e);
+  const handleSliderChange = (event) => {
+    setSliderPosition(event.target.value);
   };
 
   return (
     <div className="flex flex-col gap-4">
-      <div 
-        ref={containerRef}
-        className="relative w-full aspect-[4/3] rounded-xl overflow-hidden cursor-ew-resize group select-none shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
-        onMouseMove={handleDrag}
-        onMouseDown={handleMove}
-        onTouchMove={handleDrag}
-        onTouchStart={handleMove}
-      >
-        {/* Before Image (Background) */}
+      <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden group select-none shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        {/* Background Image: After (Visible on the right) */}
         <img 
-          src={beforeImage} 
-          alt="Before" 
+          src={afterImage} 
+          alt="After" 
           className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
           draggable={false}
         />
         
-        {/* After Image (Foreground / Clipped) */}
+        {/* Foreground Image: Before (Visible on the left, clipped on the right) */}
         <img 
-          src={afterImage} 
-          alt="After" 
+          src={beforeImage} 
+          alt="Before" 
           className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
           style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
           draggable={false}
         />
         
-        {/* Slider Line & Handle */}
+        {/* Native Range Input for ultra-smooth drag (invisible but functional) */}
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={sliderPosition}
+          onChange={handleSliderChange}
+          className="absolute top-0 left-0 w-full h-full opacity-0 cursor-ew-resize z-20 m-0 p-0"
+        />
+
+        {/* Slider Line & Handle (Visuals) */}
         <div 
-          className="absolute top-0 bottom-0 w-1 bg-white/80 pointer-events-none shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+          className="absolute top-0 bottom-0 w-1 bg-white/80 pointer-events-none shadow-[0_0_10px_rgba(0,0,0,0.5)] z-10"
           style={{ left: `calc(${sliderPosition}% - 2px)` }}
         >
           {/* Handle icon */}
@@ -68,10 +52,10 @@ const ComparisonSlider = ({ beforeImage, afterImage, title }) => {
         </div>
 
         {/* Labels */}
-        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur text-white px-3 py-1 text-xs font-semibold rounded uppercase tracking-wider shadow-lg">
+        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur text-white px-3 py-1 text-xs font-semibold rounded uppercase tracking-wider shadow-lg z-10 pointer-events-none">
           Before
         </div>
-        <div className="absolute top-4 right-4 bg-accent/90 backdrop-blur text-bg-main px-3 py-1 text-xs font-semibold rounded uppercase tracking-wider shadow-lg">
+        <div className="absolute top-4 right-4 bg-accent/90 backdrop-blur text-bg-main px-3 py-1 text-xs font-semibold rounded uppercase tracking-wider shadow-lg z-10 pointer-events-none">
           After
         </div>
       </div>
