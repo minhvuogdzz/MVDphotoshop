@@ -30,10 +30,11 @@ const BackgroundAudio = () => {
       }
     };
 
-    document.addEventListener('click', handleFirstInteraction, { once: true });
+    const events = ['click', 'scroll', 'mousemove', 'touchstart', 'keydown'];
+    events.forEach(evt => document.addEventListener(evt, handleFirstInteraction, { once: true }));
     
     return () => {
-      document.removeEventListener('click', handleFirstInteraction);
+      events.forEach(evt => document.removeEventListener(evt, handleFirstInteraction));
     };
   }, [hasInteracted]);
 
