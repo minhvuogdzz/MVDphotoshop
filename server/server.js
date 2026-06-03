@@ -113,16 +113,17 @@ app.post('/api/upload-multiple', requireAuth, upload.array('images', 20), async 
       return res.status(400).json({ error: 'No images uploaded' });
     }
 
-    const urls = [];
-    for (const file of req.files) {
+    const uploadPromises = req.files.map(async (file) => {
       const webpBuffer = await sharp(file.buffer)
         .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 80 })
         .toBuffer();
 
       const result = await streamUploadToCloudinary(webpBuffer);
-      urls.push(result.secure_url);
-    }
+      return result.secure_url;
+    });
+
+    const urls = await Promise.all(uploadPromises);
 
     res.json({ urls });
   } catch (err) {

@@ -129,7 +129,7 @@ const Admin = () => {
       
       for (let i = 0; i < files.length; i++) {
         const compressedFile = await imageCompression(files[i], options);
-        form.append('images', compressedFile);
+        form.append('images', compressedFile, files[i].name);
       }
 
       const { data } = await api.post('/upload-multiple', form, {
