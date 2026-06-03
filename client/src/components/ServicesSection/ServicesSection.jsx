@@ -31,10 +31,10 @@ const ServicesSection = () => {
               768: { slidesPerView: 2 },
               1024: { slidesPerView: 3 }
             }}
-            pagination={{ clickable: true }}
+            pagination={{ type: 'progressbar' }}
             navigation
             autoplay={{ delay: 3000, disableOnInteraction: false }}
-            className="pb-16 nav-swiper"
+            className="pb-10 nav-swiper"
           >
             {data.map(service => (
               <SwiperSlide key={service._id} className="h-auto">

@@ -201,18 +201,23 @@ html.light .glass-panel {
 
 /* ==================== SWIPER STYLES ==================== */
 .swiper-pagination-progressbar {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   top: auto !important;
   bottom: 0 !important;
-  height: 4px !important;
+  height: 3px !important;
+  border-radius: 3px !important;
+  left: 5% !important;
+  width: 90% !important;
 }
 
 html.light .swiper-pagination-progressbar {
-  background: rgba(0, 0, 0, 0.1) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
 }
 
 .swiper-pagination-progressbar .swiper-pagination-progressbar-fill {
   background: var(--accent) !important;
+  border-radius: 3px !important;
+  box-shadow: 0 0 8px rgba(192, 155, 104, 0.4);
 }
 
 /* Custom Swiper Navigation */

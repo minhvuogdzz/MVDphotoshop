@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination } from 'swiper/modules';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { useData } from '../../contexts/DataContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 
@@ -77,16 +77,17 @@ const PortfolioSection = () => {
 
         <div className="relative px-2 sm:px-12">
           <Swiper
-            modules={[Navigation, Pagination]}
+            modules={[Navigation, Pagination, Autoplay]}
             navigation
-            pagination={{ clickable: true }}
+            pagination={{ type: 'progressbar' }}
+            autoplay={{ delay: 4000, disableOnInteraction: false }}
             spaceBetween={24}
             slidesPerView={1}
             breakpoints={{
               640: { slidesPerView: 2 },
               1024: { slidesPerView: 3 }
             }}
-            className="pb-16 nav-swiper"
+            className="pb-10 nav-swiper"
           >
             {filteredData.map(item => (
               <SwiperSlide key={item._id}>
