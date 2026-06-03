@@ -191,6 +191,28 @@ const Admin = () => {
     }
   };
 
+  // Reorder handler for portfolio items
+  const moveItem = async (index, direction) => {
+    const newList = [...dataList];
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= newList.length) return;
+    
+    // Swap items
+    [newList[index], newList[targetIndex]] = [newList[targetIndex], newList[index]];
+    setDataList(newList);
+    
+    // Save new order to server
+    try {
+      const items = newList.map((item, i) => ({ id: item._id, order: i }));
+      await api.put('/portfolio/reorder', { items });
+      fetchAllData();
+      setMessage('Đã sắp xếp lại thành công!');
+    } catch (err) {
+      setMessage('Lỗi khi sắp xếp!');
+      fetchAllData(); // revert on error
+    }
+  };
+
   const openAddModal = () => {
     setFormData({});
     setIsModalOpen(true);
@@ -270,8 +292,19 @@ const Admin = () => {
                   <p className="text-text-secondary">Chưa có dữ liệu nào. Vui lòng thêm mới hoặc dữ liệu mặc định sẽ được hiển thị trên web.</p>
                 ) : (
                   dataList.map((item, index) => (
-                    <div key={index} className="p-4 bg-white/5 rounded-lg flex justify-between items-center">
-                      <div><strong>{item.title || item.name || item.question || item.customerName || `Mục ${index + 1}`}</strong></div>
+                    <div key={item._id || index} className="p-4 bg-white/5 rounded-lg flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        {activeTab === 'portfolio' && (
+                          <div className="flex flex-col gap-1">
+                            <button onClick={() => moveItem(index, -1)} disabled={index === 0} className={`w-7 h-7 flex items-center justify-center rounded text-sm transition-colors ${index === 0 ? 'opacity-30 cursor-not-allowed text-text-secondary' : 'bg-white/10 text-accent hover:bg-accent hover:text-bg-main'}`}>▲</button>
+                            <button onClick={() => moveItem(index, 1)} disabled={index === dataList.length - 1} className={`w-7 h-7 flex items-center justify-center rounded text-sm transition-colors ${index === dataList.length - 1 ? 'opacity-30 cursor-not-allowed text-text-secondary' : 'bg-white/10 text-accent hover:bg-accent hover:text-bg-main'}`}>▼</button>
+                          </div>
+                        )}
+                        <div>
+                          <strong>{item.title || item.name || item.question || item.customerName || `Mục ${index + 1}`}</strong>
+                          {activeTab === 'portfolio' && <span className="text-text-secondary text-sm ml-2">#{index + 1}</span>}
+                        </div>
+                      </div>
                       <div className="flex gap-2">
                         <button onClick={() => openEditModal(item)} className="text-accent border border-accent bg-transparent px-3 py-1.5 rounded hover:bg-accent hover:text-bg-main transition-colors">Sửa</button>
                         {item._id && (

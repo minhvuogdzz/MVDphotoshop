@@ -82,36 +82,40 @@ const PortfolioSection = () => {
             pagination={{ clickable: true }}
             spaceBetween={24}
             slidesPerView={1}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 }
-            }}
             className="pb-16 nav-swiper"
           >
-            {filteredData.map(item => (
-              <SwiperSlide key={item._id}>
-                <div className="group relative rounded-lg overflow-hidden cursor-pointer">
-                  <img 
-                    src={item.coverImage || (item.images && item.images[0])} 
-                    alt={item.title} 
-                    className="w-full aspect-[4/6] object-cover block transition-transform duration-400 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  <div className="absolute top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm opacity-0 transition-all duration-400 flex flex-col justify-center items-center p-6 text-center group-hover:opacity-100">
-                    <div className="translate-y-5 transition-transform duration-400 group-hover:translate-y-0">
-                      <h3 className="font-secondary text-2xl mb-2">{item.title}</h3>
-                      <p className="text-sm text-accent tracking-widest uppercase">{item.category} • {item.location}</p>
-                    </div>
-                    <button 
-                      className="mt-6 w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center translate-y-5 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 hover:!bg-accent hover:!text-bg-main"
-                      onClick={() => openLightbox(item)}
-                    >
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-                    </button>
+            {/* Group items into chunks of 6 for grid slides */}
+            {Array.from({ length: Math.ceil(filteredData.length / 6) }, (_, slideIndex) => {
+              const chunk = filteredData.slice(slideIndex * 6, slideIndex * 6 + 6);
+              return (
+                <SwiperSlide key={slideIndex}>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                    {chunk.map(item => (
+                      <div key={item._id} className="group relative rounded-lg overflow-hidden cursor-pointer">
+                        <img 
+                          src={item.coverImage || (item.images && item.images[0])} 
+                          alt={item.title} 
+                          className="w-full aspect-[4/5] object-cover block transition-transform duration-400 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <div className="absolute top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm opacity-0 transition-all duration-400 flex flex-col justify-center items-center p-4 md:p-6 text-center group-hover:opacity-100">
+                          <div className="translate-y-5 transition-transform duration-400 group-hover:translate-y-0">
+                            <h3 className="font-secondary text-lg md:text-2xl mb-1 md:mb-2">{item.title}</h3>
+                            <p className="text-xs md:text-sm text-accent tracking-widest uppercase">{item.category} • {item.location}</p>
+                          </div>
+                          <button 
+                            className="mt-4 md:mt-6 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 text-white flex items-center justify-center translate-y-5 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 hover:!bg-accent hover:!text-bg-main"
+                            onClick={() => openLightbox(item)}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </SwiperSlide>
-            ))}
+                </SwiperSlide>
+              );
+            })}
           </Swiper>
         </div>
         

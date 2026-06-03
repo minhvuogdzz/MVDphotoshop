@@ -170,7 +170,7 @@ app.post('/api/hero', requireAuth, async (req, res) => {
 // Portfolio
 app.get('/api/portfolio', async (req, res) => {
   try {
-    const portfolios = await Portfolio.find().sort({ createdAt: -1 });
+    const portfolios = await Portfolio.find().sort({ order: 1, createdAt: -1 });
     res.json(portfolios);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -182,11 +182,27 @@ app.post('/api/portfolio', requireAuth, async (req, res) => {
     if (req.body._id) {
       portfolio = await Portfolio.findByIdAndUpdate(req.body._id, req.body, { new: true });
     } else {
+      // Auto-assign order to end of list
+      const count = await Portfolio.countDocuments();
+      req.body.order = count;
       portfolio = new Portfolio(req.body);
       await portfolio.save();
     }
     emitDataUpdate('portfolio');
     res.json(portfolio);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Reorder portfolio items
+app.put('/api/portfolio/reorder', requireAuth, async (req, res) => {
+  try {
+    const { items } = req.body; // [{id, order}, ...]
+    for (const item of items) {
+      await Portfolio.findByIdAndUpdate(item.id, { order: item.order });
+    }
+    emitDataUpdate('portfolio');
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
