@@ -9,35 +9,30 @@ const BackgroundAudio = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Attempt to autoplay
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          setIsPlaying(true);
-        })
-        .catch(() => {
-          // Auto-play was prevented.
-          setIsPlaying(false);
-        });
-    }
-
-    // A global click listener to start audio if not playing (common workaround for autoplay block)
-    const handleFirstInteraction = () => {
-      if (!hasInteracted && audio.paused) {
+    let interactionEvents = ['click', 'scroll', 'mousemove', 'touchstart', 'keydown'];
+    
+    const tryPlayMusic = () => {
+      if (!hasInteracted) {
         audio.play().then(() => {
           setIsPlaying(true);
+          setHasInteracted(true);
           window.dispatchEvent(new CustomEvent('musicStarted'));
-        }).catch(() => {});
-        setHasInteracted(true);
+          // Successfully played, remove listeners
+          interactionEvents.forEach(evt => document.removeEventListener(evt, tryPlayMusic));
+        }).catch(() => {
+          // Play failed (e.g. strict autoplay policy), keep listeners active
+        });
       }
     };
 
-    const events = ['click', 'scroll', 'mousemove', 'touchstart', 'keydown'];
-    events.forEach(evt => document.addEventListener(evt, handleFirstInteraction, { once: true }));
+    // Attach listeners
+    interactionEvents.forEach(evt => document.addEventListener(evt, tryPlayMusic));
+    
+    // Attempt to play immediately (might succeed on soft reloads or if user interacted before)
+    tryPlayMusic();
     
     return () => {
-      events.forEach(evt => document.removeEventListener(evt, handleFirstInteraction));
+      interactionEvents.forEach(evt => document.removeEventListener(evt, tryPlayMusic));
     };
   }, [hasInteracted]);
 
