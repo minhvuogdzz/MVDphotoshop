@@ -22,6 +22,7 @@ import Service from './models/Service.js';
 import About from './models/About.js';
 import Testimonial from './models/Testimonial.js';
 import FAQ from './models/FAQ.js';
+import Comparison from './models/Comparison.js';
 
 dotenv.config();
 
@@ -338,6 +339,54 @@ app.delete('/api/faq/:id', requireAuth, async (req, res) => {
   try {
     await FAQ.findByIdAndDelete(req.params.id);
     emitDataUpdate('faq');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Comparisons (Before/After)
+app.get('/api/comparisons', async (req, res) => {
+  try {
+    const comparisons = await Comparison.find().sort({ order: 1, createdAt: -1 });
+    res.json(comparisons);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/comparisons', requireAuth, async (req, res) => {
+  try {
+    let comparison;
+    if (req.body._id) {
+      comparison = await Comparison.findByIdAndUpdate(req.body._id, req.body, { new: true });
+    } else {
+      const count = await Comparison.countDocuments();
+      req.body.order = count;
+      comparison = new Comparison(req.body);
+      await comparison.save();
+    }
+    emitDataUpdate('comparisons');
+    res.json(comparison);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.put('/api/comparisons/reorder', requireAuth, async (req, res) => {
+  try {
+    const { items } = req.body;
+    for (const item of items) {
+      await Comparison.findByIdAndUpdate(item.id, { order: item.order });
+    }
+    emitDataUpdate('comparisons');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.delete('/api/comparisons/:id', requireAuth, async (req, res) => {
+  try {
+    await Comparison.findByIdAndDelete(req.params.id);
+    emitDataUpdate('comparisons');
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

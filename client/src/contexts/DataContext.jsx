@@ -43,6 +43,12 @@ const DEFAULT_DATA = {
     { _id: 2, question: 'Tôi có thể yêu cầu chỉnh sửa lại không?', answer: 'Có, mỗi gói đều hỗ trợ chỉnh sửa lại miễn phí từ 1 đến 2 lần.' },
     { _id: 3, question: 'Làm sao để gửi ảnh gốc?', answer: 'Bạn có thể tải lên Google Drive và gửi link cho chúng tôi.' },
     { _id: 4, question: 'Có hỗ trợ trả file PSD không?', answer: 'File PSD sẽ có mức giá riêng vì thuộc về bản quyền chất xám.' },
+  ],
+  comparisons: [
+    { _id: 1, title: 'Retouch da', beforeImage: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80', afterImage: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=100' },
+    { _id: 2, title: 'Blend màu nghệ thuật', beforeImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80', afterImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=100' },
+    { _id: 3, title: 'Phục hồi ảnh cũ', beforeImage: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80', afterImage: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=100' },
+    { _id: 4, title: 'Cứu sáng', beforeImage: 'https://images.unsplash.com/photo-1518193855018-05fc08595cb6?w=800&q=80', afterImage: 'https://images.unsplash.com/photo-1518193855018-05fc08595cb6?w=800&q=100' },
   ]
 };
 
@@ -53,7 +59,8 @@ export const DataProvider = ({ children }) => {
     services: [],
     about: null,
     testimonials: [],
-    faq: []
+    faq: [],
+    comparisons: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -62,7 +69,7 @@ export const DataProvider = ({ children }) => {
   const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
-      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq'];
+      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq', 'comparisons'];
       const responses = await Promise.all(
         endpoints.map(ep => api.get(`/${ep}`).catch(err => {
           console.warn(`Failed to fetch /${ep}:`, err.message);

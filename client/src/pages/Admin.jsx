@@ -15,7 +15,8 @@ const Admin = () => {
     services: [],
     about: null,
     testimonials: [],
-    faq: []
+    faq: [],
+    comparisons: []
   });
 
   // Form & List states
@@ -55,7 +56,7 @@ const Admin = () => {
 
   const fetchAllData = async () => {
     try {
-      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq'];
+      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq', 'comparisons'];
       const responses = await Promise.all(endpoints.map(ep => api.get(`/${ep}`)));
       
       const newData = {};
@@ -223,14 +224,14 @@ const Admin = () => {
     // Save new order to server
     try {
       const items = newList.map((item, i) => ({ id: item._id, order: i }));
-      await api.put('/portfolio/reorder', { items });
+      await api.put(`/${activeTab}/reorder`, { items });
       fetchAllData();
       setMessage('Đã sắp xếp lại thành công!');
     } catch (err) {
       setMessage('Lỗi khi sắp xếp!');
       fetchAllData();
     }
-  }, [dataList]);
+  }, [dataList, activeTab]);
 
   const openAddModal = () => {
     setFormData({});
@@ -263,7 +264,7 @@ const Admin = () => {
     );
   }
 
-  const isListType = ['portfolio', 'services', 'testimonials', 'faq'].includes(activeTab);
+  const isListType = ['portfolio', 'services', 'testimonials', 'faq', 'comparisons'].includes(activeTab);
 
   const inputStyle = "w-full bg-white/5 border border-glass text-white rounded-lg p-3 outline-none focus:border-accent transition-colors";
 
@@ -279,7 +280,8 @@ const Admin = () => {
             { id: 'services', label: 'Dịch vụ & Bảng giá' },
             { id: 'about', label: 'Giới thiệu (About)' },
             { id: 'testimonials', label: 'Đánh giá khách hàng' },
-            { id: 'faq', label: 'Câu hỏi thường gặp' }
+            { id: 'faq', label: 'Câu hỏi thường gặp' },
+            { id: 'comparisons', label: 'Before/After' }
           ].map(tab => (
             <button 
               key={tab.id} 
@@ -313,21 +315,21 @@ const Admin = () => {
                   dataList.map((item, index) => (
                     <div 
                       key={item._id || index} 
-                      className={`p-4 bg-white/5 rounded-lg flex justify-between items-center transition-all duration-200 ${activeTab === 'portfolio' ? 'hover:bg-white/10' : ''}`}
-                      draggable={activeTab === 'portfolio'}
+                      className={`p-4 bg-white/5 rounded-lg flex justify-between items-center transition-all duration-200 ${(activeTab === 'portfolio' || activeTab === 'comparisons') ? 'hover:bg-white/10' : ''}`}
+                      draggable={activeTab === 'portfolio' || activeTab === 'comparisons'}
                       onDragStart={() => handleDragStart(index)}
                       onDragEnter={() => handleDragEnter(index)}
                       onDragEnd={handleDragEnd}
                       onDragOver={(e) => e.preventDefault()}
-                      style={activeTab === 'portfolio' ? { cursor: 'grab' } : {}}
+                      style={(activeTab === 'portfolio' || activeTab === 'comparisons') ? { cursor: 'grab' } : {}}
                     >
                       <div className="flex items-center gap-3">
-                        {activeTab === 'portfolio' && (
+                        {(activeTab === 'portfolio' || activeTab === 'comparisons') && (
                           <span className="text-text-secondary text-lg select-none" title="Kéo thả để sắp xếp">☰</span>
                         )}
                         <div>
                           <strong>{item.title || item.name || item.question || item.customerName || `Mục ${index + 1}`}</strong>
-                          {activeTab === 'portfolio' && <span className="text-text-secondary text-sm ml-2">#{index + 1}</span>}
+                          {(activeTab === 'portfolio' || activeTab === 'comparisons') && <span className="text-text-secondary text-sm ml-2">#{index + 1}</span>}
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -459,6 +461,34 @@ const Admin = () => {
                       <input type="file" accept="image/*" multiple id="upload-gallery" onChange={e => handleMultipleFileUpload(e, 'images')} className="hidden" />
                       <button type="button" onClick={() => document.getElementById('upload-gallery').click()} className="px-4 py-2 bg-accent text-bg-main font-bold rounded-lg hover:bg-accent-hover transition-colors">
                         {isUploading ? 'Đang tải và nén ảnh...' : 'Quét tải lên nhiều ảnh (Max 20 ảnh/lần)'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'comparisons' && (
+                <>
+                  <input type="text" placeholder="Tiêu đề (VD: Retouch da)" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className={inputStyle} required />
+                  
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Ảnh Trước (Before Image)</label>
+                    <input type="text" placeholder="Link ảnh Before" value={formData.beforeImage || ''} onChange={e => setFormData({...formData, beforeImage: e.target.value})} className={inputStyle} required />
+                    <div className="flex items-center gap-4 mt-3">
+                      <input type="file" accept="image/*" id="upload-before" onChange={e => handleFileUpload(e, 'beforeImage', false)} className="hidden" />
+                      <button type="button" onClick={() => document.getElementById('upload-before').click()} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                        {isUploading ? 'Đang xử lý...' : 'Tải lên Ảnh Before'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Ảnh Sau (After Image)</label>
+                    <input type="text" placeholder="Link ảnh After" value={formData.afterImage || ''} onChange={e => setFormData({...formData, afterImage: e.target.value})} className={inputStyle} required />
+                    <div className="flex items-center gap-4 mt-3">
+                      <input type="file" accept="image/*" id="upload-after" onChange={e => handleFileUpload(e, 'afterImage', false)} className="hidden" />
+                      <button type="button" onClick={() => document.getElementById('upload-after').click()} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                        {isUploading ? 'Đang xử lý...' : 'Tải lên Ảnh After'}
                       </button>
                     </div>
                   </div>
