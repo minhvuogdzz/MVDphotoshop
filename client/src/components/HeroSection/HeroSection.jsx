@@ -12,13 +12,13 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
 
   const triggerFlip = () => {
     if (swiperRef.current) {
-      swiperRef.current.slideNext();
+      swiperRef.current.slideToLoop(1);
     }
   };
 
   const triggerFlipBack = () => {
     if (swiperRef.current) {
-      swiperRef.current.slidePrev();
+      swiperRef.current.slideToLoop(0);
     }
   };
 
@@ -47,6 +47,7 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
         autoplay={{ 
           delay: 3000, 
           disableOnInteraction: false,
+          pauseOnMouseEnter: true,
           // Stagger the flip animation slightly for each box
           reverseDirection: index % 2 === 0
         }}
