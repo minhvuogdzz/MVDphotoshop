@@ -193,7 +193,16 @@ html.light .glass-panel {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @layer utilities {
+  .animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+  }
+  
   .swiper-slide-active .slide-bg {
     transform: scale(1.05);
   }

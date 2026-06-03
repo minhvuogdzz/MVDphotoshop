@@ -16,6 +16,12 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
     }
   };
 
+  const triggerFlipBack = () => {
+    if (swiperRef.current) {
+      swiperRef.current.slidePrev();
+    }
+  };
+
   const img1 = item.image1 || `https://images.unsplash.com/photo-${1500000000000 + index}?w=500&auto=format&fit=crop`;
   const img2 = item.image2 || `https://images.unsplash.com/photo-${1500000000000 + index + 10}?w=500&auto=format&fit=crop`;
 
@@ -23,6 +29,7 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
     <div 
       className={`w-full aspect-[4/6] rounded-none overflow-hidden bg-black ${visibilityClass} cursor-pointer lg:cursor-default`}
       onMouseEnter={() => { if (window.innerWidth >= 1024) triggerFlip(); }}
+      onMouseLeave={() => { if (window.innerWidth >= 1024) triggerFlipBack(); }}
       onClick={() => { if (window.innerWidth < 1024) triggerFlip(); }}
     >
       <Swiper

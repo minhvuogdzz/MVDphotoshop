@@ -1,0 +1,80 @@
+import { useEffect, useRef, useState } from 'react';
+
+const BackgroundAudio = () => {
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Attempt to autoplay
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch(() => {
+          // Auto-play was prevented.
+          setIsPlaying(false);
+        });
+    }
+
+    // A global click listener to start audio if not playing (common workaround for autoplay block)
+    const handleFirstInteraction = () => {
+      if (!hasInteracted && audio.paused) {
+        audio.play().then(() => setIsPlaying(true)).catch(() => {});
+        setHasInteracted(true);
+      }
+    };
+
+    document.addEventListener('click', handleFirstInteraction, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+    };
+  }, [hasInteracted]);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  return (
+    <>
+      <audio ref={audioRef} src="/nhac.mp3" loop preload="auto" />
+      
+      <button 
+        onClick={togglePlay}
+        className="fixed bottom-6 right-6 z-[100] w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer shadow-lg hover:bg-black/80 transition-all group"
+        aria-label="Toggle Background Music"
+      >
+        <div className={`text-accent transition-transform duration-[3000ms] ease-linear ${isPlaying ? 'animate-spin-slow' : ''}`}>
+          {isPlaying ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+              <line x1="23" y1="9" x2="17" y2="15"></line>
+              <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+          )}
+        </div>
+      </button>
+    </>
+  );
+};
+
+export default BackgroundAudio;

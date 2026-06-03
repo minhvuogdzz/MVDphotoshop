@@ -1,11 +1,15 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Admin from './pages/Admin';
 import Projects from './pages/Projects';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
+import PetalsEffect from './components/common/PetalsEffect';
+import BackgroundAudio from './components/common/BackgroundAudio';
 
 function App() {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
   return (
     <>
       <Header />
@@ -17,6 +21,8 @@ function App() {
         </Routes>
       </main>
       <Footer />
+      {isHome && <PetalsEffect />}
+      {isHome && <BackgroundAudio />}
     </>
   );
 }
