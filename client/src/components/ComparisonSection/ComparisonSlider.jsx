@@ -40,7 +40,7 @@ const ComparisonSlider = ({ beforeImage, afterImage, title }) => {
           src={beforeImage} 
           alt="Before" 
           className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
-          style={{ clipPath: 'inset(0 50% 0 0)' }}
+          style={{ clipPath: 'inset(0 50% 0 0)', transform: 'translateZ(0)', willChange: 'clip-path' }}
           draggable={false}
         />
         
@@ -58,7 +58,7 @@ const ComparisonSlider = ({ beforeImage, afterImage, title }) => {
         <div 
           ref={handleRef}
           className="absolute top-0 bottom-0 w-[3px] bg-accent pointer-events-none shadow-[0_0_10px_rgba(192,155,104,0.6)] z-10"
-          style={{ left: 'calc(50% - 1.5px)' }}
+          style={{ left: 'calc(50% - 1.5px)', transform: 'translateZ(0)', willChange: 'left' }}
         >
           {/* Handle icon */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-bg-main/80 backdrop-blur border border-accent rounded-full shadow-[0_0_20px_rgba(192,155,104,0.5)] flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
