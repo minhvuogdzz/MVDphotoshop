@@ -90,11 +90,11 @@ const PortfolioSection = () => {
           >
             {filteredData.map(item => (
               <SwiperSlide key={item._id}>
-                <div className="group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)]">
+                <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)]">
                   <img 
                     src={item.coverImage || (item.images && item.images[0])} 
                     alt={item.title} 
-                    className="w-full aspect-[4/6] object-cover block transition-transform duration-500 group-hover:scale-110"
+                    className="w-full aspect-[4/6] object-cover block"
                     loading="lazy"
                   />
                   <div className="absolute top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm opacity-0 transition-all duration-400 flex flex-col justify-center items-center p-6 text-center group-hover:opacity-100">
