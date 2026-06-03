@@ -208,6 +208,23 @@ html.light .glass-panel {
   border-radius: 3px !important;
   left: 5% !important;
   width: 90% !important;
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  position: relative !important;
+}
+
+@media (min-width: 640px) {
+  .swiper-pagination-progressbar {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .swiper-pagination-progressbar {
+    margin-top: 2.5rem;
+    margin-bottom: 2.5rem;
+  }
 }
 
 html.light .swiper-pagination-progressbar {

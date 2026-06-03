@@ -87,7 +87,7 @@ const PortfolioSection = () => {
               640: { slidesPerView: 2 },
               1024: { slidesPerView: 3 }
             }}
-            className="pb-10 nav-swiper"
+            className="nav-swiper"
           >
             {filteredData.map(item => (
               <SwiperSlide key={item._id}>
