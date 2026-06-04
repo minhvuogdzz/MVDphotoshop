@@ -58,8 +58,8 @@ const PetalsEffect = () => {
 
   useEffect(() => {
     const handleMusicStarted = () => {
-      // Đợi 4 giây sau khi nhạc phát mới bắt đầu render hoa
-      setTimeout(() => setShowPetals(true), 4000);
+      // Đợi 6 giây sau khi nhạc phát mới bắt đầu render hoa
+      setTimeout(() => setShowPetals(true), 6000);
     };
 
     window.addEventListener('musicStarted', handleMusicStarted, { once: true });

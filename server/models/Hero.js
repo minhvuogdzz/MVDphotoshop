@@ -6,7 +6,9 @@ const HeroSchema = new mongoose.Schema({
   gridItems: [
     {
       image1: { type: String, default: '' },
-      image2: { type: String, default: '' }
+      image2: { type: String, default: '' },
+      image3: { type: String, default: '' },
+      image4: { type: String, default: '' }
     }
   ],
   ctaText: { type: String, default: 'Xem Portfolio' },
@@ -17,7 +19,7 @@ const HeroSchema = new mongoose.Schema({
 HeroSchema.pre('save', function() {
   if (!this.gridItems) this.gridItems = [];
   while (this.gridItems.length < 10) {
-    this.gridItems.push({ image1: '', image2: '' });
+    this.gridItems.push({ image1: '', image2: '', image3: '', image4: '' });
   }
   if (this.gridItems.length > 10) {
     this.gridItems.splice(10);

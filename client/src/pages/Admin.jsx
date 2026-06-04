@@ -164,7 +164,7 @@ const Admin = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      const newGridItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '' }))];
+      const newGridItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '', image3: '', image4: '' }))];
       newGridItems[index] = { ...newGridItems[index], [imageField]: data.url };
       
       setFormData({ ...formData, gridItems: newGridItems });
@@ -281,7 +281,7 @@ const Admin = () => {
       return;
     }
 
-    const newGridItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '' }))];
+    const newGridItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '', image3: '', image4: '' }))];
     const draggedItem = newGridItems[heroDragItem.current];
     newGridItems.splice(heroDragItem.current, 1);
     newGridItems.splice(heroDragOverItem.current, 0, draggedItem);
@@ -419,7 +419,7 @@ const Admin = () => {
                     <p className="text-sm text-text-secondary mb-4">Lưu ý: Khung 1-4 hiện trên Mobile. Khung 1-6 hiện trên Tablet. Cả 10 khung hiện trên Máy tính.</p>
                     
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      {((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '' })).map((item, index) => (
+                      {((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '', image3: '', image4: '' })).map((item, index) => (
                         <div 
                           key={index}
                           className="bg-white/5 border border-glass p-3 rounded-lg flex flex-col gap-3 cursor-grab hover:bg-white/10 transition-colors"
@@ -447,7 +447,7 @@ const Admin = () => {
                               placeholder="URL Ảnh 1" 
                               value={item.image1 || ''} 
                               onChange={(e) => {
-                                const newItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '' }))];
+                                const newItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '', image3: '', image4: '' }))];
                                 newItems[index] = { ...newItems[index], image1: e.target.value };
                                 setFormData({ ...formData, gridItems: newItems });
                               }}
@@ -461,7 +461,7 @@ const Admin = () => {
 
                           {/* Image 2 Upload */}
                           <div className="flex flex-col gap-2 border-t border-white/10 pt-2">
-                            <span className="text-xs text-text-secondary">Ảnh 2 (Mặt lật)</span>
+                            <span className="text-xs text-text-secondary">Ảnh 2</span>
                             {item.image2 ? (
                               <img src={item.image2} alt="Grid img 2" className="w-full h-20 object-cover rounded" />
                             ) : (
@@ -472,7 +472,7 @@ const Admin = () => {
                               placeholder="URL Ảnh 2" 
                               value={item.image2 || ''} 
                               onChange={(e) => {
-                                const newItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '' }))];
+                                const newItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '', image3: '', image4: '' }))];
                                 newItems[index] = { ...newItems[index], image2: e.target.value };
                                 setFormData({ ...formData, gridItems: newItems });
                               }}
@@ -481,6 +481,56 @@ const Admin = () => {
                             <div className="relative">
                               <input type="file" accept="image/*" onChange={(e) => handleGridImageUpload(e, index, 'image2')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                               <button type="button" className="w-full bg-white/10 text-xs py-1.5 rounded hover:bg-white/20">Tải lên Ảnh 2</button>
+                            </div>
+                          </div>
+
+                          {/* Image 3 Upload */}
+                          <div className="flex flex-col gap-2 border-t border-white/10 pt-2">
+                            <span className="text-xs text-text-secondary">Ảnh 3</span>
+                            {item.image3 ? (
+                              <img src={item.image3} alt="Grid img 3" className="w-full h-20 object-cover rounded" />
+                            ) : (
+                              <div className="w-full h-20 bg-black/40 rounded flex items-center justify-center text-xs text-text-secondary">Trống</div>
+                            )}
+                            <input 
+                              type="text" 
+                              placeholder="URL Ảnh 3" 
+                              value={item.image3 || ''} 
+                              onChange={(e) => {
+                                const newItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '', image3: '', image4: '' }))];
+                                newItems[index] = { ...newItems[index], image3: e.target.value };
+                                setFormData({ ...formData, gridItems: newItems });
+                              }}
+                              className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-xs text-white"
+                            />
+                            <div className="relative">
+                              <input type="file" accept="image/*" onChange={(e) => handleGridImageUpload(e, index, 'image3')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                              <button type="button" className="w-full bg-white/10 text-xs py-1.5 rounded hover:bg-white/20">Tải lên Ảnh 3</button>
+                            </div>
+                          </div>
+
+                          {/* Image 4 Upload */}
+                          <div className="flex flex-col gap-2 border-t border-white/10 pt-2">
+                            <span className="text-xs text-text-secondary">Ảnh 4</span>
+                            {item.image4 ? (
+                              <img src={item.image4} alt="Grid img 4" className="w-full h-20 object-cover rounded" />
+                            ) : (
+                              <div className="w-full h-20 bg-black/40 rounded flex items-center justify-center text-xs text-text-secondary">Trống</div>
+                            )}
+                            <input 
+                              type="text" 
+                              placeholder="URL Ảnh 4" 
+                              value={item.image4 || ''} 
+                              onChange={(e) => {
+                                const newItems = [...((formData.gridItems && formData.gridItems.length === 10) ? formData.gridItems : Array(10).fill({ image1: '', image2: '', image3: '', image4: '' }))];
+                                newItems[index] = { ...newItems[index], image4: e.target.value };
+                                setFormData({ ...formData, gridItems: newItems });
+                              }}
+                              className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-xs text-white"
+                            />
+                            <div className="relative">
+                              <input type="file" accept="image/*" onChange={(e) => handleGridImageUpload(e, index, 'image4')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                              <button type="button" className="w-full bg-white/10 text-xs py-1.5 rounded hover:bg-white/20">Tải lên Ảnh 4</button>
                             </div>
                           </div>
                         </div>

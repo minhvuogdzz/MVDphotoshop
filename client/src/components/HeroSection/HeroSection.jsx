@@ -24,6 +24,8 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
 
   const img1 = item.image1 || `https://images.unsplash.com/photo-${1500000000000 + index}?w=500&auto=format&fit=crop`;
   const img2 = item.image2 || `https://images.unsplash.com/photo-${1500000000000 + index + 10}?w=500&auto=format&fit=crop`;
+  const img3 = item.image3 || `https://images.unsplash.com/photo-${1500000000000 + index + 20}?w=500&auto=format&fit=crop`;
+  const img4 = item.image4 || `https://images.unsplash.com/photo-${1500000000000 + index + 30}?w=500&auto=format&fit=crop`;
 
   return (
     <div 
@@ -59,6 +61,12 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
         <SwiperSlide>
           <img src={img2} alt={`Grid ${index} B`} className="w-full h-full object-cover" />
         </SwiperSlide>
+        <SwiperSlide>
+          <img src={img3} alt={`Grid ${index} C`} className="w-full h-full object-cover" />
+        </SwiperSlide>
+        <SwiperSlide>
+          <img src={img4} alt={`Grid ${index} D`} className="w-full h-full object-cover" />
+        </SwiperSlide>
       </Swiper>
     </div>
   );
@@ -70,12 +78,12 @@ const HeroSection = () => {
   const data = hero?.title ? hero : {
     title: 'Lưu giữ những khoảnh khắc vượt thời gian',
     subtitle: 'Photoshop, blending và Retouch ảnh chân dung, nàng thơ, ảnh cưới',
-    gridItems: Array(10).fill({ image1: '', image2: '' }),
+    gridItems: Array(10).fill({ image1: '', image2: '', image3: '', image4: '' }),
     ctaText: 'Xem Portfolio',
     ctaLink: '#portfolio'
   };
 
-  const gridItems = data.gridItems || Array(10).fill({ image1: '', image2: '' });
+  const gridItems = data.gridItems || Array(10).fill({ image1: '', image2: '', image3: '', image4: '' });
 
   return (
     <section className="relative min-h-[100vh] w-full flex items-center justify-center overflow-hidden bg-black pt-[88px] pb-10">
