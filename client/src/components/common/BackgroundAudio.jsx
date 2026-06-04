@@ -3,52 +3,77 @@ import { useEffect, useRef, useState } from 'react';
 const BackgroundAudio = () => {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    let interactionEvents = ['click', 'touchstart', 'keydown'];
+    const playAudio = () => {
+      if (hasStarted) return;
+      
+      audio.play().then(() => {
+        setIsPlaying(true);
+        setHasStarted(true);
+        window.dispatchEvent(new CustomEvent('musicStarted'));
+      }).catch(() => {
+        // Autoplay blocked — will try on interaction
+      });
+    };
+
+    // Strategy 1: Listen for loading complete event from DataContext
+    const handleLoadingComplete = () => {
+      // Small delay to let the UI settle
+      setTimeout(playAudio, 500);
+    };
+    window.addEventListener('loadingComplete', handleLoadingComplete);
+
+    // Strategy 2: Try autoplay immediately (works on soft reloads, PWA, some mobile browsers)
+    // Use a tiny delay to let the page initialize
+    const immediateTimer = setTimeout(playAudio, 1000);
+
+    // Strategy 3: Fallback — play on first user interaction if autoplay was blocked
+    const interactionEvents = ['click', 'touchstart', 'keydown', 'scroll'];
     
-    const tryPlayMusic = () => {
-      if (!hasInteracted) {
-        audio.play().then(() => {
-          setIsPlaying(true);
-          setHasInteracted(true);
-          window.dispatchEvent(new CustomEvent('musicStarted'));
-          // Successfully played, remove listeners
-          interactionEvents.forEach(evt => document.removeEventListener(evt, tryPlayMusic));
-        }).catch(() => {
-          // Play failed (e.g. strict autoplay policy), keep listeners active
-        });
+    const handleInteraction = () => {
+      if (!hasStarted) {
+        playAudio();
+      }
+      // Remove listeners after first successful play
+      if (hasStarted) {
+        interactionEvents.forEach(evt => document.removeEventListener(evt, handleInteraction));
       }
     };
 
-    // Attach listeners
-    interactionEvents.forEach(evt => document.addEventListener(evt, tryPlayMusic));
-    
-    // Attempt to play immediately (might succeed on soft reloads or if user interacted before)
-    tryPlayMusic();
+    // Delay adding interaction listeners to give autoplay a chance first
+    const interactionTimer = setTimeout(() => {
+      if (!hasStarted) {
+        interactionEvents.forEach(evt => document.addEventListener(evt, handleInteraction, { passive: true }));
+      }
+    }, 2000);
     
     return () => {
-      interactionEvents.forEach(evt => document.removeEventListener(evt, tryPlayMusic));
+      clearTimeout(immediateTimer);
+      clearTimeout(interactionTimer);
+      window.removeEventListener('loadingComplete', handleLoadingComplete);
+      interactionEvents.forEach(evt => document.removeEventListener(evt, handleInteraction));
     };
-  }, [hasInteracted]);
+  }, [hasStarted]);
 
   const togglePlay = () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
       } else {
         audioRef.current.play().then(() => {
-          if (!hasInteracted) {
+          setIsPlaying(true);
+          if (!hasStarted) {
             window.dispatchEvent(new CustomEvent('musicStarted'));
-            setHasInteracted(true);
+            setHasStarted(true);
           }
         }).catch(() => {});
       }
-      setIsPlaying(!isPlaying);
     }
   };
 

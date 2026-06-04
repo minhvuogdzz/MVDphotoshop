@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 
 const MAX_HISTORY = 10; // Giới hạn lịch sử gửi lên server
 
-const Chatbot = ({ onClose }) => {
+const Chatbot = ({ onClose, isMobile = false }) => {
   const [messages, setMessages] = useState([
     { role: 'model', content: 'Chào bạn, mình là trợ lý ảo của MVD Photoshop. Mình có thể giúp gì cho bạn hôm nay?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
   const abortControllerRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -73,7 +74,6 @@ const Chatbot = ({ onClose }) => {
 
     try {
       const allMessages = [...messages, userMessage];
-      // Chỉ gửi tối đa MAX_HISTORY messages gần nhất để tránh vượt token limit
       const trimmedHistory = allMessages.length > MAX_HISTORY 
         ? allMessages.slice(-MAX_HISTORY) 
         : allMessages;
@@ -91,7 +91,7 @@ const Chatbot = ({ onClose }) => {
         throw new Error('Không nhận được phản hồi từ AI');
       }
     } catch (err) {
-      if (err.name === 'AbortError') return; // Ignore cancelled requests
+      if (err.name === 'AbortError') return;
       
       console.error('Chatbot error:', err);
       const errorMessage = err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')
@@ -119,19 +119,97 @@ const Chatbot = ({ onClose }) => {
     return content
       .split('\n')
       .map((line, i) => {
-        // Bold text
         const formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         return `<span key="${i}">${formatted}</span>`;
       })
       .join('<br/>');
   };
 
+  // Mobile fullscreen layout
+  if (isMobile) {
+    return (
+      <div className="chatbot-mobile-chat">
+        {/* Mobile Header */}
+        <div className="chatbot-mobile-header">
+          <button onClick={onClose} className="chatbot-mobile-back">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <div className="flex items-center gap-3 flex-1">
+            <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center font-bold text-xs" style={{color: 'var(--bg-main)'}}>
+              MVD
+            </div>
+            <div>
+              <h3 className="font-bold text-accent text-sm">MVD Assistant</h3>
+              <p className="text-[11px] text-text-secondary flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
+                Online
+              </p>
+            </div>
+          </div>
+          {messages.length > 1 && (
+            <button onClick={handleNewChat} className="text-text-secondary hover:text-accent transition-colors p-2" title="Cuộc trò chuyện mới">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+            </button>
+          )}
+        </div>
+
+        {/* Mobile Messages */}
+        <div className="chatbot-mobile-messages">
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div 
+                className={`max-w-[85%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent rounded-tr-none' : 'bg-white/10 rounded-tl-none'}`}
+                style={msg.role === 'user' ? {color: 'var(--bg-main)'} : {color: 'var(--text-primary)'}}
+                dangerouslySetInnerHTML={{ __html: msg.role === 'model' ? formatContent(msg.content) : msg.content }}
+              />
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-white/10 p-3 rounded-2xl rounded-tl-none text-sm flex gap-1.5 items-center h-[44px]">
+                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Mobile Input */}
+        <form onSubmit={handleSend} className="chatbot-mobile-input">
+          <input 
+            ref={inputRef}
+            type="text" 
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Nhập tin nhắn..." 
+            className="flex-1 bg-white/5 border border-glass rounded-full px-4 py-3 text-sm focus:outline-none focus:border-accent transition-colors"
+            style={{color: 'var(--text-primary)', fontSize: '16px'}}
+            autoComplete="off"
+          />
+          <button 
+            type="submit" 
+            disabled={!input.trim() || isLoading}
+            className="w-11 h-11 rounded-full bg-accent flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            style={{color: 'var(--bg-main)'}}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // Desktop layout (panel inside dock window)
   return (
-    <div className="fixed bottom-24 right-6 w-[350px] max-w-[calc(100vw-48px)] h-[500px] max-h-[70vh] glass-panel rounded-2xl flex flex-col overflow-hidden z-[2000] animate-[slideUp_0.3s_ease] shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+    <div className="chatbot-desktop-panel">
       {/* Header */}
       <div className="p-4 bg-accent/10 border-b border-glass flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-bg-main font-bold">
+          <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center font-bold" style={{color: 'var(--bg-main)'}}>
             MVD
           </div>
           <div>
@@ -142,7 +220,6 @@ const Chatbot = ({ onClose }) => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* New Chat Button */}
           {messages.length > 1 && (
             <button 
               onClick={handleNewChat} 
@@ -163,14 +240,15 @@ const Chatbot = ({ onClose }) => {
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div 
-              className={`max-w-[80%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent text-bg-main rounded-tr-none' : 'bg-white/10 text-white rounded-tl-none'}`}
+              className={`max-w-[80%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent rounded-tr-none' : 'bg-white/10 rounded-tl-none'}`}
+              style={msg.role === 'user' ? {color: 'var(--bg-main)'} : {color: 'var(--text-primary)'}}
               dangerouslySetInnerHTML={{ __html: msg.role === 'model' ? formatContent(msg.content) : msg.content }}
             />
           </div>
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white/10 text-white p-3 rounded-2xl rounded-tl-none text-sm flex gap-1 items-center h-[44px]">
+            <div className="bg-white/10 p-3 rounded-2xl rounded-tl-none text-sm flex gap-1 items-center h-[44px]">
               <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce"></div>
               <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
               <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -187,12 +265,14 @@ const Chatbot = ({ onClose }) => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Nhập tin nhắn..." 
-          className="flex-1 bg-white/5 border border-glass rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:border-accent transition-colors"
+          className="flex-1 bg-white/5 border border-glass rounded-full px-4 py-2 text-sm focus:outline-none focus:border-accent transition-colors"
+          style={{color: 'var(--text-primary)'}}
         />
         <button 
           type="submit" 
           disabled={!input.trim() || isLoading}
-          className="w-10 h-10 rounded-full bg-accent text-bg-main flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-accent-hover"
+          className="w-10 h-10 rounded-full bg-accent flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-accent-hover"
+          style={{color: 'var(--bg-main)'}}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </button>

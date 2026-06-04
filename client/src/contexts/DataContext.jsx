@@ -100,6 +100,8 @@ export const DataProvider = ({ children }) => {
       setData(DEFAULT_DATA);
     } finally {
       setLoading(false);
+      // Notify other components (e.g. BackgroundAudio) that loading is complete
+      window.dispatchEvent(new CustomEvent('loadingComplete'));
     }
   }, []);
 
