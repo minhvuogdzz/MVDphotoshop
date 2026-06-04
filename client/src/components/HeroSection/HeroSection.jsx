@@ -1,20 +1,20 @@
-import { useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, EffectCube } from 'swiper/modules';
+import { EffectCube } from 'swiper/modules';
 import { useData } from '../../contexts/DataContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 import 'swiper/css';
 import 'swiper/css/effect-cube';
 
-const HeroGridItem = ({ item, index, visibilityClass }) => {
+const HeroGridItem = ({ item, index, visibilityClass, tick }) => {
   const swiperRef = useRef(null);
 
-  const triggerFlip = () => {
-    if (swiperRef.current) {
+  useEffect(() => {
+    if (swiperRef.current && tick > 0) {
       swiperRef.current.slideNext();
     }
-  };
+  }, [tick]);
 
   const img1 = item.image1 || `https://images.unsplash.com/photo-${1500000000000 + index}?w=500&auto=format&fit=crop`;
   const img2 = item.image2 || `https://images.unsplash.com/photo-${1500000000000 + index + 10}?w=500&auto=format&fit=crop`;
@@ -23,13 +23,11 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
 
   return (
     <div 
-      className={`w-full aspect-[4/6] rounded-none overflow-hidden bg-black ${visibilityClass} cursor-pointer lg:cursor-default`}
-      onMouseEnter={() => { if (window.innerWidth >= 1024) triggerFlip(); }}
-      onClick={() => { if (window.innerWidth < 1024) triggerFlip(); }}
+      className={`w-full aspect-[4/6] rounded-none overflow-hidden bg-black ${visibilityClass}`}
     >
       <Swiper
         onSwiper={(swiper) => { swiperRef.current = swiper; }}
-        modules={[Autoplay, EffectCube]}
+        modules={[EffectCube]}
         effect="cube"
         cubeEffect={{
           shadow: false,
@@ -39,11 +37,7 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
         allowTouchMove={false}
         observer={true}
         observeParents={true}
-        autoplay={{ 
-          delay: 3000, 
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true
-        }}
+        speed={1000}
         className="w-full h-full"
       >
         <SwiperSlide>
@@ -65,6 +59,15 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
 
 const HeroSection = () => {
   const { hero, loading } = useData();
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    // Master timer to synchronize all Swiper transitions
+    const interval = setInterval(() => {
+      setTick(t => t + 1);
+    }, 4000); // 4 seconds delay between synced flips
+    return () => clearInterval(interval);
+  }, []);
 
   const data = hero?.title ? hero : {
     title: 'Lưu giữ những khoảnh khắc vượt thời gian',
@@ -91,7 +94,7 @@ const HeroSection = () => {
                 if (index >= 4 && index < 6) visibilityClass = 'hidden md:block';
                 if (index >= 6) visibilityClass = 'hidden lg:block';
                 
-                return <HeroGridItem key={index} item={item} index={index} visibilityClass={visibilityClass} />;
+                return <HeroGridItem key={index} item={item} index={index} visibilityClass={visibilityClass} tick={tick} />;
               })}
             </div>
           </div>
