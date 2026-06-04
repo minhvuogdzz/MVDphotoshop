@@ -16,9 +16,8 @@
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
   transform-origin: center;
-  will-change: transform, opacity;
-  filter: blur(0.3px);
-  transition: opacity 0.5s ease;
+  will-change: transform;
+  /* Removed filter: blur to drastically improve FPS/performance */
 }
 
 .petal-svg svg {
@@ -27,54 +26,42 @@
   display: block;
 }
 
-/* Graceful, cinematic falling — gentle curves like ancient drama */
+/* Graceful, cinematic falling */
 @keyframes petalFall {
   0% {
-    transform: translateY(-5vh) translateX(0px);
+    transform: translate3d(0, -5vh, 0);
     opacity: 0;
   }
   5% {
     opacity: 1;
   }
   25% {
-    transform: translateY(25vh) translateX(30px);
+    transform: translate3d(30px, 25vh, 0);
   }
   50% {
-    transform: translateY(55vh) translateX(-20px);
+    transform: translate3d(-20px, 55vh, 0);
   }
   75% {
-    transform: translateY(85vh) translateX(15px);
+    transform: translate3d(15px, 85vh, 0);
   }
   95% {
     opacity: 1;
   }
   100% {
-    transform: translateY(115vh) translateX(-10px);
+    transform: translate3d(-10px, 115vh, 0);
     opacity: 0;
   }
 }
 
-/* Soft 3D tumbling sway */
+/* Optimized soft tumbling sway using 3D transforms efficiently */
 @keyframes petalSway {
   0%, 100% {
-    transform: translateX(0px) rotate3d(1, 0.5, 0.2, 0deg) scale(1);
+    transform: translateX(0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
   }
-  15% {
-    transform: translateX(40px) rotate3d(0.8, 1, 0.3, 60deg) scale(0.95);
+  33% {
+    transform: translateX(35px) rotateX(60deg) rotateY(20deg) rotateZ(45deg);
   }
-  30% {
-    transform: translateX(-25px) rotate3d(1, 0.3, 0.8, 130deg) scale(1.02);
-  }
-  45% {
-    transform: translateX(55px) rotate3d(0.5, 1, 0.5, 200deg) scale(0.97);
-  }
-  60% {
-    transform: translateX(-40px) rotate3d(1, 0.7, 0.2, 260deg) scale(1.01);
-  }
-  75% {
-    transform: translateX(30px) rotate3d(0.6, 1, 0.6, 320deg) scale(0.98);
-  }
-  90% {
-    transform: translateX(-15px) rotate3d(1, 0.4, 0.3, 350deg) scale(1);
+  66% {
+    transform: translateX(-25px) rotateX(30deg) rotateY(70deg) rotateZ(120deg);
   }
 }

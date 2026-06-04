@@ -72,8 +72,8 @@ const PetalsEffect = () => {
   useEffect(() => {
     if (!showPetals) return;
 
-    // Generate 18 petals with random properties
-    const newPetals = Array.from({ length: 18 }).map((_, i) => {
+    // Generate 12 petals with random properties (reduced from 18 for performance)
+    const newPetals = Array.from({ length: 12 }).map((_, i) => {
       const size = Math.random() * 12 + 10; // 10px to 22px
       const left = Math.random() * 100;
       // Slower, more graceful falling (20s to 40s)
