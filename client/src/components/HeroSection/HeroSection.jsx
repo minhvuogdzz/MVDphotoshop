@@ -12,13 +12,7 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
 
   const triggerFlip = () => {
     if (swiperRef.current) {
-      swiperRef.current.slideToLoop(1);
-    }
-  };
-
-  const triggerFlipBack = () => {
-    if (swiperRef.current) {
-      swiperRef.current.slideToLoop(0);
+      swiperRef.current.slideNext();
     }
   };
 
@@ -31,7 +25,6 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
     <div 
       className={`w-full aspect-[4/6] rounded-none overflow-hidden bg-black ${visibilityClass} cursor-pointer lg:cursor-default`}
       onMouseEnter={() => { if (window.innerWidth >= 1024) triggerFlip(); }}
-      onMouseLeave={() => { if (window.innerWidth >= 1024) triggerFlipBack(); }}
       onClick={() => { if (window.innerWidth < 1024) triggerFlip(); }}
     >
       <Swiper
@@ -49,9 +42,7 @@ const HeroGridItem = ({ item, index, visibilityClass }) => {
         autoplay={{ 
           delay: 3000, 
           disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-          // Stagger the flip animation slightly for each box
-          reverseDirection: index % 2 === 0
+          pauseOnMouseEnter: true
         }}
         className="w-full h-full"
       >
