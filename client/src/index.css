@@ -399,34 +399,49 @@ html.light .swiper-button-prev {
   }
 }
 
-/* Desktop chat window — dock popup */
-.chatbot-dock-window {
+/* Desktop chat window — wormhole stretch from button */
+.chatbot-wormhole-anchor {
+  position: fixed;
+  bottom: 6px;
+  right: 70px; /* next to FAB (24px right + 52px button - overlap) */
+  z-index: 49;
+}
+
+.chatbot-wormhole-window {
   transform-origin: bottom right;
-  animation: dockOpen 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: wormholeOpen 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-@keyframes dockOpen {
-  from {
+@keyframes wormholeOpen {
+  0% {
     opacity: 0;
-    transform: scale(0.6) translateY(20px);
+    clip-path: circle(20px at calc(100% - 0px) calc(100% - 20px));
+    transform: scale(0.8);
   }
-  to {
+  40% {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    clip-path: ellipse(60% 40% at 85% 80%);
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    clip-path: ellipse(100% 100% at 50% 50%);
+    transform: scale(1);
   }
 }
 
-/* Desktop chatbot panel inside dock window */
+/* Desktop chatbot panel inside wormhole window */
 .chatbot-desktop-panel {
   width: 370px;
-  max-width: calc(100vw - 48px);
+  max-width: calc(100vw - 100px);
   height: 520px;
-  max-height: 70vh;
+  max-height: 75vh;
   background: var(--bg-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.6),
+              0 0 0 1px rgba(255, 255, 255, 0.05);
   border-radius: 20px;
   display: flex;
   flex-direction: column;

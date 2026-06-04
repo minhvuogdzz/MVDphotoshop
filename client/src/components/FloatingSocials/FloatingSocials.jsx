@@ -111,16 +111,6 @@ const FloatingSocials = () => {
           </div>
         )}
 
-        {/* Desktop chatbot window */}
-        {!isMobile && isChatOpen && (
-          <div
-            className="chatbot-dock-window"
-            onMouseEnter={() => clearTimeout(peekTimeoutRef.current)}
-          >
-            <Chatbot onClose={handleChatClose} />
-          </div>
-        )}
-
         {/* Chatbot FAB button */}
         <button
           ref={chatBtnRef}
@@ -161,6 +151,15 @@ const FloatingSocials = () => {
         </a>
       </div>
 
+      {/* Desktop: chat window positioned to the LEFT of FAB, stretching out from button */}
+      {!isMobile && isChatOpen && (
+        <div className="chatbot-wormhole-anchor">
+          <div className="chatbot-wormhole-window">
+            <Chatbot onClose={handleChatClose} />
+          </div>
+        </div>
+      )}
+
       {/* Mobile: fullscreen chat overlay */}
       {isMobile && isChatOpen && (
         <div className="chatbot-mobile-overlay">
@@ -172,3 +171,4 @@ const FloatingSocials = () => {
 };
 
 export default FloatingSocials;
+

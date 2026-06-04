@@ -83,7 +83,7 @@ const PetalsEffect = () => {
       const delay = Math.random() * -35;
       const rotate = Math.random() * 360;
       // Varying opacity for depth — some closer (brighter), some farther (faint)
-      const opacity = Math.random() * 0.35 + 0.15; // 0.15 to 0.50
+      const opacity = Math.random() * 0.35 + 0.25; // 0.25 to 0.60
       const shapeIndex = Math.floor(Math.random() * PETAL_SHAPES.length);
       // Horizontal drift
       const drift = (Math.random() - 0.5) * 150; // -75px to 75px
