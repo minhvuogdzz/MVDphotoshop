@@ -60,7 +60,7 @@ const FloatingSocials = () => {
   // Prevent chatbot panel from causing page zoom and handle mobile keyboard
   useEffect(() => {
     if (isChatOpen && isMobile) {
-      // Lock body scroll
+      // Lock body scroll naturally
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       
@@ -71,30 +71,31 @@ const FloatingSocials = () => {
         meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
       }
 
-      // Handle visual viewport to keep header fixed when keyboard opens
+      // Handle visual viewport to keep header fixed when keyboard opens on iOS
       const handleViewportChange = () => {
         const overlay = document.querySelector('.chatbot-mobile-overlay');
         if (overlay && window.visualViewport) {
-          // Use absolute positioning to counteract iOS layout viewport shifting
-          overlay.style.position = 'absolute';
-          overlay.style.top = `${window.scrollY + window.visualViewport.offsetTop}px`;
+          // Counter-pan the fixed overlay so it stays exactly inside the visual screen
+          overlay.style.top = `${window.visualViewport.offsetTop}px`;
           overlay.style.height = `${window.visualViewport.height}px`;
-          overlay.style.bottom = 'auto'; // Prevent conflict with inset: 0
+          overlay.style.bottom = 'auto'; // Prevent conflict with CSS inset:0
         }
       };
 
       if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', handleViewportChange);
         window.visualViewport.addEventListener('scroll', handleViewportChange);
-        // Small delay to ensure DOM is ready
-        setTimeout(handleViewportChange, 50);
+        // Small delay to ensure DOM is ready and keyboard is fully calculated
+        setTimeout(handleViewportChange, 100);
       }
 
       return () => {
         document.body.style.overflow = originalOverflow;
+        
         if (meta && oldContent) {
           meta.setAttribute('content', oldContent);
         }
+        
         if (window.visualViewport) {
           window.visualViewport.removeEventListener('resize', handleViewportChange);
           window.visualViewport.removeEventListener('scroll', handleViewportChange);
