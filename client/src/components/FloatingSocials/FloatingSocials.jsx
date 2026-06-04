@@ -139,7 +139,7 @@ const FloatingSocials = () => {
         <div className="relative flex items-center justify-end w-full pointer-events-none">
           {/* Desktop chat window positioned relative to FAB */}
           {!isMobile && isChatOpen && (
-            <div className="absolute right-[72px] bottom-[-16px] pointer-events-auto z-40">
+            <div className="absolute right-[72px] bottom-[-24px] pointer-events-auto z-40">
               <div className="chatbot-wormhole-window">
                 <Chatbot onClose={handleChatClose} />
               </div>
