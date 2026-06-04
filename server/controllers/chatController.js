@@ -7,6 +7,81 @@ const BASE_PROMPT = `
 Bạn là trợ lý ảo chính thức của MVD Photoshop - một dịch vụ chuyên nghiệp về Photoshop, Blending và Retouch ảnh (ảnh chân dung, ảnh cưới, nàng thơ, phục hồi ảnh cũ) do chuyên gia với hơn 5 năm kinh nghiệm thực hiện.
 `;
 
+const MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"];
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1000;
+
+// Helper: delay
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper: gọi Gemini API với retry + fallback model
+async function callGeminiWithRetry(genAI, systemInstruction, cleanHistory, currentMessage) {
+  let lastError = null;
+
+  for (const modelName of MODELS) {
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        console.log(`[Chatbot] Trying model: ${modelName}, attempt: ${attempt + 1}`);
+        
+        const model = genAI.getGenerativeModel({ model: modelName, systemInstruction });
+        const chat = model.startChat({
+          history: cleanHistory,
+          generationConfig: {
+            maxOutputTokens: 1024,
+          },
+        });
+
+        const result = await chat.sendMessage(currentMessage);
+        const response = await result.response;
+        const text = response.text();
+
+        if (text) {
+          console.log(`[Chatbot] Success with model: ${modelName}`);
+          return text;
+        }
+      } catch (err) {
+        lastError = err;
+        const errMsg = err.message || err.toString();
+        console.error(`[Chatbot] Error with ${modelName} (attempt ${attempt + 1}):`, errMsg);
+
+        // Nếu lỗi là API key sai hoặc location không hỗ trợ → không retry
+        if (errMsg.includes('API_KEY_INVALID') || errMsg.includes('API key not valid') || 
+            errMsg.includes('User location is not supported') || errMsg.includes('PERMISSION_DENIED')) {
+          throw err;
+        }
+        
+        // Nếu lỗi SAFETY → không retry, không đổi model
+        if (errMsg.includes('SAFETY')) {
+          throw err;
+        }
+
+        // Nếu lỗi quota/rate-limit → retry với delay hoặc đổi model
+        if (errMsg.includes('429') || errMsg.includes('quota') || 
+            errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('rate') ||
+            errMsg.includes('overloaded') || errMsg.includes('503')) {
+          if (attempt < MAX_RETRIES) {
+            const delay = RETRY_DELAY_MS * Math.pow(2, attempt);
+            console.log(`[Chatbot] Rate limited, retrying in ${delay}ms...`);
+            await sleep(delay);
+            continue;
+          }
+          console.log(`[Chatbot] Model ${modelName} exhausted retries, trying next model...`);
+          break;
+        }
+
+        // Lỗi khác → retry 1 lần rồi đổi model
+        if (attempt < MAX_RETRIES) {
+          await sleep(RETRY_DELAY_MS);
+          continue;
+        }
+        break;
+      }
+    }
+  }
+
+  throw lastError || new Error('All models failed');
+}
+
 export const handleChat = async (req, res) => {
   try {
     if (!process.env.GEMINI_API_KEY) {
@@ -69,8 +144,6 @@ Phong cách trả lời:
 - Nếu thông tin không có trong danh sách trên, hãy khuyên khách hàng để lại thông tin ở mục Liên hệ (Contact) trên website để được hỗ trợ chi tiết.
 `;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", systemInstruction: DYNAMIC_SYSTEM_PROMPT });
-
     // Giới hạn history tối đa 10 messages gần nhất để tránh vượt token limit
     const MAX_HISTORY = 10;
     const trimmedMessages = messages.length > MAX_HISTORY ? messages.slice(-MAX_HISTORY) : messages;
@@ -98,32 +171,31 @@ Phong cách trả lời:
 
     const currentMessage = trimmedMessages[trimmedMessages.length - 1].content;
 
-    const chat = model.startChat({
-      history: cleanHistory,
-      generationConfig: {
-        maxOutputTokens: 1024,
-      },
-    });
+    // Gọi API với retry + fallback
+    const text = await callGeminiWithRetry(genAI, DYNAMIC_SYSTEM_PROMPT, cleanHistory, currentMessage);
 
-    const result = await chat.sendMessage(currentMessage);
-    const response = await result.response;
-
-    res.json({ reply: response.text() });
+    res.json({ reply: text });
   } catch (error) {
-    console.error('Chat error:', error);
+    console.error('[Chatbot] Final error:', error.message || error);
     
     let errorMessage = error.message || error.toString();
+    
+    // API key không hợp lệ
+    if (errorMessage.includes('API_KEY_INVALID') || errorMessage.includes('API key not valid') || errorMessage.includes('PERMISSION_DENIED')) {
+      return res.status(500).json({ error: 'Chatbot đang bảo trì. Vui lòng liên hệ qua Zalo hoặc Messenger nhé!' });
+    }
     if (errorMessage.includes('User location is not supported')) {
       return res.status(500).json({ error: 'Máy chủ đang ở vùng không được hỗ trợ. Vui lòng liên hệ qua Zalo.' });
     }
     if (errorMessage.includes('SAFETY')) {
       return res.status(400).json({ error: 'Tin nhắn không phù hợp. Vui lòng thử câu hỏi khác.' });
     }
-    if (errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
-      return res.status(429).json({ error: 'Hệ thống đang quá tải. Vui lòng thử lại sau vài phút.' });
+    if (errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED') || 
+        errorMessage.includes('429') || errorMessage.includes('overloaded')) {
+      return res.status(429).json({ error: 'Hệ thống đang bận, vui lòng thử lại sau 30 giây nhé!' });
     }
 
-    res.status(500).json({ error: 'Chatbot đang gặp sự cố. Vui lòng thử lại sau.' });
+    res.status(500).json({ error: 'Chatbot đang gặp sự cố. Vui lòng thử lại sau nhé!' });
   }
 };
 

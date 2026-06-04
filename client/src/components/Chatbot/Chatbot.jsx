@@ -28,6 +28,34 @@ const Chatbot = ({ onClose }) => {
     };
   }, []);
 
+  // Helper: gọi API với auto-retry
+  const fetchWithRetry = async (body, signal, retries = 2) => {
+    for (let i = 0; i <= retries; i++) {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal
+      });
+      
+      if (response.ok) {
+        return response;
+      }
+      
+      // Nếu lỗi 429 (rate limit) hoặc 503 → retry sau delay
+      if ((response.status === 429 || response.status === 503) && i < retries) {
+        const delay = 2000 * Math.pow(2, i); // 2s, 4s
+        console.log(`[Chatbot] Server busy (${response.status}), retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      // Các lỗi khác hoặc hết retry → throw
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Lỗi server (${response.status})`);
+    }
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -50,17 +78,10 @@ const Chatbot = ({ onClose }) => {
         ? allMessages.slice(-MAX_HISTORY) 
         : allMessages;
       
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: trimmedHistory }),
-        signal: abortControllerRef.current.signal
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Lỗi server (${response.status})`);
-      }
+      const response = await fetchWithRetry(
+        { messages: trimmedHistory },
+        abortControllerRef.current.signal
+      );
       
       const data = await response.json();
       
