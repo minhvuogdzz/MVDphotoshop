@@ -38,13 +38,48 @@ html {
 }
 
 @layer base {
+  *, *::before, *::after {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 0.4s;
+    transition-timing-function: ease;
+  }
+
   body {
     @apply font-primary leading-relaxed antialiased overflow-x-hidden;
     color: var(--text-primary);
-    background: var(--body-bg);
-    background-attachment: fixed;
+    background-color: var(--bg-main);
     min-height: 100vh;
-    transition: background 0.4s ease, color 0.3s ease;
+  }
+  
+  /* Smooth gradient transition for body */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+
+  /* Dark mode gradient */
+  body::before {
+    z-index: -2;
+    background: radial-gradient(circle at top center, #2e2621 0%, #151515 50%, #0a0a0a 100%);
+    opacity: 1;
+  }
+
+  /* Light mode gradient */
+  body::after {
+    z-index: -1;
+    background: linear-gradient(135deg, #faf8f5 0%, #f0ece6 50%, #e8e2d8 100%);
+    opacity: 0;
+  }
+
+  html.light body::before {
+    opacity: 0;
+  }
+
+  html.light body::after {
+    opacity: 1;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -57,7 +92,8 @@ html {
 .reveal-on-scroll {
   opacity: 0;
   transform: translateY(40px);
-  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  /* Include color transitions so it doesn't snap during theme switch */
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
 }
 
 .reveal-on-scroll.reveal-active {
@@ -72,7 +108,8 @@ html {
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
-    transition: background 0.3s ease, border-color 0.3s ease;
+    /* Ensure color and transform are included if needed, though global * covers it unless overridden */
+    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
   }
 
   .container-custom {
