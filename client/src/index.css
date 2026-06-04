@@ -440,20 +440,20 @@ html.light .swiper-button-prev {
 .chatbot-wormhole-window {
   /* Origin point is exactly at the center of the FAB button
      Window is 72px left of FAB. FAB is 52px wide -> center is 72 + 26 = 98px right of window
-     Window is bottom-0 aligned with FAB. FAB is 52px high -> center is 26px above window bottom */
-  transform-origin: calc(100% + 98px) calc(100% - 26px);
+     Window is bottom-[-16px] aligned with FAB. FAB is 52px high -> center is 26px + 16px = 42px above window bottom */
+  transform-origin: calc(100% + 98px) calc(100% - 42px);
   animation: wormholeOpen 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes wormholeOpen {
   0% {
     opacity: 0;
-    clip-path: circle(0px at calc(100% + 98px) calc(100% - 26px));
-    transform: scale(0.3) translate(98px, 26px);
+    clip-path: circle(0px at calc(100% + 98px) calc(100% - 42px));
+    transform: scale(0.3) translate(98px, 42px);
   }
   100% {
     opacity: 1;
-    clip-path: circle(150% at calc(100% + 98px) calc(100% - 26px));
+    clip-path: circle(150% at calc(100% + 98px) calc(100% - 42px));
     transform: scale(1) translate(0, 0);
   }
 }
