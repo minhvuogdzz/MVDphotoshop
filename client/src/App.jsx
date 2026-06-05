@@ -5,7 +5,6 @@ import Projects from './pages/Projects';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import PetalsEffect from './components/common/PetalsEffect';
-import BackgroundAudio from './components/common/BackgroundAudio';
 
 function App() {
   const location = useLocation();
@@ -22,7 +21,6 @@ function App() {
       </main>
       <Footer />
       {isHome && <PetalsEffect />}
-      {isHome && <BackgroundAudio />}
     </>
   );
 }
