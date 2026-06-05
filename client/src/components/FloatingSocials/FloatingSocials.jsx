@@ -116,9 +116,7 @@ const FloatingSocials = () => {
           >
             <div className="chatbot-peek-bubble">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-bold" style={{color: 'var(--bg-main)'}}>
-                  MVD
-                </div>
+                <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover" />
                 <span className="font-bold text-accent text-xs">MVD Assistant</span>
                 <span className="flex items-center gap-1 text-[10px] text-text-secondary ml-auto">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>

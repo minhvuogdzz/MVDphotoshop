@@ -137,9 +137,7 @@ const Chatbot = ({ onClose, isMobile = false }) => {
             </svg>
           </button>
           <div className="flex items-center gap-3 flex-1">
-            <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center font-bold text-xs" style={{color: 'var(--bg-main)'}}>
-              MVD
-            </div>
+            <img src="/avt.jpeg" alt="MVD" className="w-9 h-9 rounded-full object-cover" />
             <div>
               <h3 className="font-bold text-accent text-sm">MVD Assistant</h3>
               <p className="text-[11px] text-text-secondary flex items-center gap-1">
@@ -158,16 +156,20 @@ const Chatbot = ({ onClose, isMobile = false }) => {
         {/* Mobile Messages */}
         <div className="chatbot-mobile-messages">
           {messages.map((msg, idx) => (
-            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start items-end gap-2'}`}>
+              {msg.role === 'model' && (
+                <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mb-0.5" />
+              )}
               <div 
-                className={`max-w-[85%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent rounded-tr-none' : 'bg-white/10 rounded-tl-none'}`}
+                className={`max-w-[78%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent rounded-tr-none' : 'bg-white/10 rounded-tl-none'}`}
                 style={msg.role === 'user' ? {color: 'var(--bg-main)'} : {color: 'var(--text-primary)'}}
                 dangerouslySetInnerHTML={{ __html: msg.role === 'model' ? formatContent(msg.content) : msg.content }}
               />
             </div>
           ))}
           {isLoading && (
-            <div className="flex justify-start">
+            <div className="flex justify-start items-end gap-2">
+              <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mb-0.5" />
               <div className="bg-white/10 p-3 rounded-2xl rounded-tl-none text-sm flex gap-1.5 items-center h-[44px]">
                 <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -209,9 +211,7 @@ const Chatbot = ({ onClose, isMobile = false }) => {
       {/* Header */}
       <div className="p-4 bg-accent/10 border-b border-glass flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center font-bold" style={{color: 'var(--bg-main)'}}>
-            MVD
-          </div>
+          <img src="/avt.jpeg" alt="MVD" className="w-10 h-10 rounded-full object-cover" />
           <div>
             <h3 className="font-bold text-accent">MVD Assistant</h3>
             <p className="text-xs text-text-secondary flex items-center gap-1">
@@ -238,17 +238,21 @@ const Chatbot = ({ onClose, isMobile = false }) => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
         {messages.map((msg, idx) => (
-          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start items-end gap-2'}`}>
+            {msg.role === 'model' && (
+              <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mb-0.5" />
+            )}
             <div 
-              className={`max-w-[80%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent rounded-tr-none' : 'bg-white/10 rounded-tl-none'}`}
+              className={`max-w-[75%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent rounded-tr-none' : 'bg-white/10 rounded-tl-none'}`}
               style={msg.role === 'user' ? {color: 'var(--bg-main)'} : {color: 'var(--text-primary)'}}
               dangerouslySetInnerHTML={{ __html: msg.role === 'model' ? formatContent(msg.content) : msg.content }}
             />
           </div>
         ))}
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-white/10 p-3 rounded-2xl rounded-tl-none text-sm flex gap-1 items-center h-[44px]">
+          <div className="flex justify-start items-end gap-2">
+            <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mb-0.5" />
+            <div className="bg-white/10 p-3 rounded-2xl rounded-tl-none text-sm flex gap-1.5 items-center h-[44px]">
               <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce"></div>
               <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
               <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
