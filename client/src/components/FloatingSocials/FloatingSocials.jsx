@@ -178,7 +178,7 @@ const FloatingSocials = () => {
         {/* Social buttons - HIDES ON FOOTER, COLLAPSES HEIGHT */}
         <div 
           className={`flex flex-col items-end gap-3 transition-all duration-500 overflow-hidden ${
-            isVisible ? 'opacity-100 max-h-[250px] mt-0' : 'opacity-0 max-h-0 mt-[-12px] pointer-events-none'
+            isVisible ? 'opacity-100 max-h-[250px] mt-0 pointer-events-auto' : 'opacity-0 max-h-0 mt-[-12px] pointer-events-none'
           }`}
         >
           <div className="flex flex-col gap-3 pb-1 pt-1">
