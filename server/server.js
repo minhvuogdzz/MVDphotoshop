@@ -142,6 +142,11 @@ app.get('/api/chat-context', getChatContext);
 // Contact
 app.post('/api/contact', handleContact);
 
+// Ping (to keep server awake)
+app.get('/api/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
 // --- API Endpoints ---
 // Hero
 app.get('/api/hero', async (req, res) => {
@@ -398,6 +403,25 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  
+  // Tự động ping mỗi 14 phút (840000 milliseconds) để tránh ngủ đông
+  const PING_INTERVAL = 14 * 60 * 1000;
+  // Dùng URL thực tế nếu có (Render tự cấp RENDER_EXTERNAL_URL), nếu không thì dùng localhost
+  const serverUrl = process.env.SERVER_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+  
+  setInterval(async () => {
+    try {
+      console.log(`[Self-Ping] Pinging ${serverUrl}/api/ping to keep server awake...`);
+      const response = await fetch(`${serverUrl}/api/ping`);
+      if (response.ok) {
+        console.log('[Self-Ping] Success: Server is awake');
+      } else {
+        console.log(`[Self-Ping] Failed with status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('[Self-Ping] Error:', error.message);
+    }
+  }, PING_INTERVAL);
 });
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mvd-portfolio')
