@@ -73,7 +73,7 @@ const PortfolioSection = () => {
           <div className="relative overflow-hidden w-full px-0 sm:px-4">
             <Marquee 
               items={filteredData.slice(0, Math.ceil(filteredData.length / 2))}
-              duration="120s"
+              duration="300s"
               itemClassName="w-[200px] md:w-[240px] lg:w-[280px]"
               renderItem={(item) => (
                 <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[300px] md:h-[360px] rounded-xl">
@@ -104,7 +104,7 @@ const PortfolioSection = () => {
                 <Marquee 
                   items={filteredData.slice(Math.ceil(filteredData.length / 2)).reverse()}
                   reverse={true}
-                  duration="120s"
+                  duration="300s"
                   itemClassName="w-[200px] md:w-[240px] lg:w-[280px]"
                   renderItem={(item) => (
                     <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[300px] md:h-[360px] rounded-xl">
