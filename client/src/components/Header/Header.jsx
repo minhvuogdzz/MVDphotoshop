@@ -110,7 +110,7 @@ const Header = () => {
                 href={isHomePage ? link.href : `/${link.href}`}
                 onClick={() => handleNavClick(link.href)}
                 onMouseEnter={() => setHoveredTab(link.href)}
-                className={`font-medium transition-colors ${activeTab === link.href || hoveredTab === link.href ? 'text-accent' : 'text-text-secondary hover:text-accent'}`}
+                className={`font-medium transition-colors ${activeTab === link.href || hoveredTab === link.href ? 'text-accent' : (!scrolled ? 'text-text-primary' : 'text-text-secondary')} hover:text-accent`}
               >
                 {link.name}
               </a>
