@@ -5,10 +5,10 @@ import { useTheme } from '../../contexts/ThemeContext';
 const NAV_LINKS = [
   { name: 'Trang chủ', href: '#' },
   { name: 'Portfolio', href: '#portfolio' },
-  { name: 'Product', href: '#collaborations' },
+  { name: 'Sản phẩm', href: '#collaborations' },
   { name: 'Dịch vụ', href: '#services' },
   { name: 'Về chúng tôi', href: '#about' },
-  { name: 'Khách hàng', href: '#testimonials' },
+  { name: 'Đánh giá', href: '#testimonials' },
   { name: 'Liên hệ', href: '#contact' },
 ];
 
@@ -31,7 +31,7 @@ const Header = () => {
       if (window.scrollY < 200) setActiveTab('#');
     };
     window.addEventListener('scroll', handleScroll);
-    
+
     // Intersection Observer for active sections
     if (isHomePage) {
       const observer = new IntersectionObserver((entries) => {
@@ -91,11 +91,11 @@ const Header = () => {
           <a href="/" className="font-secondary text-2xl font-bold tracking-wide z-10">
             MVD<span className="font-normal italic text-accent ml-2">Photoshop</span>
           </a>
-          
+
           {/* Desktop Nav - lg breakpoint for tablet support */}
           <nav className="hidden lg:flex gap-8 relative" onMouseLeave={() => setHoveredTab(null)}>
             {/* Sliding Indicator */}
-            <div 
+            <div
               className="absolute bottom-[-6px] h-[2px] bg-accent transition-all duration-300 ease-out pointer-events-none"
               style={{
                 left: `${indicatorStyle.left}px`,
@@ -104,8 +104,8 @@ const Header = () => {
               }}
             />
             {NAV_LINKS.map((link, idx) => (
-              <a 
-                key={idx} 
+              <a
+                key={idx}
                 ref={el => navRefs.current[idx] = el}
                 href={isHomePage ? link.href : `/${link.href}`}
                 onClick={() => handleNavClick(link.href)}
@@ -119,7 +119,7 @@ const Header = () => {
 
           <div className="flex gap-3 items-center z-10">
             {/* Dark/Light Mode Toggle */}
-            <button 
+            <button
               className="text-text-primary w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 hover:bg-white/10 hover:text-accent"
               aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
               onClick={toggleTheme}
@@ -144,7 +144,7 @@ const Header = () => {
             </button>
 
             {/* Mobile Menu Toggle - lg breakpoint for tablet support */}
-            <button 
+            <button
               className="lg:hidden text-text-primary w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
@@ -156,7 +156,7 @@ const Header = () => {
             </button>
           </div>
         </div>
-        
+
         {/* Mobile Sidebar */}
         <div className={`fixed top-0 right-0 h-screen w-[280px] bg-[#1a1715] border-l border-glass shadow-2xl transform transition-transform duration-300 ease-in-out z-[200] ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="p-6 flex justify-end">
@@ -166,8 +166,8 @@ const Header = () => {
           </div>
           <nav className="flex flex-col gap-6 px-8 pt-4">
             {NAV_LINKS.map((link, idx) => (
-              <a 
-                key={idx} 
+              <a
+                key={idx}
                 href={isHomePage ? link.href : `/${link.href}`}
                 onClick={() => handleNavClick(link.href)}
                 className={`text-xl font-secondary transition-colors ${activeTab === link.href ? 'text-accent' : 'text-text-primary hover:text-accent'}`}
@@ -177,10 +177,10 @@ const Header = () => {
             ))}
           </nav>
         </div>
-        
+
         {/* Mobile overlay */}
         {isMobileMenuOpen && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]"
             onClick={() => setIsMobileMenuOpen(false)}
           />
