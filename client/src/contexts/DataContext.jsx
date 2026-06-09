@@ -52,7 +52,8 @@ const DEFAULT_DATA = {
     { _id: 2, title: 'Blend màu nghệ thuật', beforeImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80', afterImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=100' },
     { _id: 3, title: 'Phục hồi ảnh cũ', beforeImage: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80', afterImage: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=100' },
     { _id: 4, title: 'Cứu sáng', beforeImage: 'https://images.unsplash.com/photo-1518193855018-05fc08595cb6?w=800&q=80', afterImage: 'https://images.unsplash.com/photo-1518193855018-05fc08595cb6?w=800&q=100' },
-  ]
+  ],
+  collaborations: []
 };
 
 export const DataProvider = ({ children }) => {
@@ -63,7 +64,8 @@ export const DataProvider = ({ children }) => {
     about: null,
     testimonials: [],
     faq: [],
-    comparisons: []
+    comparisons: [],
+    collaborations: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,7 +74,7 @@ export const DataProvider = ({ children }) => {
   const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
-      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq', 'comparisons'];
+      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq', 'comparisons', 'collaborations'];
       const responses = await Promise.all(
         endpoints.map(ep => api.get(`/${ep}`).catch(err => {
           console.warn(`Failed to fetch /${ep}:`, err.message);

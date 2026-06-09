@@ -16,7 +16,8 @@ const Admin = () => {
     about: null,
     testimonials: [],
     faq: [],
-    comparisons: []
+    comparisons: [],
+    collaborations: []
   });
 
   // Form & List states
@@ -56,7 +57,7 @@ const Admin = () => {
 
   const fetchAllData = async () => {
     try {
-      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq', 'comparisons'];
+      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq', 'comparisons', 'collaborations'];
       const responses = await Promise.all(endpoints.map(ep => api.get(`/${ep}`)));
       
       const newData = {};
@@ -322,7 +323,7 @@ const Admin = () => {
     );
   }
 
-  const isListType = ['portfolio', 'services', 'testimonials', 'faq', 'comparisons'].includes(activeTab);
+  const isListType = ['portfolio', 'services', 'testimonials', 'faq', 'comparisons', 'collaborations'].includes(activeTab);
 
   const inputStyle = "w-full bg-white/5 border border-glass text-white rounded-lg p-3 outline-none focus:border-accent transition-colors";
 
@@ -339,7 +340,8 @@ const Admin = () => {
             { id: 'about', label: 'Giới thiệu (About)' },
             { id: 'testimonials', label: 'Đánh giá khách hàng' },
             { id: 'faq', label: 'Câu hỏi thường gặp' },
-            { id: 'comparisons', label: 'Before/After' }
+            { id: 'comparisons', label: 'Before/After' },
+            { id: 'collaborations', label: 'Sản phẩm cộng tác' }
           ].map(tab => (
             <button 
               key={tab.id} 
@@ -373,21 +375,21 @@ const Admin = () => {
                   dataList.map((item, index) => (
                     <div 
                       key={item._id || index} 
-                      className={`p-4 bg-white/5 rounded-lg flex justify-between items-center transition-all duration-200 ${(activeTab === 'portfolio' || activeTab === 'comparisons') ? 'hover:bg-white/10' : ''}`}
-                      draggable={activeTab === 'portfolio' || activeTab === 'comparisons'}
+                      className={`p-4 bg-white/5 rounded-lg flex justify-between items-center transition-all duration-200 ${(activeTab === 'portfolio' || activeTab === 'comparisons' || activeTab === 'collaborations') ? 'hover:bg-white/10' : ''}`}
+                      draggable={activeTab === 'portfolio' || activeTab === 'comparisons' || activeTab === 'collaborations'}
                       onDragStart={() => handleDragStart(index)}
                       onDragEnter={() => handleDragEnter(index)}
                       onDragEnd={handleDragEnd}
                       onDragOver={(e) => e.preventDefault()}
-                      style={(activeTab === 'portfolio' || activeTab === 'comparisons') ? { cursor: 'grab' } : {}}
+                      style={(activeTab === 'portfolio' || activeTab === 'comparisons' || activeTab === 'collaborations') ? { cursor: 'grab' } : {}}
                     >
                       <div className="flex items-center gap-3">
-                        {(activeTab === 'portfolio' || activeTab === 'comparisons') && (
+                        {(activeTab === 'portfolio' || activeTab === 'comparisons' || activeTab === 'collaborations') && (
                           <span className="text-text-secondary text-lg select-none" title="Kéo thả để sắp xếp">☰</span>
                         )}
                         <div>
                           <strong>{item.title || item.name || item.question || item.customerName || `Mục ${index + 1}`}</strong>
-                          {(activeTab === 'portfolio' || activeTab === 'comparisons') && <span className="text-text-secondary text-sm ml-2">#{index + 1}</span>}
+                          {(activeTab === 'portfolio' || activeTab === 'comparisons' || activeTab === 'collaborations') && <span className="text-text-secondary text-sm ml-2">#{index + 1}</span>}
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -658,6 +660,25 @@ const Admin = () => {
                       <input type="file" accept="image/*" id="upload-after" onChange={e => handleFileUpload(e, 'afterImage', false)} className="hidden" />
                       <button type="button" onClick={() => document.getElementById('upload-after').click()} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
                         {isUploading ? 'Đang xử lý...' : 'Tải lên Ảnh After'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'collaborations' && (
+                <>
+                  <input type="text" placeholder="Tên bộ ảnh" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className={inputStyle} required />
+                  <input type="text" placeholder="Địa điểm (Location)" value={formData.location || ''} onChange={e => setFormData({...formData, location: e.target.value})} className={inputStyle} />
+                  <input type="text" placeholder="Link Drive chi tiết" value={formData.driveLink || ''} onChange={e => setFormData({...formData, driveLink: e.target.value})} className={inputStyle} required />
+                  
+                  <div>
+                    <label className="block mb-2 text-text-secondary">Ảnh minh họa (Tỷ lệ 4:6)</label>
+                    <input type="text" placeholder="Link ảnh minh họa" value={formData.image || ''} onChange={e => setFormData({...formData, image: e.target.value})} className={inputStyle} required />
+                    <div className="flex items-center gap-4 mt-3">
+                      <input type="file" accept="image/*" id="upload-collab-image" onChange={e => handleFileUpload(e, 'image', false)} className="hidden" />
+                      <button type="button" onClick={() => document.getElementById('upload-collab-image').click()} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                        {isUploading ? 'Đang xử lý...' : 'Tải lên Ảnh (Nén < 600KB)'}
                       </button>
                     </div>
                   </div>

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import HeroSection from '../components/HeroSection/HeroSection';
 import PortfolioSection from '../components/PortfolioSection/PortfolioSection';
+import CollabSection from '../components/CollabSection/CollabSection';
 import ComparisonSection from '../components/ComparisonSection/ComparisonSection';
 import ServicesSection from '../components/ServicesSection/ServicesSection';
 import AboutSection from '../components/AboutSection/AboutSection';
@@ -29,6 +30,7 @@ const Home = () => {
     <>
       <HeroSection />
       <div className="reveal-on-scroll"><PortfolioSection /></div>
+      <div className="reveal-on-scroll"><CollabSection /></div>
       <div className="reveal-on-scroll"><ComparisonSection /></div>
       <div className="reveal-on-scroll"><ServicesSection /></div>
       <div className="reveal-on-scroll"><AboutSection /></div>

@@ -23,6 +23,7 @@ import About from './models/About.js';
 import Testimonial from './models/Testimonial.js';
 import FAQ from './models/FAQ.js';
 import Comparison from './models/Comparison.js';
+import Collaboration from './models/Collaboration.js';
 
 dotenv.config();
 
@@ -392,6 +393,54 @@ app.delete('/api/comparisons/:id', requireAuth, async (req, res) => {
   try {
     await Comparison.findByIdAndDelete(req.params.id);
     emitDataUpdate('comparisons');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Collaborations (Sản phẩm cộng tác)
+app.get('/api/collaborations', async (req, res) => {
+  try {
+    const collaborations = await Collaboration.find().sort({ order: 1, createdAt: -1 });
+    res.json(collaborations);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/collaborations', requireAuth, async (req, res) => {
+  try {
+    let collaboration;
+    if (req.body._id) {
+      collaboration = await Collaboration.findByIdAndUpdate(req.body._id, req.body, { new: true });
+    } else {
+      const count = await Collaboration.countDocuments();
+      req.body.order = count;
+      collaboration = new Collaboration(req.body);
+      await collaboration.save();
+    }
+    emitDataUpdate('collaborations');
+    res.json(collaboration);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.put('/api/collaborations/reorder', requireAuth, async (req, res) => {
+  try {
+    const { items } = req.body;
+    for (const item of items) {
+      await Collaboration.findByIdAndUpdate(item.id, { order: item.order });
+    }
+    emitDataUpdate('collaborations');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.delete('/api/collaborations/:id', requireAuth, async (req, res) => {
+  try {
+    await Collaboration.findByIdAndDelete(req.params.id);
+    emitDataUpdate('collaborations');
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
