@@ -17,16 +17,27 @@ function App() {
           await audioRef.current.play();
         }
       } catch (error) {
-        console.log("Autoplay blocked by browser. Will play on first interaction.");
-        // If blocked, wait for ANY interaction (even mouse move or scroll)
-        const playOnInteract = () => {
-          if (audioRef.current) audioRef.current.play();
-          ['click', 'mousemove', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
-            window.removeEventListener(evt, playOnInteract)
-          );
+        console.log("Autoplay blocked by browser. Will play on first interaction.", error);
+        
+        const validInteractions = ['click', 'touchstart', 'keydown', 'mousedown'];
+        
+        const playOnInteract = async () => {
+          try {
+            if (audioRef.current) {
+              await audioRef.current.play();
+              // If successful, remove all listeners
+              validInteractions.forEach(evt => 
+                window.removeEventListener(evt, playOnInteract)
+              );
+            }
+          } catch (err) {
+            // Still blocked (maybe invalid interaction), keep waiting
+            console.log("Still waiting for valid user interaction...");
+          }
         };
-        ['click', 'mousemove', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
-          window.addEventListener(evt, playOnInteract, { once: true })
+
+        validInteractions.forEach(evt => 
+          window.addEventListener(evt, playOnInteract, { once: false })
         );
       }
     };
@@ -36,7 +47,7 @@ function App() {
 
   return (
     <>
-      <audio ref={audioRef} src="/nhac.mp3" loop />
+      <audio ref={audioRef} src="/nhac.mp3" autoPlay loop preload="auto" />
       <Header />
       <main>
         <Routes>
