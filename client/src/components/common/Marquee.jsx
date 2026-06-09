@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import './Marquee.css';
 
-const Marquee = ({ items, renderItem, reverse = false, duration = '30s', className = '' }) => {
+const Marquee = ({ items, renderItem, reverse = false, duration = '30s', className = '', itemClassName = "w-[280px] md:w-[320px] lg:w-[360px]" }) => {
   const [duplicatedItems, setDuplicatedItems] = useState([]);
   
   useEffect(() => {
@@ -20,7 +20,7 @@ const Marquee = ({ items, renderItem, reverse = false, duration = '30s', classNa
         style={{ '--duration': duration }}
       >
         {duplicatedItems.map((item, index) => (
-          <div key={`${item._id || index}-${index}`} className="flex-shrink-0 w-[280px] md:w-[320px] lg:w-[360px]">
+          <div key={`${item._id || index}-${index}`} className={`flex-shrink-0 ${itemClassName}`}>
             {renderItem(item)}
           </div>
         ))}

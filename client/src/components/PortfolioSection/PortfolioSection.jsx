@@ -73,9 +73,10 @@ const PortfolioSection = () => {
           <div className="relative overflow-hidden w-full px-0 sm:px-4">
             <Marquee 
               items={filteredData.slice(0, Math.ceil(filteredData.length / 2))}
-              duration="35s"
+              duration="120s"
+              itemClassName="w-[200px] md:w-[240px] lg:w-[280px]"
               renderItem={(item) => (
-                <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[400px] md:h-[450px] rounded-xl">
+                <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[300px] md:h-[360px] rounded-xl">
                   <img 
                     src={item.coverImage || (item.images && item.images[0])} 
                     alt={item.title} 
@@ -103,9 +104,10 @@ const PortfolioSection = () => {
                 <Marquee 
                   items={filteredData.slice(Math.ceil(filteredData.length / 2)).reverse()}
                   reverse={true}
-                  duration="35s"
+                  duration="120s"
+                  itemClassName="w-[200px] md:w-[240px] lg:w-[280px]"
                   renderItem={(item) => (
-                    <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[400px] md:h-[450px] rounded-xl">
+                    <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[300px] md:h-[360px] rounded-xl">
                       <img 
                         src={item.coverImage || (item.images && item.images[0])} 
                         alt={item.title} 

@@ -39,7 +39,7 @@ const CollabSection = () => {
               className="nav-swiper"
             >
               {collaborations.map(item => (
-                <SwiperSlide key={item._id}>
+                <SwiperSlide key={item._id} className="!h-auto">
                   <div className="group relative overflow-hidden transition-all duration-500 bg-white/5 border border-glass rounded-xl flex flex-col h-full shadow-lg">
                     <div className="overflow-hidden">
                       <img 
@@ -51,7 +51,7 @@ const CollabSection = () => {
                     </div>
                     <div className="p-6 flex-1 flex flex-col justify-between">
                       <div>
-                        <h3 className="font-secondary text-2xl mb-1 text-white">Bộ ảnh: {item.title}</h3>
+                        <h3 className="font-secondary text-2xl mb-1 text-white">{item.title}</h3>
                         {item.location && <p className="text-sm text-accent mb-5">Location: {item.location}</p>}
                       </div>
                       <a 
