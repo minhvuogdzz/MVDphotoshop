@@ -9,24 +9,4 @@
   display: flex;
   gap: 24px;
   min-width: max-content;
-  animation: scroll var(--duration, 30s) linear infinite;
-}
-
-.marquee-content.reverse {
-  animation-direction: reverse;
-}
-
-.marquee-content:hover {
-  animation-play-state: paused;
-}
-
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    /* 50% is exactly half the total width of the container */
-    /* Since gap is 24px, we subtract 12px to account for the half gap between the original and clone */
-    transform: translateX(calc(-50% - 12px));
-  }
 }
