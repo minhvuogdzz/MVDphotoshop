@@ -1,6 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+
+const NAV_LINKS = [
+  { name: 'Trang chủ', href: '#' },
+  { name: 'Portfolio', href: '#portfolio' },
+  { name: 'Product', href: '#collaborations' },
+  { name: 'Dịch vụ', href: '#services' },
+  { name: 'Về chúng tôi', href: '#about' },
+  { name: 'Khách hàng', href: '#testimonials' },
+  { name: 'Liên hệ', href: '#contact' },
+];
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -9,26 +19,66 @@ const Header = () => {
   const isHomePage = location.pathname === '/';
   const { theme, toggleTheme } = useTheme();
 
+  // Active tab and sliding indicator states
+  const [activeTab, setActiveTab] = useState('#');
+  const [hoveredTab, setHoveredTab] = useState(null);
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  const navRefs = useRef([]);
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
+      if (window.scrollY < 200) setActiveTab('#');
     };
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    
+    // Intersection Observer for active sections
+    if (isHomePage) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setActiveTab(`#${entry.target.id}`);
+          }
+        });
+      }, { threshold: 0.3, rootMargin: '-100px 0px -40% 0px' });
 
-  const navLinks = [
-    { name: 'Trang chủ', href: '#' },
-    { name: 'Portfolio', href: '#portfolio' },
-    { name: 'Product', href: '#collaborations' },
-    { name: 'Dịch vụ', href: '#services' },
-    { name: 'Về chúng tôi', href: '#about' },
-    { name: 'Khách hàng', href: '#testimonials' },
-    { name: 'Liên hệ', href: '#contact' },
-  ];
+      // Observe all sections after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        NAV_LINKS.forEach(link => {
+          if (link.href !== '#') {
+            const el = document.querySelector(link.href);
+            if (el) observer.observe(el);
+          }
+        });
+      }, 500);
+
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+        observer.disconnect();
+      };
+    }
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isHomePage]);
+
+  useEffect(() => {
+    const currentTab = hoveredTab || activeTab;
+    const index = NAV_LINKS.findIndex(l => l.href === currentTab);
+    if (index !== -1 && navRefs.current[index]) {
+      const el = navRefs.current[index];
+      setIndicatorStyle({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+        opacity: 1
+      });
+    } else {
+      setIndicatorStyle(prev => ({ ...prev, opacity: 0 }));
+    }
+  }, [hoveredTab, activeTab]);
 
   const handleNavClick = (href) => {
     setIsMobileMenuOpen(false);
+    setActiveTab(href);
     if (!isHomePage) {
       window.location.href = `/${href}`;
     }
@@ -38,25 +88,36 @@ const Header = () => {
     <>
       <header className={`fixed top-0 left-0 w-full z-[100] transition-all duration-400 ease-in-out ${scrolled ? 'py-4 bg-bg-glass backdrop-blur-md border-b border-glass shadow-[0_10px_30px_rgba(0,0,0,0.3)]' : 'py-6 bg-transparent'}`}>
         <div className="container-custom flex justify-between items-center">
-          <a href="/" className="font-secondary text-2xl font-bold tracking-wide">
+          <a href="/" className="font-secondary text-2xl font-bold tracking-wide z-10">
             MVD<span className="font-normal italic text-accent ml-2">Photoshop</span>
           </a>
           
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex gap-8">
-            {navLinks.map((link, idx) => (
+          {/* Desktop Nav - lg breakpoint for tablet support */}
+          <nav className="hidden lg:flex gap-8 relative" onMouseLeave={() => setHoveredTab(null)}>
+            {/* Sliding Indicator */}
+            <div 
+              className="absolute bottom-[-6px] h-[2px] bg-accent transition-all duration-300 ease-out pointer-events-none"
+              style={{
+                left: `${indicatorStyle.left}px`,
+                width: `${indicatorStyle.width}px`,
+                opacity: indicatorStyle.opacity
+              }}
+            />
+            {NAV_LINKS.map((link, idx) => (
               <a 
                 key={idx} 
+                ref={el => navRefs.current[idx] = el}
                 href={isHomePage ? link.href : `/${link.href}`}
                 onClick={() => handleNavClick(link.href)}
-                className="text-text-secondary hover:text-accent font-medium transition-colors"
+                onMouseEnter={() => setHoveredTab(link.href)}
+                className={`font-medium transition-colors ${activeTab === link.href || hoveredTab === link.href ? 'text-accent' : 'text-text-secondary hover:text-accent'}`}
               >
                 {link.name}
               </a>
             ))}
           </nav>
 
-          <div className="flex gap-3 items-center">
+          <div className="flex gap-3 items-center z-10">
             {/* Dark/Light Mode Toggle */}
             <button 
               className="text-text-primary w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 hover:bg-white/10 hover:text-accent"
@@ -64,7 +125,6 @@ const Header = () => {
               onClick={toggleTheme}
             >
               {theme === 'dark' ? (
-                // Sun icon for switching to light mode
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="5"></circle>
                   <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -77,16 +137,15 @@ const Header = () => {
                   <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                 </svg>
               ) : (
-                // Moon icon for switching to dark mode
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
               )}
             </button>
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Menu Toggle - lg breakpoint for tablet support */}
             <button 
-              className="md:hidden text-text-primary w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10"
+              className="lg:hidden text-text-primary w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -106,12 +165,12 @@ const Header = () => {
             </button>
           </div>
           <nav className="flex flex-col gap-6 px-8 pt-4">
-            {navLinks.map((link, idx) => (
+            {NAV_LINKS.map((link, idx) => (
               <a 
                 key={idx} 
                 href={isHomePage ? link.href : `/${link.href}`}
                 onClick={() => handleNavClick(link.href)}
-                className="text-xl text-text-primary font-secondary hover:text-accent transition-colors"
+                className={`text-xl font-secondary transition-colors ${activeTab === link.href ? 'text-accent' : 'text-text-primary hover:text-accent'}`}
               >
                 {link.name}
               </a>
