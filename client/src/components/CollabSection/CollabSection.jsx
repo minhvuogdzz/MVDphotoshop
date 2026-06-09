@@ -10,7 +10,7 @@ import 'swiper/css/pagination';
 const CollabSection = () => {
   const { collaborations, loading } = useData();
 
-  if (!collaborations || collaborations.length === 0) return null;
+  if (!loading && (!collaborations || collaborations.length === 0)) return null;
 
   return (
     <section id="collaborations" className="py-[100px] bg-bg-secondary border-t border-white/5">
