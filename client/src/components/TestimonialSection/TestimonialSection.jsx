@@ -11,7 +11,7 @@ const TestimonialSection = () => {
   const data = testimonials || [];
 
   return (
-    <section className="py-[100px] bg-bg-secondary">
+    <section id="testimonials" className="py-[100px] bg-bg-secondary">
       <div className="container-custom">
         <div className="text-center mb-16">
           <h2 className="text-[40px] mb-4 text-accent">Khách hàng nói gì?</h2>

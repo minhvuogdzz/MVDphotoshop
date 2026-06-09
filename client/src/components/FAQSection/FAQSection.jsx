@@ -15,7 +15,7 @@ const FAQSection = () => {
   const data = faq || [];
 
   return (
-    <section className="py-[100px] bg-bg-main relative">
+    <section id="faq" className="py-[100px] bg-bg-main relative">
       <div className="container-custom max-w-[800px] mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-[40px] mb-4 text-accent">Câu hỏi thường gặp</h2>
