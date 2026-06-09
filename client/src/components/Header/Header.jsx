@@ -87,7 +87,7 @@ const Header = () => {
   return (
     <>
       <header className={`fixed top-0 left-0 w-full z-[100] transition-all duration-400 ease-in-out ${scrolled ? 'py-4 bg-bg-glass backdrop-blur-md border-b border-glass shadow-[0_10px_30px_rgba(0,0,0,0.3)]' : 'py-6 bg-transparent'}`}>
-        <div className="container-custom flex justify-between items-center">
+        <div className={`container-custom flex justify-between items-center transition-all duration-300 ${!scrolled ? 'drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]' : ''}`}>
           <a href="/" className="font-secondary text-2xl font-bold tracking-wide z-10">
             MVD<span className="font-normal italic text-accent ml-2">Photoshop</span>
           </a>
