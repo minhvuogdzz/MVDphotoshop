@@ -13,6 +13,7 @@ function App() {
     const playAudio = async () => {
       try {
         if (audioRef.current) {
+          audioRef.current.volume = 0.3; // Reduce volume
           // Attempt to play immediately
           await audioRef.current.play();
         }
@@ -24,6 +25,7 @@ function App() {
         const playOnInteract = async () => {
           try {
             if (audioRef.current) {
+              audioRef.current.volume = 0.3; // Reduce volume
               await audioRef.current.play();
               // If successful, remove all listeners
               validInteractions.forEach(evt => 
