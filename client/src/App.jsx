@@ -49,7 +49,7 @@ function App() {
 
   return (
     <>
-      <audio ref={audioRef} src="/nhac.mp3" autoPlay loop preload="auto" />
+      <audio ref={audioRef} src="/nhac.mp3" loop preload="metadata" />
       <Header />
       <main>
         <Routes>

@@ -7,7 +7,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import 'swiper/css';
 import 'swiper/css/effect-cube';
 
-const HeroGridItem = ({ item, index, visibilityClass, tick }) => {
+const HeroGridItem = ({ item, index, visibilityClass, tick, isLcp }) => {
   const swiperRef = useRef(null);
 
   useEffect(() => {
@@ -41,16 +41,16 @@ const HeroGridItem = ({ item, index, visibilityClass, tick }) => {
         className="w-full h-full"
       >
         <SwiperSlide>
-          <img src={img1} alt={`Grid ${index} A`} className="w-full h-full object-cover" />
+          <img src={img1} alt={`Grid ${index} A`} className="w-full h-full object-cover" fetchPriority={isLcp ? "high" : "auto"} loading={isLcp ? "eager" : "lazy"} decoding={isLcp ? "sync" : "async"} />
         </SwiperSlide>
         <SwiperSlide>
-          <img src={img2} alt={`Grid ${index} B`} className="w-full h-full object-cover" />
+          <img src={img2} alt={`Grid ${index} B`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         </SwiperSlide>
         <SwiperSlide>
-          <img src={img3} alt={`Grid ${index} C`} className="w-full h-full object-cover" />
+          <img src={img3} alt={`Grid ${index} C`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         </SwiperSlide>
         <SwiperSlide>
-          <img src={img4} alt={`Grid ${index} D`} className="w-full h-full object-cover" />
+          <img src={img4} alt={`Grid ${index} D`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         </SwiperSlide>
       </Swiper>
     </div>
@@ -94,7 +94,7 @@ const HeroSection = () => {
                 if (index >= 4 && index < 6) visibilityClass = 'hidden md:block';
                 if (index >= 6) visibilityClass = 'hidden lg:block';
                 
-                return <HeroGridItem key={index} item={item} index={index} visibilityClass={visibilityClass} tick={tick} />;
+                return <HeroGridItem key={index} item={item} index={index} visibilityClass={visibilityClass} tick={tick} isLcp={index === 0} />;
               })}
             </div>
           </div>
