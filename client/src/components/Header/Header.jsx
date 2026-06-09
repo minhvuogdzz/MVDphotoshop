@@ -20,12 +20,10 @@ const Header = () => {
   const navLinks = [
     { name: 'Trang chủ', href: '#' },
     { name: 'Portfolio', href: '#portfolio' },
-    { name: 'Collab', href: '#collaborations' },
-    { name: 'Before/After', href: '#before-after' },
+    { name: 'Product', href: '#collaborations' },
     { name: 'Dịch vụ', href: '#services' },
     { name: 'Về chúng tôi', href: '#about' },
     { name: 'Khách hàng', href: '#testimonials' },
-    { name: 'FAQ', href: '#faq' },
     { name: 'Liên hệ', href: '#contact' },
   ];
 
