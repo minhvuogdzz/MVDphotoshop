@@ -559,14 +559,3 @@ html.light .swiper-button-prev {
   font-size: 16px !important;
   touch-action: manipulation;
 }
-
-/* Header top state */
-.header-top {
-  background-color: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-html.light .header-top {
-  background-color: rgba(255, 255, 255, 0.3);
-}
