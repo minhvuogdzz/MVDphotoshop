@@ -1,13 +1,8 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { useData } from '../../contexts/DataContext';
 import LoadingSpinner from '../common/LoadingSpinner';
-
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
+import Marquee from '../common/Marquee';
 
 const PortfolioSection = () => {
   const { portfolio, loading } = useData();
@@ -75,29 +70,16 @@ const PortfolioSection = () => {
           ))}
         </div>
 
-        <div className="relative px-2 sm:px-12">
-            <Swiper
-              modules={[Navigation, Pagination, Autoplay]}
-              navigation
-              pagination={{ type: 'progressbar' }}
-              autoplay={{ delay: 0, disableOnInteraction: false, pauseOnMouseEnter: true }}
-              speed={4000}
-              loop={true}
-              spaceBetween={24}
-              slidesPerView={1}
-              breakpoints={{
-                640: { slidesPerView: 2 },
-                1024: { slidesPerView: 3 }
-              }}
-              className="nav-swiper continuous-slider"
-            >
-            {filteredData.map(item => (
-              <SwiperSlide key={item._id}>
-                <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)]">
+          <div className="relative overflow-hidden w-full px-0 sm:px-4">
+            <Marquee 
+              items={filteredData.slice(0, Math.ceil(filteredData.length / 2))}
+              duration="35s"
+              renderItem={(item) => (
+                <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[400px] md:h-[450px] rounded-xl">
                   <img 
                     src={item.coverImage || (item.images && item.images[0])} 
                     alt={item.title} 
-                    className="w-full aspect-[4/6] object-cover block"
+                    className="w-full h-full object-cover block"
                     loading="lazy"
                   />
                   <div className="absolute top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm opacity-0 transition-all duration-400 flex flex-col justify-center items-center p-6 text-center group-hover:opacity-100">
@@ -113,10 +95,41 @@ const PortfolioSection = () => {
                     </button>
                   </div>
                 </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
+              )}
+            />
+            
+            {filteredData.length > 1 && (
+              <div className="mt-8">
+                <Marquee 
+                  items={filteredData.slice(Math.ceil(filteredData.length / 2)).reverse()}
+                  reverse={true}
+                  duration="35s"
+                  renderItem={(item) => (
+                    <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[400px] md:h-[450px] rounded-xl">
+                      <img 
+                        src={item.coverImage || (item.images && item.images[0])} 
+                        alt={item.title} 
+                        className="w-full h-full object-cover block"
+                        loading="lazy"
+                      />
+                      <div className="absolute top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm opacity-0 transition-all duration-400 flex flex-col justify-center items-center p-6 text-center group-hover:opacity-100">
+                        <div className="translate-y-5 transition-transform duration-400 group-hover:translate-y-0">
+                          <h3 className="font-secondary text-2xl mb-2">{item.title}</h3>
+                          <p className="text-sm text-accent tracking-widest uppercase">{item.category} • {item.location}</p>
+                        </div>
+                        <button 
+                          className="mt-6 w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center translate-y-5 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 hover:!bg-accent hover:!text-bg-main"
+                          onClick={() => openLightbox(item)}
+                        >
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+          </div>
         
         <div className="text-center mt-10">
           <a href="/projects" className="inline-block px-8 py-3 border border-accent text-accent rounded-full font-medium transition-all duration-200 hover:bg-accent hover:text-bg-main">Xem toàn bộ dự án</a>
