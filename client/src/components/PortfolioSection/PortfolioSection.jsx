@@ -76,19 +76,21 @@ const PortfolioSection = () => {
         </div>
 
         <div className="relative px-2 sm:px-12">
-          <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
-            navigation
-            pagination={{ type: 'progressbar' }}
-            autoplay={{ delay: 4000, disableOnInteraction: false }}
-            spaceBetween={24}
-            slidesPerView={1}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 }
-            }}
-            className="nav-swiper"
-          >
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay]}
+              navigation
+              pagination={{ type: 'progressbar' }}
+              autoplay={{ delay: 0, disableOnInteraction: false, pauseOnMouseEnter: true }}
+              speed={4000}
+              loop={true}
+              spaceBetween={24}
+              slidesPerView={1}
+              breakpoints={{
+                640: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 }
+              }}
+              className="nav-swiper continuous-slider"
+            >
             {filteredData.map(item => (
               <SwiperSlide key={item._id}>
                 <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)]">

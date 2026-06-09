@@ -28,7 +28,9 @@ const CollabSection = () => {
               modules={[Navigation, Pagination, Autoplay]}
               navigation
               pagination={{ type: 'progressbar' }}
-              autoplay={{ delay: 5000, disableOnInteraction: false }}
+              autoplay={{ delay: 0, disableOnInteraction: false, pauseOnMouseEnter: true }}
+              speed={4000}
+              loop={true}
               spaceBetween={24}
               slidesPerView={1}
               breakpoints={{
@@ -36,7 +38,7 @@ const CollabSection = () => {
                 1024: { slidesPerView: 3 },
                 1280: { slidesPerView: 4 }
               }}
-              className="nav-swiper"
+              className="nav-swiper continuous-slider"
             >
               {collaborations.map(item => (
                 <SwiperSlide key={item._id}>

@@ -339,6 +339,11 @@ html.light .swiper-button-prev {
   }
 }
 
+/* Continuous Swiper */
+.continuous-slider > .swiper-wrapper {
+  transition-timing-function: linear !important;
+}
+
 /* ==================== CHATBOT FAB & DOCK ==================== */
 
 /* Chatbot FAB Button — macOS dock style */
