@@ -76,11 +76,11 @@ const PortfolioSection = () => {
               duration="300s"
               itemClassName="w-[200px] md:w-[240px] lg:w-[280px]"
               renderItem={(item) => (
-                <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[300px] md:h-[360px] rounded-xl">
+                <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[300px] md:h-[360px] rounded-xl [transform:translateZ(0)]">
                   <img 
                     src={item.coverImage || (item.images && item.images[0])} 
                     alt={item.title} 
-                    className="w-full h-full object-cover block"
+                    className="w-full h-full object-cover block rounded-xl"
                     loading="lazy"
                   />
                   <div className="absolute top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm opacity-0 transition-all duration-400 flex flex-col justify-center items-center p-6 text-center group-hover:opacity-100">
@@ -107,11 +107,11 @@ const PortfolioSection = () => {
                   duration="300s"
                   itemClassName="w-[200px] md:w-[240px] lg:w-[280px]"
                   renderItem={(item) => (
-                    <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[300px] md:h-[360px] rounded-xl">
+                    <div className="group relative overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(192,155,104,0.3),0_0_60px_rgba(192,155,104,0.1)] h-[300px] md:h-[360px] rounded-xl [transform:translateZ(0)]">
                       <img 
                         src={item.coverImage || (item.images && item.images[0])} 
                         alt={item.title} 
-                        className="w-full h-full object-cover block"
+                        className="w-full h-full object-cover block rounded-xl"
                         loading="lazy"
                       />
                       <div className="absolute top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm opacity-0 transition-all duration-400 flex flex-col justify-center items-center p-6 text-center group-hover:opacity-100">
