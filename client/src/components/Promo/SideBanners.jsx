@@ -45,7 +45,7 @@ const SideBanners = () => {
     <>
       {/* Left Banner - Marquee Up */}
       <div 
-        className={`fixed top-[88px] left-4 xl:left-8 bottom-0 w-[140px] xl:w-[200px] z-0 hidden lg:block overflow-hidden pointer-events-none transition-opacity duration-1000 ${
+        className={`fixed top-[88px] left-4 xl:left-8 bottom-0 w-[140px] xl:w-[200px] z-10 hidden lg:block overflow-hidden pointer-events-none transition-opacity duration-1000 ${
           isVisible ? 'opacity-80' : 'opacity-0'
         }`}
       >
@@ -63,7 +63,7 @@ const SideBanners = () => {
 
       {/* Right Banner - Marquee Down */}
       <div 
-        className={`fixed top-[88px] right-4 xl:right-8 bottom-0 w-[140px] xl:w-[200px] z-0 hidden lg:block overflow-hidden pointer-events-none transition-opacity duration-1000 ${
+        className={`fixed top-[88px] right-4 xl:right-8 bottom-0 w-[140px] xl:w-[200px] z-10 hidden lg:block overflow-hidden pointer-events-none transition-opacity duration-1000 ${
           isVisible ? 'opacity-80' : 'opacity-0'
         }`}
       >
