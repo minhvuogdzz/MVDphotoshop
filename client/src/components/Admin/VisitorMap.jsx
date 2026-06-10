@@ -4,23 +4,21 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import api from '../../services/api';
 
-// Fix for default marker icon in react-leaflet
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
-
-let DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconRetinaUrl: iconRetina,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  tooltipAnchor: [16, -28],
-  shadowSize: [41, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
+// Create a custom animated pulsing icon instead of using default images
+const createPulsingIcon = () => {
+  return L.divIcon({
+    className: 'bg-transparent border-none',
+    html: `
+      <div class="relative flex w-6 h-6 -ml-3 -mt-3">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-6 w-6 bg-red-500 border-2 border-white shadow-[0_0_15px_rgba(239,68,68,0.6)]"></span>
+      </div>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
+  });
+};
 
 const VisitorMap = () => {
   const [visitors, setVisitors] = useState([]);
@@ -90,7 +88,7 @@ const VisitorMap = () => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {visitors.map((visitor) => (
-            <Marker key={visitor.id} position={[visitor.lat, visitor.lon]}>
+            <Marker key={visitor.id} position={[visitor.lat, visitor.lon]} icon={createPulsingIcon()}>
               <Popup>
                 <div className="text-black p-1">
                   <p className="font-bold border-b pb-1 mb-1">{visitor.city}, {visitor.country}</p>
