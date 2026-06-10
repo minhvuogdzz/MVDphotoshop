@@ -13,14 +13,15 @@ const SideBanners = () => {
       const contact = document.getElementById('contact');
       
       if (portfolio && contact) {
-        const scrollY = window.scrollY;
-        // The point where the top of viewport hits the top of Portfolio minus a buffer
-        const startPoint = portfolio.offsetTop - window.innerHeight / 2;
-        // The point where the bottom of the banners hit the top of Contact section
-        // We stop it when the viewport bottom reaches Contact top
-        const endPoint = contact.offsetTop - window.innerHeight + 100;
-
-        if (scrollY > startPoint && scrollY < endPoint) {
+        // getBoundingClientRect is relative to the viewport
+        const portRect = portfolio.getBoundingClientRect();
+        const contactRect = contact.getBoundingClientRect();
+        
+        // Show banner when Portfolio section is reasonably within the screen (top < 80% of viewport height)
+        // Hide banner when Contact section enters a good portion of the screen (top < 20% of viewport height)
+        // Also ensure we don't show it if we are above the portfolio section completely
+        
+        if (portRect.top < window.innerHeight * 0.8 && contactRect.top > window.innerHeight * 0.2) {
           setIsVisible(true);
         } else {
           setIsVisible(false);
