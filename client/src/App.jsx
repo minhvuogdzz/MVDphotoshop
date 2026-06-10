@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import { useData } from './contexts/DataContext';
 import Home from './pages/Home';
@@ -12,11 +12,15 @@ import MobilePopup from './components/Promo/MobilePopup';
 function App() {
   const { hero } = useData();
   const audioRef = useRef(null);
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
 
   const audioSrc = hero?.backgroundMusic || "/nhac.mp3";
 
   useEffect(() => {
     const playAudio = async () => {
+      // Do not attempt to play audio on admin route
+      if (isAdmin) return;
       try {
         if (audioRef.current) {
           audioRef.current.volume = 0.3; // Reduce volume
@@ -62,18 +66,20 @@ function App() {
 
   return (
     <>
-      <audio ref={audioRef} src={audioSrc} loop preload="metadata" />
-      <SideBanners />
-      <MobilePopup />
-      <Header />
-      <main>
+      {!isAdmin && <audio ref={audioRef} src={audioSrc} loop preload="metadata" />}
+      {!isAdmin && <SideBanners />}
+      {!isAdmin && <MobilePopup />}
+      {!isAdmin && <Header />}
+      
+      <main className={isAdmin ? 'bg-bg-main min-h-screen' : ''}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/projects" element={<Projects />} />
         </Routes>
       </main>
-      <Footer />
+      
+      {!isAdmin && <Footer />}
     </>
   );
 }
