@@ -54,8 +54,6 @@ function App() {
       }
     };
     
-    };
-    
     // Slight delay to allow audio source to load if it changed
     const timer = setTimeout(() => {
       playAudio();
