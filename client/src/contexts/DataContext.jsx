@@ -121,6 +121,8 @@ export const DataProvider = ({ children }) => {
           ? import.meta.env.VITE_API_URL.replace('/api', '')
           : 'http://localhost:5001';
         
+        const isAdmin = localStorage.getItem('adminToken') || window.location.pathname.includes('admin');
+        
         let sessionId = sessionStorage.getItem('visitor_session');
         if (!sessionId) {
           sessionId = Math.random().toString(36).substring(2, 15);
@@ -129,7 +131,7 @@ export const DataProvider = ({ children }) => {
 
         socketRef.current = io(serverUrl, {
           transports: ['websocket', 'polling'],
-          query: { sessionId, type: 'visitor' },
+          query: isAdmin ? { type: 'admin' } : { sessionId, type: 'visitor' },
           reconnection: true,
           reconnectionAttempts: 5,
           reconnectionDelay: 3000,
@@ -155,7 +157,24 @@ export const DataProvider = ({ children }) => {
 
     connectSocket();
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        socketRef.current?.disconnect();
+      } else if (document.visibilityState === 'visible') {
+        socketRef.current?.connect();
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      sessionStorage.removeItem('visitor_session');
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
