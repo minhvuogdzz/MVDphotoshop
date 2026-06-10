@@ -72,6 +72,9 @@ io.on('connection', async (socket) => {
       existingVisitor.leaveTime = null;
       await existingVisitor.save();
       dbVisitorId = existingVisitor._id;
+
+      const recentVisitors = await Visitor.find().sort({ joinTime: -1 }).limit(100);
+      io.emit('visitor-updated', recentVisitors);
     } else {
       let ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
       if (ip.includes(',')) ip = ip.split(',')[0].trim();
@@ -123,9 +126,6 @@ io.on('connection', async (socket) => {
           })
           .catch(err => console.warn(`ip-api async lookup failed for ${ip}:`, err.message));
       }
-    } else {
-      const recentVisitors = await Visitor.find().sort({ joinTime: -1 }).limit(100);
-      io.emit('visitor-updated', recentVisitors);
     }
   } catch (err) {
     console.error('Error tracking visitor:', err);
