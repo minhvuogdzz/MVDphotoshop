@@ -48,11 +48,56 @@ const io = new SocketIOServer(server, {
   transports: ['websocket', 'polling']
 });
 
-io.on('connection', (socket) => {
+const activeVisitors = new Map();
+
+io.on('connection', async (socket) => {
   console.log('🔌 Client connected:', socket.id);
   
+  try {
+    let ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+    if (ip.includes(',')) ip = ip.split(',')[0].trim();
+    if (ip.startsWith('::ffff:')) ip = ip.substring(7);
+    
+    let locationData = {
+      id: socket.id,
+      ip: ip,
+      city: 'Unknown',
+      country: 'Unknown',
+      lat: 21.0285, // Default Hanoi
+      lon: 105.8542,
+      timestamp: Date.now()
+    };
+
+    if (ip === '::1' || ip === '127.0.0.1') {
+      locationData.city = 'Localhost (Dev)';
+      locationData.country = 'Vietnam';
+      locationData.ip = '127.0.0.1';
+    } else {
+      const response = await fetch(`http://ip-api.com/json/${ip}`);
+      const data = await response.json();
+      if (data.status === 'success') {
+        locationData = {
+          id: socket.id,
+          ip: ip,
+          city: data.city,
+          country: data.country,
+          lat: data.lat,
+          lon: data.lon,
+          timestamp: Date.now()
+        };
+      }
+    }
+
+    activeVisitors.set(socket.id, locationData);
+    io.emit('visitor-updated', Array.from(activeVisitors.values()));
+  } catch (err) {
+    console.error('Error fetching IP data:', err);
+  }
+
   socket.on('disconnect', () => {
     console.log('🔌 Client disconnected:', socket.id);
+    activeVisitors.delete(socket.id);
+    io.emit('visitor-updated', Array.from(activeVisitors.values()));
   });
 });
 
@@ -149,6 +194,12 @@ app.get('/api/ping', (req, res) => {
 });
 
 // --- API Endpoints ---
+// Visitors
+app.get('/api/visitors', requireAuth, (req, res) => {
+  res.json(Array.from(activeVisitors.values()));
+});
+
+
 // Hero
 app.get('/api/hero', async (req, res) => {
   try {

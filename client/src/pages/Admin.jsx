@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
 import imageCompression from 'browser-image-compression';
+import VisitorMap from '../components/Admin/VisitorMap';
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -341,7 +342,8 @@ const Admin = () => {
             { id: 'testimonials', label: 'Đánh giá khách hàng' },
             { id: 'faq', label: 'Câu hỏi thường gặp' },
             { id: 'comparisons', label: 'Before/After' },
-            { id: 'collaborations', label: 'Sản phẩm cộng tác' }
+            { id: 'collaborations', label: 'Sản phẩm cộng tác' },
+            { id: 'visitors', label: '📍 Bản đồ Visitor' }
           ].map(tab => (
             <button 
               key={tab.id} 
@@ -361,7 +363,9 @@ const Admin = () => {
         {message && <div className="p-3 bg-accent/20 text-accent rounded-lg mb-6">{message}</div>}
         
         <div className="glass-panel p-8 rounded-xl">
-          {isListType ? (
+          {activeTab === 'visitors' ? (
+            <VisitorMap />
+          ) : isListType ? (
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl">Danh sách dữ liệu</h3>
