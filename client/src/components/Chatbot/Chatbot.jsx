@@ -213,7 +213,7 @@ const Chatbot = ({ onClose, isMobile = false }) => {
         <div className="flex items-center gap-3">
           <img src="/avt.jpeg" alt="MVD" className="w-10 h-10 rounded-full object-cover" />
           <div>
-            <h3 className="font-bold text-accent">MVD Assistant</h3>
+            <h3 className="font-bold text-accent">MVD Photoshop CSKH</h3>
             <p className="text-xs text-text-secondary flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Online
             </p>
