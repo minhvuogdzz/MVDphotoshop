@@ -87,13 +87,19 @@ io.on('connection', async (socket) => {
         country = 'Vietnam';
         ip = '127.0.0.1';
       } else {
-        const response = await fetch(`http://ip-api.com/json/${ip}`);
-        const data = await response.json();
-        if (data.status === 'success') {
-          city = data.city;
-          country = data.country;
-          lat = data.lat;
-          lon = data.lon;
+        try {
+          const response = await fetch(`http://ip-api.com/json/${ip}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'success') {
+              city = data.city;
+              country = data.country;
+              lat = data.lat;
+              lon = data.lon;
+            }
+          }
+        } catch (apiErr) {
+          console.warn(`ip-api lookup failed for ${ip}, using defaults:`, apiErr.message);
         }
       }
 

@@ -121,12 +121,23 @@ export const DataProvider = ({ children }) => {
           ? import.meta.env.VITE_API_URL.replace('/api', '')
           : 'http://localhost:5001';
         
-        const isAdmin = localStorage.getItem('adminToken') || window.location.pathname.includes('admin');
+        let isAdmin = false;
+        try {
+          isAdmin = localStorage.getItem('adminToken') || window.location.pathname.includes('admin');
+        } catch (e) {
+          isAdmin = window.location.pathname.includes('admin');
+        }
         
-        let sessionId = sessionStorage.getItem('visitor_session');
-        if (!sessionId) {
+        let sessionId = '';
+        try {
+          sessionId = sessionStorage.getItem('visitor_session');
+          if (!sessionId) {
+            sessionId = Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem('visitor_session', sessionId);
+          }
+        } catch (e) {
+          // Fallback if sessionStorage is disabled
           sessionId = Math.random().toString(36).substring(2, 15);
-          sessionStorage.setItem('visitor_session', sessionId);
         }
 
         socketRef.current = io(serverUrl, {
@@ -166,7 +177,11 @@ export const DataProvider = ({ children }) => {
     };
 
     const handleBeforeUnload = () => {
-      sessionStorage.removeItem('visitor_session');
+      try {
+        sessionStorage.removeItem('visitor_session');
+      } catch (e) {
+        // ignore
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
