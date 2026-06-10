@@ -17,7 +17,7 @@ const FadeSlide = ({ images, widthClass }) => {
   if (!images || images.length === 0) return null;
 
   return (
-    <div className={`relative ${widthClass} aspect-[1/3] overflow-hidden bg-black shadow-[0_0_20px_rgba(0,0,0,0.6)]`}>
+    <div className={`relative ${widthClass} overflow-hidden bg-black shadow-[0_0_20px_rgba(0,0,0,0.6)]`}>
       {images.map((img, idx) => (
         <img 
           key={idx}
@@ -69,20 +69,20 @@ const SideBanners = () => {
   return (
     <>
       <div 
-        className={`fixed top-[120px] left-4 xl:left-8 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
-          isVisible ? 'opacity-100' : 'opacity-0'
+        className={`fixed top-[88px] left-0 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
+          isVisible ? 'opacity-90' : 'opacity-0'
         }`}
       >
-        <FadeSlide images={promo.images} widthClass="w-[160px] xl:w-[220px]" />
+        <FadeSlide images={promo.images} widthClass="w-[160px] xl:w-[240px] h-[calc(100vh-88px)]" />
       </div>
 
       <div 
-        className={`fixed top-[120px] right-4 xl:right-8 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
-          isVisible ? 'opacity-100' : 'opacity-0'
+        className={`fixed top-[88px] right-0 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
+          isVisible ? 'opacity-90' : 'opacity-0'
         }`}
       >
         {/* Pass a reversed array so the right side shows different sequence if desired, or same array */}
-        <FadeSlide images={[...promo.images].reverse()} widthClass="w-[160px] xl:w-[220px]" />
+        <FadeSlide images={[...promo.images].reverse()} widthClass="w-[160px] xl:w-[240px] h-[calc(100vh-88px)]" />
       </div>
     </>
   );
