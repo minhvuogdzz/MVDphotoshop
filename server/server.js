@@ -128,7 +128,17 @@ io.on('connection', async (socket) => {
         fetch(`http://ip-api.com/json/${ip}`)
           .then(res => res.json())
           .then(async data => {
+            let locCity = 'Unknown';
+            let locCountry = 'Unknown';
+            let locLat = 21.0285;
+            let locLon = 105.8542;
+
             if (data.status === 'success') {
+              locCity = data.city;
+              locCountry = data.country;
+              locLat = data.lat;
+              locLon = data.lon;
+
               await Visitor.findByIdAndUpdate(dbVisitorId, {
                 city: data.city,
                 country: data.country,
@@ -137,24 +147,39 @@ io.on('connection', async (socket) => {
               });
               const updatedList = await Visitor.find().sort({ joinTime: -1 }).limit(100);
               io.emit('visitor-updated', updatedList);
-              
-              // Notify admin for public visits
-              sendEmail(
-                `[MVD Portfolio] Có khách đang truy cập từ ${data.city}`,
-                `
-                  <h2>Có khách hàng mới vừa truy cập trang Portfolio:</h2>
-                  <ul>
-                    <li><strong>Thời gian:</strong> ${new Date().toLocaleString('vi-VN')}</li>
-                    <li><strong>IP:</strong> ${ip}</li>
-                    <li><strong>Vị trí:</strong> ${data.city}, ${data.country}</li>
-                    <li><strong>Tọa độ:</strong> ${data.lat}, ${data.lon}</li>
-                  </ul>
-                  <p>Hãy vào trang Quản trị để theo dõi vị trí trực tiếp trên Bản đồ.</p>
-                `
-              );
             }
+
+            // Always notify admin, whether IP lookup succeeded or not
+            sendEmail(
+              `[MVD Portfolio] Có khách đang truy cập từ ${locCity !== 'Unknown' ? locCity : ip}`,
+              `
+                <h2>Có khách hàng mới vừa truy cập trang Portfolio:</h2>
+                <ul>
+                  <li><strong>Thời gian:</strong> ${new Date().toLocaleString('vi-VN')}</li>
+                  <li><strong>IP:</strong> ${ip}</li>
+                  <li><strong>Vị trí:</strong> ${locCity}, ${locCountry}</li>
+                  <li><strong>Tọa độ:</strong> ${locLat}, ${locLon}</li>
+                </ul>
+                <p>Hãy vào trang Quản trị để theo dõi vị trí trực tiếp trên Bản đồ.</p>
+              `
+            );
           })
-          .catch(err => console.warn(`ip-api async lookup failed for ${ip}:`, err.message));
+          .catch(err => {
+            console.warn(`ip-api async lookup failed for ${ip}:`, err.message);
+            // Send fallback email if fetch itself crashes
+            sendEmail(
+              `[MVD Portfolio] Có khách đang truy cập từ ${ip}`,
+              `
+                <h2>Có khách hàng mới vừa truy cập trang Portfolio:</h2>
+                <ul>
+                  <li><strong>Thời gian:</strong> ${new Date().toLocaleString('vi-VN')}</li>
+                  <li><strong>IP:</strong> ${ip}</li>
+                  <li><strong>Vị trí:</strong> Unknown (Lỗi truy xuất IP)</li>
+                </ul>
+                <p>Hãy vào trang Quản trị để theo dõi vị trí trực tiếp trên Bản đồ.</p>
+              `
+            );
+          });
       }
     }
   } catch (err) {
