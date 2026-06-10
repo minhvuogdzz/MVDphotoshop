@@ -80,7 +80,7 @@ const HeroSection = () => {
   const gridItems = data.gridItems || Array(10).fill({ image1: '', image2: '', image3: '', image4: '' });
 
   return (
-    <section className="relative min-h-[100vh] w-full flex items-center justify-center overflow-hidden bg-black pt-[88px] pb-10">
+    <section className="relative z-10 min-h-[100vh] w-full flex items-center justify-center overflow-hidden bg-black pt-[88px] pb-10">
       {loading ? (
         <LoadingSpinner />
       ) : (

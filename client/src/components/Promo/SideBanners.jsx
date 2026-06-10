@@ -69,16 +69,16 @@ const SideBanners = () => {
   return (
     <>
       <div 
-        className={`fixed top-[120px] left-4 xl:left-8 z-[5] hidden lg:block pointer-events-auto transition-opacity duration-1000 ${
-          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        className={`fixed top-[120px] left-4 xl:left-8 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
+          isVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <FadeSlide images={promo.images} widthClass="w-[160px] xl:w-[220px]" />
       </div>
 
       <div 
-        className={`fixed top-[120px] right-4 xl:right-8 z-[5] hidden lg:block pointer-events-auto transition-opacity duration-1000 ${
-          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        className={`fixed top-[120px] right-4 xl:right-8 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
+          isVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
         {/* Pass a reversed array so the right side shows different sequence if desired, or same array */}
