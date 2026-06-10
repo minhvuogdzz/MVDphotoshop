@@ -14,6 +14,7 @@ import { handleChat, getChatContext } from './controllers/chatController.js';
 import { handleContact } from './controllers/contactController.js';
 import { requireAuth } from './middlewares/authMiddleware.js';
 import { v2 as cloudinary } from 'cloudinary';
+import { sendEmail } from './utils/emailService.js';
 
 // Models
 import Hero from './models/Hero.js';
@@ -89,6 +90,20 @@ io.on('connection', async (socket) => {
         city = 'Mạng nội bộ (LAN/Dev)';
         country = 'Vietnam';
         ip = ip === '::1' ? '127.0.0.1' : ip;
+        
+        // Notify admin for LAN visits
+        sendEmail(
+          `[MVD Portfolio] Có truy cập nội bộ (LAN) từ ${ip}`,
+          `
+            <h2>Hệ thống ghi nhận lượt truy cập nội bộ:</h2>
+            <ul>
+              <li><strong>Thời gian:</strong> ${new Date().toLocaleString('vi-VN')}</li>
+              <li><strong>IP:</strong> ${ip}</li>
+              <li><strong>Vị trí:</strong> ${city}</li>
+            </ul>
+            <p>Admin truy cập trực tiếp bằng Mạng nội bộ để test web.</p>
+          `
+        );
       }
 
       const newVisitor = new Visitor({
@@ -122,6 +137,21 @@ io.on('connection', async (socket) => {
               });
               const updatedList = await Visitor.find().sort({ joinTime: -1 }).limit(100);
               io.emit('visitor-updated', updatedList);
+              
+              // Notify admin for public visits
+              sendEmail(
+                `[MVD Portfolio] Có khách đang truy cập từ ${data.city}`,
+                `
+                  <h2>Có khách hàng mới vừa truy cập trang Portfolio:</h2>
+                  <ul>
+                    <li><strong>Thời gian:</strong> ${new Date().toLocaleString('vi-VN')}</li>
+                    <li><strong>IP:</strong> ${ip}</li>
+                    <li><strong>Vị trí:</strong> ${data.city}, ${data.country}</li>
+                    <li><strong>Tọa độ:</strong> ${data.lat}, ${data.lon}</li>
+                  </ul>
+                  <p>Hãy vào trang Quản trị để theo dõi vị trí trực tiếp trên Bản đồ.</p>
+                `
+              );
             }
           })
           .catch(err => console.warn(`ip-api async lookup failed for ${ip}:`, err.message));
