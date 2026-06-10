@@ -7,7 +7,6 @@ import Projects from './pages/Projects';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import SideBanners from './components/Promo/SideBanners';
-import MobilePopup from './components/Promo/MobilePopup';
 
 function App() {
   const { hero } = useData();
@@ -66,7 +65,6 @@ function App() {
     <>
       {!isAdmin && <audio ref={audioRef} src={audioSrc} loop preload="metadata" />}
       {!isAdmin && <SideBanners />}
-      {!isAdmin && <MobilePopup />}
       {!isAdmin && <Header />}
       
       <main className={isAdmin ? 'bg-bg-main min-h-screen' : ''}>

@@ -673,20 +673,10 @@ const Admin = () => {
                       className="w-6 h-6 rounded cursor-pointer accent-accent"
                     />
                   </div>
-                  
-                  <div className="flex items-center gap-4 bg-white/5 p-4 rounded-lg border border-glass">
-                    <label className="text-white font-bold flex-1">Hiển thị Popup quảng cáo (Mobile)</label>
-                    <input 
-                      type="checkbox" 
-                      checked={formData.mobileEnabled || false} 
-                      onChange={e => setFormData({...formData, mobileEnabled: e.target.checked})}
-                      className="w-6 h-6 rounded cursor-pointer accent-accent"
-                    />
-                  </div>
 
                   <div>
                     <label className="block mb-2 text-text-secondary font-bold">Thư viện ảnh Quảng cáo (Tỉ lệ 1:3 - Khuyên dùng ảnh dọc)</label>
-                    <p className="text-sm text-text-secondary mb-4">Mỗi bên sẽ lấy ảnh để tạo hiệu ứng vỡ hạt chuyển slide (mỗi 3s). Mobile sẽ lấy ảnh đầu tiên làm Popup. Hỗ trợ GIF động.</p>
+                    <p className="text-sm text-text-secondary mb-4">Mỗi bên lề sẽ lấy ảnh để tạo hiệu ứng mờ ảo chuyển slide (mỗi 3s). Banner này chỉ hiển thị trên màn hình Desktop lớn. Hỗ trợ ảnh động GIF.</p>
                     <div className="flex flex-wrap gap-4 mb-4">
                       {(formData.images || []).map((img, idx) => (
                         <div key={idx} className="relative group">
