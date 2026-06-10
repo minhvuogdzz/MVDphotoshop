@@ -41,13 +41,13 @@ const SideBanners = () => {
 
     const handleScroll = () => {
       const portfolio = document.getElementById('portfolio');
-      const contact = document.getElementById('contact');
       
-      if (portfolio && contact) {
+      if (portfolio) {
         const portRect = portfolio.getBoundingClientRect();
-        const contactRect = contact.getBoundingClientRect();
         
-        if (portRect.top < window.innerHeight * 0.8 && contactRect.top > window.innerHeight * 0.2) {
+        // Show banner only when Portfolio section is reasonably within the screen 
+        // (top entering screen, bottom hasn't left screen)
+        if (portRect.top < window.innerHeight * 0.8 && portRect.bottom > window.innerHeight * 0.2) {
           setIsVisible(true);
         } else {
           setIsVisible(false);
