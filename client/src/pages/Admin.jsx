@@ -618,8 +618,8 @@ const Admin = () => {
                   </div>
 
                   <div>
-                    <label className="block mb-2 text-text-secondary font-bold">Thư viện ảnh Quảng cáo (Tỉ lệ 4:6)</label>
-                    <p className="text-sm text-text-secondary mb-4">Các ảnh này sẽ tự động cuộn ở 2 bên lề trên máy tính, và lấy ảnh đầu tiên làm Popup trên điện thoại. Hỗ trợ GIF động.</p>
+                    <label className="block mb-2 text-text-secondary font-bold">Thư viện ảnh Quảng cáo (Tỉ lệ 1:3 - Khuyên dùng ảnh dọc)</label>
+                    <p className="text-sm text-text-secondary mb-4">Mỗi bên sẽ lấy ảnh để tạo hiệu ứng vỡ hạt chuyển slide (mỗi 3s). Mobile sẽ lấy ảnh đầu tiên làm Popup. Hỗ trợ GIF động.</p>
                     <div className="flex flex-wrap gap-4 mb-4">
                       {(formData.images || []).map((img, idx) => (
                         <div key={idx} className="relative group">

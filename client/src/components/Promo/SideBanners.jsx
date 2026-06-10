@@ -1,5 +1,98 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useData } from '../../contexts/DataContext';
+
+const ShatterSlide = ({ images, widthClass }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [shatterState, setShatterState] = useState('idle'); // 'idle' | 'preparing' | 'shattering'
+  
+  const rows = 15;
+  const cols = 5;
+  
+  const tileConfig = useMemo(() => {
+    const config = [];
+    for (let i = 0; i < rows * cols; i++) {
+      config.push({
+        delay: Math.random() * 0.4,
+        tx: (Math.random() - 0.5) * 80, // translate X
+        ty: (Math.random() - 0.5) * 80, // translate Y
+        rot: (Math.random() - 0.5) * 60   // rotate
+      });
+    }
+    return config;
+  }, []);
+
+  useEffect(() => {
+    if (!images || images.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setShatterState('preparing');
+      
+      // Allow DOM to render the tiles before animating
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setShatterState('shattering');
+        });
+      });
+      
+      // Reset state after transition completes
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+        setShatterState('idle');
+      }, 1200);
+      
+    }, 3000); 
+    
+    return () => clearInterval(interval);
+  }, [images]);
+
+  if (!images || images.length === 0) return null;
+
+  const currentImage = images[currentIndex];
+  const nextImage = images[(currentIndex + 1) % images.length];
+
+  return (
+    <div className={`relative ${widthClass} aspect-[1/3] overflow-hidden bg-black shadow-[0_0_20px_rgba(0,0,0,0.6)]`}>
+      {/* Background (Next Image) */}
+      {images.length > 1 && (
+        <img src={nextImage} className="absolute inset-0 w-full h-full object-cover" alt="Next Promo" />
+      )}
+      
+      {/* Foreground (Current Image) */}
+      {shatterState === 'idle' ? (
+        <img src={currentImage} className="absolute inset-0 w-full h-full object-cover" alt="Current Promo" />
+      ) : (
+        <div className="absolute inset-0 w-full h-full flex flex-wrap">
+          {tileConfig.map((conf, i) => {
+            const row = Math.floor(i / cols);
+            const col = i % cols;
+            const bgPosX = cols > 1 ? (col / (cols - 1)) * 100 : 0;
+            const bgPosY = rows > 1 ? (row / (rows - 1)) * 100 : 0;
+            const isShattering = shatterState === 'shattering';
+            
+            return (
+              <div 
+                key={i}
+                style={{
+                  width: `${100 / cols}%`,
+                  height: `${100 / rows}%`,
+                  backgroundImage: `url(${currentImage})`,
+                  backgroundSize: `${cols * 100}% ${rows * 100}%`,
+                  backgroundPosition: `${bgPosX}% ${bgPosY}%`,
+                  transition: `all 0.6s cubic-bezier(0.25, 1, 0.5, 1) ${conf.delay}s`,
+                  opacity: isShattering ? 0 : 1,
+                  transform: isShattering 
+                    ? `scale(0.2) translate(${conf.tx}px, ${conf.ty}px) rotate(${conf.rot}deg)` 
+                    : 'scale(1) translate(0px, 0px) rotate(0deg)'
+                }}
+                className="will-change-transform origin-center"
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SideBanners = () => {
   const { promo } = useData();
@@ -13,13 +106,8 @@ const SideBanners = () => {
       const contact = document.getElementById('contact');
       
       if (portfolio && contact) {
-        // getBoundingClientRect is relative to the viewport
         const portRect = portfolio.getBoundingClientRect();
         const contactRect = contact.getBoundingClientRect();
-        
-        // Show banner when Portfolio section is reasonably within the screen (top < 80% of viewport height)
-        // Hide banner when Contact section enters a good portion of the screen (top < 20% of viewport height)
-        // Also ensure we don't show it if we are above the portfolio section completely
         
         if (portRect.top < window.innerHeight * 0.8 && contactRect.top > window.innerHeight * 0.2) {
           setIsVisible(true);
@@ -30,7 +118,7 @@ const SideBanners = () => {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Check immediately on mount
+    handleScroll(); 
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, [promo]);
@@ -39,45 +127,24 @@ const SideBanners = () => {
     return null;
   }
 
-  // To create a seamless infinite scroll, we duplicate the images array
-  const duplicatedImages = [...promo.images, ...promo.images, ...promo.images];
-
+  // We set z-index to 5 so it is above background but below the navigation (z-50)
   return (
     <>
-      {/* Left Banner - Marquee Up */}
       <div 
-        className={`fixed top-[88px] left-4 xl:left-8 bottom-0 w-[140px] xl:w-[200px] z-10 hidden lg:block overflow-hidden pointer-events-none transition-opacity duration-1000 ${
-          isVisible ? 'opacity-80' : 'opacity-0'
+        className={`fixed top-[120px] left-4 xl:left-8 z-[5] hidden lg:block pointer-events-auto transition-opacity duration-1000 ${
+          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="flex flex-col gap-4 animate-marquee-up py-4">
-          {duplicatedImages.map((img, idx) => (
-            <img 
-              key={`left-${idx}`} 
-              src={img} 
-              alt="Promo" 
-              className="w-full aspect-[4/6] object-cover rounded-lg shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-glass"
-            />
-          ))}
-        </div>
+        <ShatterSlide images={promo.images} widthClass="w-[160px] xl:w-[220px]" />
       </div>
 
-      {/* Right Banner - Marquee Down */}
       <div 
-        className={`fixed top-[88px] right-4 xl:right-8 bottom-0 w-[140px] xl:w-[200px] z-10 hidden lg:block overflow-hidden pointer-events-none transition-opacity duration-1000 ${
-          isVisible ? 'opacity-80' : 'opacity-0'
+        className={`fixed top-[120px] right-4 xl:right-8 z-[5] hidden lg:block pointer-events-auto transition-opacity duration-1000 ${
+          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="flex flex-col gap-4 animate-marquee-down py-4">
-          {duplicatedImages.map((img, idx) => (
-            <img 
-              key={`right-${idx}`} 
-              src={img} 
-              alt="Promo" 
-              className="w-full aspect-[4/6] object-cover rounded-lg shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-glass"
-            />
-          ))}
-        </div>
+        {/* Pass a reversed array so the right side shows different sequence if desired, or same array */}
+        <ShatterSlide images={[...promo.images].reverse()} widthClass="w-[160px] xl:w-[220px]" />
       </div>
     </>
   );
