@@ -232,6 +232,34 @@ const streamUploadToCloudinary = (buffer) => {
   });
 };
 
+const uploadAudio = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'audio/mpeg' || file.mimetype === 'audio/mp3') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only mp3 files are allowed!'), false);
+    }
+  }
+});
+
+const streamUploadAudioToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    let stream = cloudinary.uploader.upload_stream(
+      { folder: "mvd-portfolio", resource_type: "video" }, // Cloudinary uses "video" for audio files
+      (error, result) => {
+        if (result) {
+          resolve(result);
+        } else {
+          reject(error);
+        }
+      }
+    );
+    stream.end(buffer);
+  });
+};
+
 // Routes
 // Upload
 app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) => {
@@ -284,6 +312,20 @@ app.post('/api/upload-multiple', requireAuth, upload.array('images', 20), async 
     res.json({ urls });
   } catch (err) {
     console.error('Upload Multiple Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/upload-audio', requireAuth, uploadAudio.single('audio'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file uploaded' });
+    }
+
+    const result = await streamUploadAudioToCloudinary(req.file.buffer);
+    res.json({ url: result.secure_url });
+  } catch (err) {
+    console.error('Upload Audio Error:', err);
     res.status(500).json({ error: err.message });
   }
 });

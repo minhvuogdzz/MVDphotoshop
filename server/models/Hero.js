@@ -13,6 +13,7 @@ const HeroSchema = new mongoose.Schema({
   ],
   ctaText: { type: String, default: 'Xem Portfolio' },
   ctaLink: { type: String, default: '#portfolio' },
+  backgroundMusic: { type: String, default: '' },
 }, { timestamps: true });
 
 // Ensure we have exactly 10 items in the grid if empty

@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
+import { useData } from './contexts/DataContext';
 import Home from './pages/Home';
 import Admin from './pages/Admin';
 import Projects from './pages/Projects';
@@ -9,7 +10,10 @@ import SideBanners from './components/Promo/SideBanners';
 import MobilePopup from './components/Promo/MobilePopup';
 
 function App() {
+  const { hero } = useData();
   const audioRef = useRef(null);
+
+  const audioSrc = hero?.backgroundMusic || "/nhac.mp3";
 
   useEffect(() => {
     const playAudio = async () => {
@@ -46,12 +50,19 @@ function App() {
       }
     };
     
-    playAudio();
-  }, []);
+    };
+    
+    // Slight delay to allow audio source to load if it changed
+    const timer = setTimeout(() => {
+      playAudio();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [audioSrc]);
 
   return (
     <>
-      <audio ref={audioRef} src="/nhac.mp3" loop preload="metadata" />
+      <audio ref={audioRef} src={audioSrc} loop preload="metadata" />
       <SideBanners />
       <MobilePopup />
       <Header />

@@ -69,7 +69,7 @@ const SideBanners = () => {
   return (
     <>
       <div 
-        className={`fixed top-[88px] left-0 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
+        className={`fixed top-[88px] left-2 xl:left-4 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
           isVisible ? 'opacity-90' : 'opacity-0'
         }`}
       >
@@ -77,7 +77,7 @@ const SideBanners = () => {
       </div>
 
       <div 
-        className={`fixed top-[88px] right-0 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
+        className={`fixed top-[88px] right-2 xl:right-4 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
           isVisible ? 'opacity-90' : 'opacity-0'
         }`}
       >

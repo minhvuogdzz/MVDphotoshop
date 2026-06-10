@@ -178,6 +178,34 @@ const Admin = () => {
     }
   };
 
+  // Audio Upload handler
+  const handleAudioUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setMessage('Lỗi: File nhạc vượt quá dung lượng cho phép (10MB).');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const form = new FormData();
+      form.append('audio', file);
+
+      const { data } = await api.post('/upload-audio', form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setFormData({ ...formData, backgroundMusic: data.url });
+      setMessage('Tải nhạc nền thành công!');
+    } catch (err) {
+      setMessage('Lỗi khi tải nhạc nền. ' + (err.response?.data?.error || err.message));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSaveObject = async (e) => {
     e.preventDefault();
     try {
@@ -420,6 +448,45 @@ const Admin = () => {
                   <div>
                     <label className="block mb-2 text-text-secondary">Phụ đề (Subtitle)</label>
                     <textarea value={formData.subtitle || ''} onChange={e => setFormData({...formData, subtitle: e.target.value})} className={inputStyle} />
+                  </div>
+                  <div className="bg-white/5 p-4 rounded-lg border border-glass">
+                    <label className="block mb-2 text-text-secondary font-bold text-accent">Nhạc nền tự động phát (Background Music)</label>
+                    <p className="text-sm text-text-secondary mb-3">Chỉ chấp nhận file định dạng mp3 (Tối đa 10MB). Bỏ trống để dùng nhạc mặc định.</p>
+                    
+                    <div className="flex flex-col gap-3">
+                      {formData.backgroundMusic ? (
+                        <div className="flex items-center gap-4 bg-black/40 p-3 rounded-lg">
+                          <audio controls src={formData.backgroundMusic} className="h-8 max-w-[200px]" />
+                          <button 
+                            type="button" 
+                            onClick={() => setFormData({...formData, backgroundMusic: ''})}
+                            className="text-[#ff6b6b] hover:underline text-sm font-bold"
+                          >
+                            Xóa nhạc
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-[#ff6b6b]">Chưa có nhạc tùy chỉnh, web sẽ chạy nhạc mặc định.</span>
+                      )}
+                      
+                      <div className="flex items-center gap-4">
+                        <input 
+                          type="file" 
+                          accept="audio/mp3, audio/mpeg" 
+                          id="upload-audio" 
+                          onChange={handleAudioUpload} 
+                          className="hidden" 
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => document.getElementById('upload-audio').click()} 
+                          disabled={isUploading}
+                          className="px-4 py-2 bg-accent text-bg-main font-bold rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-50"
+                        >
+                          {isUploading ? 'Đang tải lên...' : 'Chọn file mp3'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   <div className="mb-6">
                     <label className="block mb-2 text-text-secondary">Quản lý Grid 10 Khung Hình (Kéo thả để sắp xếp vị trí)</label>
