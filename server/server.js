@@ -234,7 +234,7 @@ const streamUploadToCloudinary = (buffer) => {
 
 const uploadAudio = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
   fileFilter: (req, file, cb) => {
     if (file.mimetype === 'audio/mpeg' || file.mimetype === 'audio/mp3') {
       cb(null, true);
@@ -323,7 +323,10 @@ app.post('/api/upload-audio', requireAuth, uploadAudio.single('audio'), async (r
     }
 
     const result = await streamUploadAudioToCloudinary(req.file.buffer);
-    res.json({ url: result.secure_url });
+    // Inject bitrate compression transformation (96kbps) to heavily compress the MP3 file on download
+    const compressedUrl = result.secure_url.replace('/upload/', '/upload/br_96k/');
+    
+    res.json({ url: compressedUrl });
   } catch (err) {
     console.error('Upload Audio Error:', err);
     res.status(500).json({ error: err.message });

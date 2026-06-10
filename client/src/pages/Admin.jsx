@@ -183,8 +183,8 @@ const Admin = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      setMessage('Lỗi: File nhạc vượt quá dung lượng cho phép (10MB).');
+    if (file.size > 50 * 1024 * 1024) {
+      setMessage('Lỗi: File nhạc vượt quá dung lượng cho phép (50MB).');
       return;
     }
 
@@ -451,7 +451,7 @@ const Admin = () => {
                   </div>
                   <div className="bg-white/5 p-4 rounded-lg border border-glass">
                     <label className="block mb-2 text-text-secondary font-bold text-accent">Nhạc nền tự động phát (Background Music)</label>
-                    <p className="text-sm text-text-secondary mb-3">Chỉ chấp nhận file định dạng mp3 (Tối đa 10MB). Bỏ trống để dùng nhạc mặc định.</p>
+                    <p className="text-sm text-text-secondary mb-3">Chấp nhận định dạng mp3 (Tối đa 50MB). Hệ thống sẽ <span className="text-accent">tự động nén chất lượng</span> xuống mức nhẹ nhất để trang web load nhanh. Bỏ trống để dùng nhạc mặc định.</p>
                     
                     <div className="flex flex-col gap-3">
                       {formData.backgroundMusic ? (
