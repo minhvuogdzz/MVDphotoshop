@@ -24,6 +24,7 @@ import Testimonial from './models/Testimonial.js';
 import FAQ from './models/FAQ.js';
 import Comparison from './models/Comparison.js';
 import Collaboration from './models/Collaboration.js';
+import Visitor from './models/Visitor.js';
 
 dotenv.config();
 
@@ -48,56 +49,64 @@ const io = new SocketIOServer(server, {
   transports: ['websocket', 'polling']
 });
 
-const activeVisitors = new Map();
-
 io.on('connection', async (socket) => {
   console.log('🔌 Client connected:', socket.id);
+  let dbVisitorId = null;
   
   try {
     let ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
     if (ip.includes(',')) ip = ip.split(',')[0].trim();
     if (ip.startsWith('::ffff:')) ip = ip.substring(7);
     
-    let locationData = {
-      id: socket.id,
-      ip: ip,
-      city: 'Unknown',
-      country: 'Unknown',
-      lat: 21.0285, // Default Hanoi
-      lon: 105.8542,
-      timestamp: Date.now()
-    };
+    let city = 'Unknown';
+    let country = 'Unknown';
+    let lat = 21.0285;
+    let lon = 105.8542;
 
     if (ip === '::1' || ip === '127.0.0.1') {
-      locationData.city = 'Localhost (Dev)';
-      locationData.country = 'Vietnam';
-      locationData.ip = '127.0.0.1';
+      city = 'Hà Nội (Local)';
+      country = 'Vietnam';
+      ip = '127.0.0.1';
     } else {
       const response = await fetch(`http://ip-api.com/json/${ip}`);
       const data = await response.json();
       if (data.status === 'success') {
-        locationData = {
-          id: socket.id,
-          ip: ip,
-          city: data.city,
-          country: data.country,
-          lat: data.lat,
-          lon: data.lon,
-          timestamp: Date.now()
-        };
+        city = data.city;
+        country = data.country;
+        lat = data.lat;
+        lon = data.lon;
       }
     }
 
-    activeVisitors.set(socket.id, locationData);
-    io.emit('visitor-updated', Array.from(activeVisitors.values()));
+    const newVisitor = new Visitor({
+      ip,
+      city,
+      country,
+      lat,
+      lon,
+      joinTime: Date.now(),
+      leaveTime: null
+    });
+    const savedVisitor = await newVisitor.save();
+    dbVisitorId = savedVisitor._id;
+
+    const recentVisitors = await Visitor.find().sort({ joinTime: -1 }).limit(100);
+    io.emit('visitor-updated', recentVisitors);
   } catch (err) {
-    console.error('Error fetching IP data:', err);
+    console.error('Error tracking visitor:', err);
   }
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     console.log('🔌 Client disconnected:', socket.id);
-    activeVisitors.delete(socket.id);
-    io.emit('visitor-updated', Array.from(activeVisitors.values()));
+    if (dbVisitorId) {
+      try {
+        await Visitor.findByIdAndUpdate(dbVisitorId, { leaveTime: Date.now() });
+        const recentVisitors = await Visitor.find().sort({ joinTime: -1 }).limit(100);
+        io.emit('visitor-updated', recentVisitors);
+      } catch (err) {
+        console.error('Error updating visitor disconnect:', err);
+      }
+    }
   });
 });
 
@@ -195,8 +204,13 @@ app.get('/api/ping', (req, res) => {
 
 // --- API Endpoints ---
 // Visitors
-app.get('/api/visitors', requireAuth, (req, res) => {
-  res.json(Array.from(activeVisitors.values()));
+app.get('/api/visitors', requireAuth, async (req, res) => {
+  try {
+    const recentVisitors = await Visitor.find().sort({ joinTime: -1 }).limit(100);
+    res.json(recentVisitors);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 

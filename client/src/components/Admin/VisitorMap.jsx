@@ -68,6 +68,8 @@ const VisitorMap = () => {
     };
   }, []);
 
+  const activeVisitors = visitors.filter(v => !v.leaveTime);
+
   return (
     <div className="bg-bg-secondary p-6 rounded-2xl border border-white/10 shadow-glass">
       <div className="flex justify-between items-center mb-6">
@@ -77,7 +79,7 @@ const VisitorMap = () => {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
           </span>
-          <span className="text-text-secondary">Đang truy cập: <strong className="text-white">{visitors.length}</strong></span>
+          <span className="text-text-secondary">Đang truy cập: <strong className="text-white">{activeVisitors.length}</strong></span>
         </div>
       </div>
       
@@ -87,13 +89,13 @@ const VisitorMap = () => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {visitors.map((visitor) => (
-            <Marker key={visitor.id} position={[visitor.lat, visitor.lon]} icon={createPulsingIcon()}>
+          {activeVisitors.map((visitor) => (
+            <Marker key={visitor._id || visitor.id} position={[visitor.lat, visitor.lon]} icon={createPulsingIcon()}>
               <Popup>
                 <div className="text-black p-1">
                   <p className="font-bold border-b pb-1 mb-1">{visitor.city}, {visitor.country}</p>
                   <p className="text-sm">IP: {visitor.ip}</p>
-                  <p className="text-xs text-gray-500">Tham gia: {new Date(visitor.timestamp).toLocaleTimeString()}</p>
+                  <p className="text-xs text-gray-500">Bắt đầu: {new Date(visitor.joinTime || visitor.timestamp).toLocaleTimeString()}</p>
                 </div>
               </Popup>
             </Marker>
@@ -103,22 +105,30 @@ const VisitorMap = () => {
 
       {visitors.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-lg font-medium mb-3">Danh sách chi tiết</h3>
+          <h3 className="text-lg font-medium mb-3">Lịch sử truy cập (100 lượt gần nhất)</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-white/10 text-text-secondary text-sm">
                   <th className="py-2 px-4">IP</th>
                   <th className="py-2 px-4">Vị trí</th>
-                  <th className="py-2 px-4">Thời gian</th>
+                  <th className="py-2 px-4">Bắt đầu</th>
+                  <th className="py-2 px-4">Rời đi</th>
                 </tr>
               </thead>
               <tbody>
                 {visitors.map((v) => (
-                  <tr key={v.id} className="border-b border-white/5 hover:bg-white/5">
+                  <tr key={v._id || v.id} className="border-b border-white/5 hover:bg-white/5">
                     <td className="py-3 px-4 text-sm">{v.ip}</td>
                     <td className="py-3 px-4 text-sm">{v.city}, {v.country}</td>
-                    <td className="py-3 px-4 text-sm">{new Date(v.timestamp).toLocaleTimeString()}</td>
+                    <td className="py-3 px-4 text-sm">{new Date(v.joinTime || v.timestamp).toLocaleString('vi-VN')}</td>
+                    <td className="py-3 px-4 text-sm font-medium">
+                      {v.leaveTime ? (
+                        <span className="text-text-secondary">{new Date(v.leaveTime).toLocaleString('vi-VN')}</span>
+                      ) : (
+                        <span className="text-green-400">🟢 Đang truy cập</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
