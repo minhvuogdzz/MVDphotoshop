@@ -82,25 +82,10 @@ io.on('connection', async (socket) => {
       let lat = 21.0285;
       let lon = 105.8542;
 
-      if (ip === '::1' || ip === '127.0.0.1') {
-        city = 'Hà Nội (Local)';
+      if (ip === '::1' || ip === '127.0.0.1' || ip.startsWith('192.168.')) {
+        city = 'Mạng nội bộ (LAN/Dev)';
         country = 'Vietnam';
-        ip = '127.0.0.1';
-      } else {
-        try {
-          const response = await fetch(`http://ip-api.com/json/${ip}`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.status === 'success') {
-              city = data.city;
-              country = data.country;
-              lat = data.lat;
-              lon = data.lon;
-            }
-          }
-        } catch (apiErr) {
-          console.warn(`ip-api lookup failed for ${ip}, using defaults:`, apiErr.message);
-        }
+        ip = ip === '::1' ? '127.0.0.1' : ip;
       }
 
       const newVisitor = new Visitor({
@@ -115,10 +100,33 @@ io.on('connection', async (socket) => {
       });
       const savedVisitor = await newVisitor.save();
       dbVisitorId = savedVisitor._id;
-    }
 
-    const recentVisitors = await Visitor.find().sort({ joinTime: -1 }).limit(100);
-    io.emit('visitor-updated', recentVisitors);
+      // Emit immediately so UI updates fast
+      const recentVisitors = await Visitor.find().sort({ joinTime: -1 }).limit(100);
+      io.emit('visitor-updated', recentVisitors);
+
+      // Asynchronous IP lookup to prevent connection hang
+      if (ip !== '127.0.0.1' && !ip.startsWith('192.168.')) {
+        fetch(`http://ip-api.com/json/${ip}`)
+          .then(res => res.json())
+          .then(async data => {
+            if (data.status === 'success') {
+              await Visitor.findByIdAndUpdate(dbVisitorId, {
+                city: data.city,
+                country: data.country,
+                lat: data.lat,
+                lon: data.lon
+              });
+              const updatedList = await Visitor.find().sort({ joinTime: -1 }).limit(100);
+              io.emit('visitor-updated', updatedList);
+            }
+          })
+          .catch(err => console.warn(`ip-api async lookup failed for ${ip}:`, err.message));
+      }
+    } else {
+      const recentVisitors = await Visitor.find().sort({ joinTime: -1 }).limit(100);
+      io.emit('visitor-updated', recentVisitors);
+    }
   } catch (err) {
     console.error('Error tracking visitor:', err);
   }
