@@ -38,11 +38,11 @@ const Chatbot = ({ onClose, isMobile = false }) => {
         body: JSON.stringify(body),
         signal
       });
-      
+
       if (response.ok) {
         return response;
       }
-      
+
       // Nếu lỗi 429 (rate limit) hoặc 503 → retry sau delay
       if ((response.status === 429 || response.status === 503) && i < retries) {
         const delay = 2000 * Math.pow(2, i); // 2s, 4s
@@ -50,7 +50,7 @@ const Chatbot = ({ onClose, isMobile = false }) => {
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
-      
+
       // Các lỗi khác hoặc hết retry → throw
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Lỗi server (${response.status})`);
@@ -74,17 +74,17 @@ const Chatbot = ({ onClose, isMobile = false }) => {
 
     try {
       const allMessages = [...messages, userMessage];
-      const trimmedHistory = allMessages.length > MAX_HISTORY 
-        ? allMessages.slice(-MAX_HISTORY) 
+      const trimmedHistory = allMessages.length > MAX_HISTORY
+        ? allMessages.slice(-MAX_HISTORY)
         : allMessages;
-      
+
       const response = await fetchWithRetry(
         { messages: trimmedHistory },
         abortControllerRef.current.signal
       );
-      
+
       const data = await response.json();
-      
+
       if (data.reply) {
         setMessages(prev => [...prev, { role: 'model', content: data.reply }]);
       } else {
@@ -92,14 +92,14 @@ const Chatbot = ({ onClose, isMobile = false }) => {
       }
     } catch (err) {
       if (err.name === 'AbortError') return;
-      
+
       console.error('Chatbot error:', err);
       const errorMessage = err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')
         ? 'Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng và thử lại.'
         : err.message?.includes('token') || err.message?.includes('limit')
           ? 'Cuộc hội thoại quá dài. Bạn hãy bắt đầu cuộc trò chuyện mới nhé!'
           : err.message || 'Xin lỗi, hệ thống đang gặp chút sự cố. Vui lòng thử lại sau nhé!';
-      
+
       setMessages(prev => [...prev, { role: 'model', content: errorMessage }]);
     } finally {
       setIsLoading(false);
@@ -139,7 +139,7 @@ const Chatbot = ({ onClose, isMobile = false }) => {
           <div className="flex items-center gap-3 flex-1">
             <img src="/avt.jpeg" alt="MVD" className="w-9 h-9 rounded-full object-cover" />
             <div>
-              <h3 className="font-bold text-accent text-sm">MVD Assistant</h3>
+              <h3 className="font-bold text-accent text-sm">MVD Photoshop CSKH</h3>
               <p className="text-[11px] text-text-secondary flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
                 Online
@@ -160,9 +160,9 @@ const Chatbot = ({ onClose, isMobile = false }) => {
               {msg.role === 'model' && (
                 <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mb-0.5" />
               )}
-              <div 
+              <div
                 className={`max-w-[78%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent rounded-tr-none' : 'bg-white/10 rounded-tl-none'}`}
-                style={msg.role === 'user' ? {color: 'var(--bg-main)'} : {color: 'var(--text-primary)'}}
+                style={msg.role === 'user' ? { color: 'var(--bg-main)' } : { color: 'var(--text-primary)' }}
                 dangerouslySetInnerHTML={{ __html: msg.role === 'model' ? formatContent(msg.content) : msg.content }}
               />
             </div>
@@ -182,21 +182,21 @@ const Chatbot = ({ onClose, isMobile = false }) => {
 
         {/* Mobile Input */}
         <form onSubmit={handleSend} className="chatbot-mobile-input">
-          <input 
+          <input
             ref={inputRef}
-            type="text" 
+            type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Nhập tin nhắn..." 
+            placeholder="Nhập tin nhắn..."
             className="flex-1 bg-white/5 border border-glass rounded-full px-4 py-3 text-sm focus:outline-none focus:border-accent transition-colors"
-            style={{color: 'var(--text-primary)', fontSize: '16px'}}
+            style={{ color: 'var(--text-primary)', fontSize: '16px' }}
             autoComplete="off"
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={!input.trim() || isLoading}
             className="w-11 h-11 rounded-full bg-accent flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            style={{color: 'var(--bg-main)'}}
+            style={{ color: 'var(--bg-main)' }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
@@ -221,9 +221,9 @@ const Chatbot = ({ onClose, isMobile = false }) => {
         </div>
         <div className="flex items-center gap-2">
           {messages.length > 1 && (
-            <button 
-              onClick={handleNewChat} 
-              className="text-text-secondary hover:text-accent transition-colors p-1" 
+            <button
+              onClick={handleNewChat}
+              className="text-text-secondary hover:text-accent transition-colors p-1"
               title="Cuộc trò chuyện mới"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
@@ -242,9 +242,9 @@ const Chatbot = ({ onClose, isMobile = false }) => {
             {msg.role === 'model' && (
               <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mb-0.5" />
             )}
-            <div 
+            <div
               className={`max-w-[75%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent rounded-tr-none' : 'bg-white/10 rounded-tl-none'}`}
-              style={msg.role === 'user' ? {color: 'var(--bg-main)'} : {color: 'var(--text-primary)'}}
+              style={msg.role === 'user' ? { color: 'var(--bg-main)' } : { color: 'var(--text-primary)' }}
               dangerouslySetInnerHTML={{ __html: msg.role === 'model' ? formatContent(msg.content) : msg.content }}
             />
           </div>
@@ -264,19 +264,19 @@ const Chatbot = ({ onClose, isMobile = false }) => {
 
       {/* Input */}
       <form onSubmit={handleSend} className="p-4 border-t border-glass bg-bg-main/50 flex gap-2">
-        <input 
-          type="text" 
+        <input
+          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Nhập tin nhắn..." 
+          placeholder="Nhập tin nhắn..."
           className="flex-1 bg-white/5 border border-glass rounded-full px-4 py-2 text-sm focus:outline-none focus:border-accent transition-colors"
-          style={{color: 'var(--text-primary)'}}
+          style={{ color: 'var(--text-primary)' }}
         />
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={!input.trim() || isLoading}
           className="w-10 h-10 rounded-full bg-accent flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-accent-hover"
-          style={{color: 'var(--bg-main)'}}
+          style={{ color: 'var(--bg-main)' }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </button>
