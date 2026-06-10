@@ -51,44 +51,65 @@ const io = new SocketIOServer(server, {
 
 io.on('connection', async (socket) => {
   console.log('🔌 Client connected:', socket.id);
+  
+  const query = socket.handshake.query || {};
+  if (query.type === 'admin') {
+    console.log('Admin socket connected, skipping visitor tracking.');
+    return;
+  }
+
   let dbVisitorId = null;
+  const sessionId = query.sessionId;
   
   try {
-    let ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
-    if (ip.includes(',')) ip = ip.split(',')[0].trim();
-    if (ip.startsWith('::ffff:')) ip = ip.substring(7);
-    
-    let city = 'Unknown';
-    let country = 'Unknown';
-    let lat = 21.0285;
-    let lon = 105.8542;
-
-    if (ip === '::1' || ip === '127.0.0.1') {
-      city = 'Hà Nội (Local)';
-      country = 'Vietnam';
-      ip = '127.0.0.1';
-    } else {
-      const response = await fetch(`http://ip-api.com/json/${ip}`);
-      const data = await response.json();
-      if (data.status === 'success') {
-        city = data.city;
-        country = data.country;
-        lat = data.lat;
-        lon = data.lon;
-      }
+    let existingVisitor = null;
+    if (sessionId) {
+      existingVisitor = await Visitor.findOne({ sessionId }).sort({ joinTime: -1 });
     }
 
-    const newVisitor = new Visitor({
-      ip,
-      city,
-      country,
-      lat,
-      lon,
-      joinTime: Date.now(),
-      leaveTime: null
-    });
-    const savedVisitor = await newVisitor.save();
-    dbVisitorId = savedVisitor._id;
+    if (existingVisitor) {
+      // Resume existing session to prevent duplicates (page reload, strict mode)
+      existingVisitor.leaveTime = null;
+      await existingVisitor.save();
+      dbVisitorId = existingVisitor._id;
+    } else {
+      let ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+      if (ip.includes(',')) ip = ip.split(',')[0].trim();
+      if (ip.startsWith('::ffff:')) ip = ip.substring(7);
+      
+      let city = 'Unknown';
+      let country = 'Unknown';
+      let lat = 21.0285;
+      let lon = 105.8542;
+
+      if (ip === '::1' || ip === '127.0.0.1') {
+        city = 'Hà Nội (Local)';
+        country = 'Vietnam';
+        ip = '127.0.0.1';
+      } else {
+        const response = await fetch(`http://ip-api.com/json/${ip}`);
+        const data = await response.json();
+        if (data.status === 'success') {
+          city = data.city;
+          country = data.country;
+          lat = data.lat;
+          lon = data.lon;
+        }
+      }
+
+      const newVisitor = new Visitor({
+        sessionId,
+        ip,
+        city,
+        country,
+        lat,
+        lon,
+        joinTime: Date.now(),
+        leaveTime: null
+      });
+      const savedVisitor = await newVisitor.save();
+      dbVisitorId = savedVisitor._id;
+    }
 
     const recentVisitors = await Visitor.find().sort({ joinTime: -1 }).limit(100);
     io.emit('visitor-updated', recentVisitors);

@@ -48,6 +48,7 @@ const VisitorMap = () => {
 
         socketRef.current = io(serverUrl, {
           transports: ['websocket', 'polling'],
+          query: { type: 'admin' }
         });
 
         socketRef.current.on('visitor-updated', (activeList) => {

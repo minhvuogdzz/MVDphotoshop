@@ -121,8 +121,15 @@ export const DataProvider = ({ children }) => {
           ? import.meta.env.VITE_API_URL.replace('/api', '')
           : 'http://localhost:5001';
         
+        let sessionId = sessionStorage.getItem('visitor_session');
+        if (!sessionId) {
+          sessionId = Math.random().toString(36).substring(2, 15);
+          sessionStorage.setItem('visitor_session', sessionId);
+        }
+
         socketRef.current = io(serverUrl, {
           transports: ['websocket', 'polling'],
+          query: { sessionId, type: 'visitor' },
           reconnection: true,
           reconnectionAttempts: 5,
           reconnectionDelay: 3000,
