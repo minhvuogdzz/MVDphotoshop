@@ -16,9 +16,9 @@ const Admin = () => {
     services: [],
     about: null,
     testimonials: [],
-    faq: [],
     comparisons: [],
-    collaborations: []
+    collaborations: [],
+    promo: null
   });
 
   // Form & List states
@@ -58,7 +58,7 @@ const Admin = () => {
 
   const fetchAllData = async () => {
     try {
-      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq', 'comparisons', 'collaborations'];
+      const endpoints = ['hero', 'portfolio', 'services', 'about', 'testimonials', 'faq', 'comparisons', 'collaborations', 'promo'];
       const responses = await Promise.all(endpoints.map(ep => api.get(`/${ep}`)));
       
       const newData = {};
@@ -343,6 +343,7 @@ const Admin = () => {
             { id: 'faq', label: 'Câu hỏi thường gặp' },
             { id: 'comparisons', label: 'Before/After' },
             { id: 'collaborations', label: 'Sản phẩm cộng tác' },
+            { id: 'promo', label: '📢 Quảng cáo & Banner' },
             { id: 'visitors', label: '📍 Bản đồ Visitor' }
           ].map(tab => (
             <button 
@@ -594,6 +595,56 @@ const Admin = () => {
                   </div>
                 </>
               )}
+              {activeTab === 'promo' && (
+                <>
+                  <div className="flex items-center gap-4 bg-white/5 p-4 rounded-lg border border-glass">
+                    <label className="text-white font-bold flex-1">Hiển thị Banners 2 bên lề (Desktop)</label>
+                    <input 
+                      type="checkbox" 
+                      checked={formData.desktopEnabled || false} 
+                      onChange={e => setFormData({...formData, desktopEnabled: e.target.checked})}
+                      className="w-6 h-6 rounded cursor-pointer accent-accent"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center gap-4 bg-white/5 p-4 rounded-lg border border-glass">
+                    <label className="text-white font-bold flex-1">Hiển thị Popup quảng cáo (Mobile)</label>
+                    <input 
+                      type="checkbox" 
+                      checked={formData.mobileEnabled || false} 
+                      onChange={e => setFormData({...formData, mobileEnabled: e.target.checked})}
+                      className="w-6 h-6 rounded cursor-pointer accent-accent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-2 text-text-secondary font-bold">Thư viện ảnh Quảng cáo (Tỉ lệ 4:6)</label>
+                    <p className="text-sm text-text-secondary mb-4">Các ảnh này sẽ tự động cuộn ở 2 bên lề trên máy tính, và lấy ảnh đầu tiên làm Popup trên điện thoại. Hỗ trợ GIF động.</p>
+                    <div className="flex flex-wrap gap-4 mb-4">
+                      {(formData.images || []).map((img, idx) => (
+                        <div key={idx} className="relative group">
+                          <img src={img} alt="Promo" className="w-24 h-36 object-cover rounded-lg border border-glass" />
+                          <button type="button" onClick={() => setFormData({...formData, images: formData.images.filter((_, i) => i !== idx)})} className="absolute -top-2 -right-2 bg-[#ff6b6b] text-white w-7 h-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity font-bold">×</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-4">
+                        <input 
+                          type="file" 
+                          multiple
+                          accept="image/*"
+                          onChange={(e) => handleMultipleFileUpload(e, 'images')}
+                          disabled={isUploading}
+                          className="text-sm text-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                        />
+                      </div>
+                      {isUploading && <span className="text-accent text-sm animate-pulse">Đang nén & tải ảnh...</span>}
+                    </div>
+                  </div>
+                </>
+              )}
+
               <button type="submit" className="px-6 py-3 bg-accent text-bg-main rounded-lg font-bold hover:bg-accent-hover transition-colors self-start">Lưu thay đổi</button>
             </form>
           )}

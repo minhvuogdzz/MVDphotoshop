@@ -5,6 +5,8 @@ import Admin from './pages/Admin';
 import Projects from './pages/Projects';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
+import SideBanners from './components/Promo/SideBanners';
+import MobilePopup from './components/Promo/MobilePopup';
 
 function App() {
   const audioRef = useRef(null);
@@ -50,6 +52,8 @@ function App() {
   return (
     <>
       <audio ref={audioRef} src="/nhac.mp3" loop preload="metadata" />
+      <SideBanners />
+      <MobilePopup />
       <Header />
       <main>
         <Routes>

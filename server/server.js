@@ -26,6 +26,7 @@ import FAQ from './models/FAQ.js';
 import Comparison from './models/Comparison.js';
 import Collaboration from './models/Collaboration.js';
 import Visitor from './models/Visitor.js';
+import Promo from './models/Promo.js';
 
 dotenv.config();
 
@@ -239,13 +240,18 @@ app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) =>
       return res.status(400).json({ error: 'No image uploaded' });
     }
 
-    // Compress with sharp (max 1920px width, webp 80% quality -> usually < 600kb)
-    const webpBuffer = await sharp(req.file.buffer)
-      .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 80 })
-      .toBuffer();
+    let finalBuffer;
+    if (req.file.mimetype === 'image/gif') {
+      finalBuffer = req.file.buffer;
+    } else {
+      // Compress with sharp (max 1920px width, webp 80% quality -> usually < 600kb)
+      finalBuffer = await sharp(req.file.buffer)
+        .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+    }
 
-    const result = await streamUploadToCloudinary(webpBuffer);
+    const result = await streamUploadToCloudinary(finalBuffer);
     res.json({ url: result.secure_url });
   } catch (err) {
     console.error('Upload Error:', err);
@@ -261,12 +267,17 @@ app.post('/api/upload-multiple', requireAuth, upload.array('images', 20), async 
 
     const urls = [];
     for (const file of req.files) {
-      const webpBuffer = await sharp(file.buffer)
-        .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
-        .webp({ quality: 80 })
-        .toBuffer();
+      let finalBuffer;
+      if (file.mimetype === 'image/gif') {
+        finalBuffer = file.buffer;
+      } else {
+        finalBuffer = await sharp(file.buffer)
+          .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
+          .webp({ quality: 80 })
+          .toBuffer();
+      }
 
-      const result = await streamUploadToCloudinary(webpBuffer);
+      const result = await streamUploadToCloudinary(finalBuffer);
       urls.push(result.secure_url);
     }
 
@@ -293,6 +304,31 @@ app.get('/api/ping', (req, res) => {
 });
 
 // --- API Endpoints ---
+// Promo
+app.get('/api/promo', async (req, res) => {
+  try {
+    const promo = await Promo.findOne();
+    res.json(promo || { images: [], mobileEnabled: false, desktopEnabled: false });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/promo', requireAuth, async (req, res) => {
+  try {
+    let promo = await Promo.findOne();
+    if (promo) {
+      Object.assign(promo, req.body);
+    } else {
+      promo = new Promo(req.body);
+    }
+    await promo.save();
+    emitDataUpdate('promo');
+    res.json(promo);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Visitors
 app.get('/api/visitors', requireAuth, async (req, res) => {
   try {
