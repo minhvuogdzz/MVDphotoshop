@@ -16,7 +16,7 @@ const CollabSection = () => {
     <section id="collaborations" className="py-[100px] bg-bg-secondary border-t border-white/5">
       <div className="container-custom">
         <div className="text-center mb-12">
-          <h2 className="text-[40px] mb-4 text-accent">Sản phẩm cộng tác Studio nổi bật</h2>
+          <h2 className="text-[40px] mb-4 text-accent">Dành cho các nhà tuyển dụng và Studio</h2>
           <p className="text-text-secondary max-w-[600px] mx-auto">Những dự án hợp tác độc đáo mang đến những tác phẩm tuyệt vời.</p>
         </div>
 
@@ -42,9 +42,9 @@ const CollabSection = () => {
                 <SwiperSlide key={item._id} className="!h-auto">
                   <div className="group relative overflow-hidden transition-all duration-500 bg-white/5 border border-glass rounded-xl flex flex-col h-full shadow-lg">
                     <div className="overflow-hidden">
-                      <img 
-                        src={item.image} 
-                        alt={item.title} 
+                      <img
+                        src={item.image}
+                        alt={item.title}
                         className="w-full aspect-[4/6] object-cover block rounded-t-xl transition-transform duration-700 group-hover:scale-105"
                         loading="lazy"
                       />
@@ -56,7 +56,7 @@ const CollabSection = () => {
                       </div>
                       <div className="flex flex-col gap-3 mt-auto">
                         {(item.originalDriveLink || item.driveLink) && (
-                          <a 
+                          <a
                             href={item.originalDriveLink || item.driveLink}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -67,7 +67,7 @@ const CollabSection = () => {
                           </a>
                         )}
                         {item.editedDriveLink && (
-                          <a 
+                          <a
                             href={item.editedDriveLink}
                             target="_blank"
                             rel="noopener noreferrer"
