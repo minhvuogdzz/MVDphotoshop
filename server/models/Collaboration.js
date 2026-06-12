@@ -14,7 +14,12 @@ const collaborationSchema = new mongoose.Schema({
   },
   driveLink: {
     type: String,
-    required: true,
+  },
+  originalDriveLink: {
+    type: String,
+  },
+  editedDriveLink: {
+    type: String,
   },
   order: {
     type: Number,

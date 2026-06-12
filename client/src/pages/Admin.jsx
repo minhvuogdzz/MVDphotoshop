@@ -782,7 +782,8 @@ const Admin = () => {
                 <>
                   <input type="text" placeholder="Tên bộ ảnh" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className={inputStyle} required />
                   <input type="text" placeholder="Địa điểm (Location)" value={formData.location || ''} onChange={e => setFormData({...formData, location: e.target.value})} className={inputStyle} />
-                  <input type="text" placeholder="Link Drive chi tiết" value={formData.driveLink || ''} onChange={e => setFormData({...formData, driveLink: e.target.value})} className={inputStyle} required />
+                  <input type="text" placeholder="Link Drive ảnh gốc" value={formData.originalDriveLink || ''} onChange={e => setFormData({...formData, originalDriveLink: e.target.value})} className={inputStyle} />
+                  <input type="text" placeholder="Link Drive ảnh sửa" value={formData.editedDriveLink || ''} onChange={e => setFormData({...formData, editedDriveLink: e.target.value})} className={inputStyle} />
                   
                   <div>
                     <label className="block mb-2 text-text-secondary">Ảnh minh họa (Tỷ lệ 4:6)</label>
