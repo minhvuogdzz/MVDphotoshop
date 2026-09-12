@@ -7,6 +7,6 @@
 
 .marquee-content {
   display: flex;
-  gap: 24px;
+  gap: 8px;
   min-width: max-content;
 }

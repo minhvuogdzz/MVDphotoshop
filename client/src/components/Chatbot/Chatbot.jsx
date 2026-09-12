@@ -57,11 +57,18 @@ const Chatbot = ({ onClose, isMobile = false }) => {
     }
   };
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const QUICK_PROMPTS = [
+    'Báo giá các gói dịch vụ',
+    'Thời gian hoàn thiện bao lâu?',
+    'Tư vấn chỉnh sửa ảnh',
+    'Làm sao để gửi ảnh gốc?'
+  ];
 
-    const userMessage = { role: 'user', content: input };
+  const sendUserMessage = async (textToSend) => {
+    const trimmed = textToSend?.trim();
+    if (!trimmed || isLoading) return;
+
+    const userMessage = { role: 'user', content: trimmed };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
@@ -113,6 +120,11 @@ const Chatbot = ({ onClose, isMobile = false }) => {
     setInput('');
   };
 
+  const handleSend = (e) => {
+    if (e) e.preventDefault();
+    sendUserMessage(input);
+  };
+
   // Format message content - basic markdown-like formatting
   const formatContent = (content) => {
     if (!content) return '';
@@ -161,19 +173,38 @@ const Chatbot = ({ onClose, isMobile = false }) => {
                 <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mb-0.5" />
               )}
               <div
-                className={`max-w-[78%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent rounded-tr-none' : 'bg-white/10 rounded-tl-none'}`}
-                style={msg.role === 'user' ? { color: 'var(--bg-main)' } : { color: 'var(--text-primary)' }}
+                className={`max-w-[78%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${
+                  msg.role === 'user' 
+                    ? 'bg-accent text-neutral-950 font-medium rounded-tr-none shadow-sm' 
+                    : 'bg-black/5 dark:bg-white/10 text-text-primary border border-black/5 dark:border-white/10 rounded-tl-none'
+                }`}
                 dangerouslySetInnerHTML={{ __html: msg.role === 'model' ? formatContent(msg.content) : msg.content }}
               />
             </div>
           ))}
+          {messages.length === 1 && !isLoading && (
+            <div className="flex flex-col gap-2 mt-2 ml-9">
+              <span className="text-xs text-text-secondary font-medium">Gợi ý câu hỏi nhanh:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_PROMPTS.map((prompt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => sendUserMessage(prompt)}
+                    className="text-xs text-accent bg-black/5 dark:bg-white/5 hover:bg-accent hover:text-neutral-950 font-medium border border-black/10 dark:border-white/10 px-3 py-1.5 rounded-full transition-all text-left cursor-pointer"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {isLoading && (
             <div className="flex justify-start items-end gap-2">
               <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mb-0.5" />
-              <div className="bg-white/10 p-3 rounded-2xl rounded-tl-none text-sm flex gap-1.5 items-center h-[44px]">
-                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/10 p-3 rounded-2xl rounded-tl-none text-sm flex gap-1.5 items-center h-[44px]">
+                <div className="w-2 h-2 bg-text-secondary/60 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-text-secondary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-text-secondary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
             </div>
           )}
@@ -188,15 +219,14 @@ const Chatbot = ({ onClose, isMobile = false }) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Nhập tin nhắn..."
-            className="flex-1 bg-white/5 border border-glass rounded-full px-4 py-3 text-sm focus:outline-none focus:border-accent transition-colors"
-            style={{ color: 'var(--text-primary)', fontSize: '16px' }}
+            className="flex-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
+            style={{ fontSize: '16px' }}
             autoComplete="off"
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="w-11 h-11 rounded-full bg-accent flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            style={{ color: 'var(--bg-main)' }}
+            className="w-11 h-11 rounded-full bg-accent text-neutral-950 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
@@ -229,7 +259,7 @@ const Chatbot = ({ onClose, isMobile = false }) => {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
             </button>
           )}
-          <button onClick={onClose} className="text-text-secondary hover:text-white transition-colors">
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
@@ -243,19 +273,38 @@ const Chatbot = ({ onClose, isMobile = false }) => {
               <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mb-0.5" />
             )}
             <div
-              className={`max-w-[75%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-accent rounded-tr-none' : 'bg-white/10 rounded-tl-none'}`}
-              style={msg.role === 'user' ? { color: 'var(--bg-main)' } : { color: 'var(--text-primary)' }}
+              className={`max-w-[75%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${
+                msg.role === 'user' 
+                  ? 'bg-accent text-neutral-950 font-medium rounded-tr-none shadow-sm' 
+                  : 'bg-black/5 dark:bg-white/10 text-text-primary border border-black/5 dark:border-white/10 rounded-tl-none'
+              }`}
               dangerouslySetInnerHTML={{ __html: msg.role === 'model' ? formatContent(msg.content) : msg.content }}
             />
           </div>
         ))}
+        {messages.length === 1 && !isLoading && (
+          <div className="flex flex-col gap-2 mt-1 ml-9">
+            <span className="text-xs text-text-secondary font-medium">Gợi ý câu hỏi nhanh:</span>
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_PROMPTS.map((prompt, i) => (
+                <button
+                  key={i}
+                  onClick={() => sendUserMessage(prompt)}
+                  className="text-xs text-accent bg-black/5 dark:bg-white/5 hover:bg-accent hover:text-neutral-950 font-medium border border-black/10 dark:border-white/10 px-3 py-1.5 rounded-full transition-all text-left cursor-pointer"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {isLoading && (
           <div className="flex justify-start items-end gap-2">
             <img src="/avt.jpeg" alt="MVD" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mb-0.5" />
-            <div className="bg-white/10 p-3 rounded-2xl rounded-tl-none text-sm flex gap-1.5 items-center h-[44px]">
-              <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/10 p-3 rounded-2xl rounded-tl-none text-sm flex gap-1.5 items-center h-[44px]">
+              <div className="w-2 h-2 bg-text-secondary/60 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-text-secondary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-text-secondary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
             </div>
           </div>
         )}
@@ -269,14 +318,12 @@ const Chatbot = ({ onClose, isMobile = false }) => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Nhập tin nhắn..."
-          className="flex-1 bg-white/5 border border-glass rounded-full px-4 py-2 text-sm focus:outline-none focus:border-accent transition-colors"
-          style={{ color: 'var(--text-primary)' }}
+          className="flex-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full px-4 py-2 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
         />
         <button
           type="submit"
           disabled={!input.trim() || isLoading}
-          className="w-10 h-10 rounded-full bg-accent flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-accent-hover"
-          style={{ color: 'var(--bg-main)' }}
+          className="w-10 h-10 rounded-full bg-accent text-neutral-950 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-accent-hover"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </button>

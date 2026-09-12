@@ -1,78 +1,59 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
-import { useData } from './contexts/DataContext';
+import { useEffect } from 'react';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
-import Admin from './pages/Admin';
+import About from './pages/About';
+import Courses from './pages/Courses';
+import Services from './pages/Services';
+import Showcase from './pages/Showcase';
+import Resources from './pages/Resources';
+import Contact from './pages/Contact';
 import Projects from './pages/Projects';
+import Admin from './pages/Admin';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import SideBanners from './components/Promo/SideBanners';
+import MobilePopup from './components/Promo/MobilePopup';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant'
+    });
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
-  const { hero } = useData();
-  const audioRef = useRef(null);
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
 
-  const audioSrc = hero?.backgroundMusic || "/nhac.mp3";
-
-  useEffect(() => {
-    const playAudio = async () => {
-      // Do not attempt to play audio on admin route
-      if (isAdmin) return;
-      try {
-        if (audioRef.current) {
-          audioRef.current.volume = 0.3; // Reduce volume
-          // Attempt to play immediately
-          await audioRef.current.play();
-        }
-      } catch (error) {
-        console.log("Autoplay blocked by browser. Will play on first interaction.", error);
-        
-        const validInteractions = ['click', 'touchstart', 'keydown', 'mousedown'];
-        
-        const playOnInteract = async () => {
-          try {
-            if (audioRef.current) {
-              audioRef.current.volume = 0.3; // Reduce volume
-              await audioRef.current.play();
-              // If successful, remove all listeners
-              validInteractions.forEach(evt => 
-                window.removeEventListener(evt, playOnInteract)
-              );
-            }
-          } catch (err) {
-            // Still blocked (maybe invalid interaction), keep waiting
-            console.log("Still waiting for valid user interaction...");
-          }
-        };
-
-        validInteractions.forEach(evt => 
-          window.addEventListener(evt, playOnInteract, { once: false })
-        );
-      }
-    };
-    
-    // Slight delay to allow audio source to load if it changed
-    const timer = setTimeout(() => {
-      playAudio();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [audioSrc]);
-
   return (
     <>
-      {!isAdmin && <audio ref={audioRef} src={audioSrc} loop preload="metadata" />}
+      <ScrollToTop />
       {!isAdmin && <SideBanners />}
+      {!isAdmin && <MobilePopup />}
       {!isAdmin && <Header />}
       
       <main className={isAdmin ? 'bg-bg-main min-h-screen' : ''}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/projects" element={<Projects />} />
-        </Routes>
+        <div key={isAdmin ? 'admin' : location.pathname} className={!isAdmin ? 'page-enter-transition' : ''}>
+          <Routes location={location}>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/showcase" element={<Showcase />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </main>
       
       {!isAdmin && <Footer />}
@@ -81,3 +62,5 @@ function App() {
 }
 
 export default App;
+
+

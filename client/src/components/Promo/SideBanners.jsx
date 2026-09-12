@@ -1,23 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useData } from '../../contexts/DataContext';
 
-const FadeSlide = ({ images, widthClass }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+const FadeSlide = ({ images, widthClass, isHovered, initialIndex = 0, intervalMs = 4000 }) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex % (images?.length || 1));
 
   useEffect(() => {
-    if (!images || images.length <= 1) return;
+    setCurrentIndex(initialIndex % (images?.length || 1));
+  }, [initialIndex, images]);
+
+  useEffect(() => {
+    if (!images || images.length <= 1 || isHovered) return;
     
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 3000); 
+    }, intervalMs); 
     
     return () => clearInterval(interval);
-  }, [images]);
+  }, [images, isHovered, intervalMs]);
 
   if (!images || images.length === 0) return null;
 
   return (
-    <div className={`relative ${widthClass} overflow-hidden bg-black shadow-[0_0_20px_rgba(0,0,0,0.6)]`}>
+    <div className={`relative ${widthClass} overflow-hidden bg-neutral-900/40 dark:bg-black/40 rounded-xl border border-black/10 dark:border-white/10 hover:border-accent/50 shadow-xl dark:shadow-[0_10px_35px_rgba(0,0,0,0.8)] transition-all duration-500`}>
       {images.map((img, idx) => (
         <img 
           key={idx}
@@ -25,9 +29,10 @@ const FadeSlide = ({ images, widthClass }) => {
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
             idx === currentIndex ? 'opacity-100' : 'opacity-0'
           }`} 
-          alt="Promo" 
+          alt="Promo Banner" 
         />
       ))}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
     </div>
   );
 };
@@ -35,23 +40,26 @@ const FadeSlide = ({ images, widthClass }) => {
 const SideBanners = () => {
   const { promo } = useData();
   const [isVisible, setIsVisible] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  const [isHoveredLeft, setIsHoveredLeft] = useState(false);
+  const [isHoveredRight, setIsHoveredRight] = useState(false);
 
   useEffect(() => {
-    if (!promo || !promo.desktopEnabled || !promo.images || promo.images.length === 0) return;
+    if (!promo || !promo.desktopEnabled || !promo.images || promo.images.length === 0 || isDismissed) return;
 
     const handleScroll = () => {
       const portfolio = document.getElementById('portfolio');
       
       if (portfolio) {
         const portRect = portfolio.getBoundingClientRect();
-        
-        // Show banner only when Portfolio section is reasonably within the screen 
-        // (top entering screen, bottom hasn't left screen)
-        if (portRect.top < window.innerHeight * 0.8 && portRect.bottom > window.innerHeight * 0.2) {
+        // Luôn hiển thị kể từ khi lướt xuống section portfolio xuống dưới
+        if (portRect.top < window.innerHeight * 0.85) {
           setIsVisible(true);
         } else {
           setIsVisible(false);
         }
+      } else {
+        setIsVisible(window.scrollY > 300);
       }
     };
 
@@ -59,30 +67,62 @@ const SideBanners = () => {
     handleScroll(); 
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [promo]);
+  }, [promo, isDismissed]);
 
-  if (!promo || !promo.desktopEnabled || !promo.images || promo.images.length === 0) {
+  if (!promo || !promo.desktopEnabled || !promo.images || promo.images.length === 0 || isDismissed) {
     return null;
   }
 
-  // We set z-index to 5 so it is above background but below the navigation (z-50)
+  const halfLen = Math.floor(promo.images.length / 2) || 1;
+
   return (
     <>
+      {/* Left Banner */}
       <div 
-        className={`fixed top-[88px] left-2 xl:left-4 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
-          isVisible ? 'opacity-90' : 'opacity-0'
+        onMouseEnter={() => setIsHoveredLeft(true)}
+        onMouseLeave={() => setIsHoveredLeft(false)}
+        className={`fixed top-[90px] left-3 xl:left-4 2xl:left-7 z-[25] hidden xl:block group transition-all duration-700 ${
+          isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6 pointer-events-none'
         }`}
       >
-        <FadeSlide images={promo.images} widthClass="w-[160px] xl:w-[240px] h-[calc(100vh-88px)]" />
+        <button
+          onClick={() => setIsDismissed(true)}
+          title="Ẩn banner quảng cáo"
+          className="absolute -top-2 -right-2 z-30 w-6 h-6 rounded-full bg-black/85 text-white/70 hover:text-white hover:bg-black border border-white/20 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-md cursor-pointer"
+        >
+          ✕
+        </button>
+        <FadeSlide 
+          images={promo.images} 
+          initialIndex={0}
+          intervalMs={4200}
+          widthClass="w-[190px] xl:w-[215px] 2xl:w-[250px] h-[calc(100vh-125px)]" 
+          isHovered={isHoveredLeft} 
+        />
       </div>
 
+      {/* Right Banner */}
       <div 
-        className={`fixed top-[88px] right-2 xl:right-4 z-[5] hidden lg:block pointer-events-none transition-opacity duration-1000 ${
-          isVisible ? 'opacity-90' : 'opacity-0'
+        onMouseEnter={() => setIsHoveredRight(true)}
+        onMouseLeave={() => setIsHoveredRight(false)}
+        className={`fixed top-[90px] right-3 xl:right-4 2xl:right-7 z-[25] hidden xl:block group transition-all duration-700 ${
+          isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-6 pointer-events-none'
         }`}
       >
-        {/* Pass a reversed array so the right side shows different sequence if desired, or same array */}
-        <FadeSlide images={[...promo.images].reverse()} widthClass="w-[160px] xl:w-[240px] h-[calc(100vh-88px)]" />
+        <button
+          onClick={() => setIsDismissed(true)}
+          title="Ẩn banner quảng cáo"
+          className="absolute -top-2 -left-2 z-30 w-6 h-6 rounded-full bg-black/85 text-white/70 hover:text-white hover:bg-black border border-white/20 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-md cursor-pointer"
+        >
+          ✕
+        </button>
+        <FadeSlide 
+          images={promo.images} 
+          initialIndex={halfLen}
+          intervalMs={4800}
+          widthClass="w-[190px] xl:w-[215px] 2xl:w-[250px] h-[calc(100vh-125px)]" 
+          isHovered={isHoveredRight} 
+        />
       </div>
     </>
   );

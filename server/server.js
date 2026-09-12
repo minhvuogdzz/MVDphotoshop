@@ -27,6 +27,9 @@ import Comparison from './models/Comparison.js';
 import Collaboration from './models/Collaboration.js';
 import Visitor from './models/Visitor.js';
 import Promo from './models/Promo.js';
+import Resource from './models/Resource.js';
+import PageSettings from './models/PageSettings.js';
+
 
 dotenv.config();
 
@@ -91,20 +94,6 @@ io.on('connection', async (socket) => {
         city = 'Mạng nội bộ (LAN/Dev)';
         country = 'Vietnam';
         ip = ip === '::1' ? '127.0.0.1' : ip;
-        
-        // Notify admin for LAN visits
-        sendEmail(
-          `[MVD Portfolio] Có truy cập nội bộ (LAN) từ ${ip}`,
-          `
-            <h2>Hệ thống ghi nhận lượt truy cập nội bộ:</h2>
-            <ul>
-              <li><strong>Thời gian:</strong> ${new Date().toLocaleString('vi-VN')}</li>
-              <li><strong>IP:</strong> ${ip}</li>
-              <li><strong>Vị trí:</strong> ${city}</li>
-            </ul>
-            <p>Admin truy cập trực tiếp bằng Mạng nội bộ để test web.</p>
-          `
-        );
       }
 
       const newVisitor = new Visitor({
@@ -124,62 +113,30 @@ io.on('connection', async (socket) => {
       const recentVisitors = await Visitor.find().sort({ joinTime: -1 }).limit(100);
       io.emit('visitor-updated', recentVisitors);
 
-      // Asynchronous IP lookup to prevent connection hang
+      // Asynchronous IP lookup for external visitors to update Map coordinates
       if (ip !== '127.0.0.1' && !ip.startsWith('192.168.')) {
-        fetch(`http://ip-api.com/json/${ip}`)
+        fetch(`https://ipapi.co/${ip}/json/`)
           .then(res => res.json())
+          .catch(() => fetch(`http://ip-api.com/json/${ip}`).then(r => r.json()))
           .then(async data => {
-            let locCity = 'Unknown';
-            let locCountry = 'Unknown';
-            let locLat = 21.0285;
-            let locLon = 105.8542;
-
-            if (data.status === 'success') {
-              locCity = data.city;
-              locCountry = data.country;
-              locLat = data.lat;
-              locLon = data.lon;
+            if (data && (data.status === 'success' || data.city)) {
+              const locCity = data.city || 'Unknown';
+              const locCountry = data.country_name || data.country || 'Unknown';
+              const locLat = Number(data.latitude || data.lat) || 21.0285;
+              const locLon = Number(data.longitude || data.lon) || 105.8542;
 
               await Visitor.findByIdAndUpdate(dbVisitorId, {
-                city: data.city,
-                country: data.country,
-                lat: data.lat,
-                lon: data.lon
+                city: locCity,
+                country: locCountry,
+                lat: locLat,
+                lon: locLon
               });
               const updatedList = await Visitor.find().sort({ joinTime: -1 }).limit(100);
               io.emit('visitor-updated', updatedList);
             }
-
-            // Always notify admin, whether IP lookup succeeded or not
-            sendEmail(
-              `[MVD Portfolio] Có khách đang truy cập từ ${locCity !== 'Unknown' ? locCity : ip}`,
-              `
-                <h2>Có khách hàng mới vừa truy cập trang Portfolio:</h2>
-                <ul>
-                  <li><strong>Thời gian:</strong> ${new Date().toLocaleString('vi-VN')}</li>
-                  <li><strong>IP:</strong> ${ip}</li>
-                  <li><strong>Vị trí:</strong> ${locCity}, ${locCountry}</li>
-                  <li><strong>Tọa độ:</strong> ${locLat}, ${locLon}</li>
-                </ul>
-                <p>Hãy vào trang Quản trị để theo dõi vị trí trực tiếp trên Bản đồ.</p>
-              `
-            );
           })
           .catch(err => {
-            console.warn(`ip-api async lookup failed for ${ip}:`, err.message);
-            // Send fallback email if fetch itself crashes
-            sendEmail(
-              `[MVD Portfolio] Có khách đang truy cập từ ${ip}`,
-              `
-                <h2>Có khách hàng mới vừa truy cập trang Portfolio:</h2>
-                <ul>
-                  <li><strong>Thời gian:</strong> ${new Date().toLocaleString('vi-VN')}</li>
-                  <li><strong>IP:</strong> ${ip}</li>
-                  <li><strong>Vị trí:</strong> Unknown (Lỗi truy xuất IP)</li>
-                </ul>
-                <p>Hãy vào trang Quản trị để theo dõi vị trí trực tiếp trên Bản đồ.</p>
-              `
-            );
+            console.warn(`Geo IP lookup failed for ${ip}:`, err.message);
           });
       }
     }
@@ -212,6 +169,12 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
+// Ensure resources upload folder exists
+const resourcesUploadDir = path.join(__dirname, 'public/uploads/resources');
+if (!fs.existsSync(resourcesUploadDir)) {
+  fs.mkdirSync(resourcesUploadDir, { recursive: true });
+}
+
 // Multer config
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -232,22 +195,26 @@ const streamUploadToCloudinary = (buffer) => {
   });
 };
 
-const uploadAudio = multer({
+const uploadResourceFile = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'audio/mpeg' || file.mimetype === 'audio/mp3') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only mp3 files are allowed!'), false);
-    }
-  }
+  limits: { fileSize: 6 * 1024 * 1024 }, // 6MB limit for direct uploads
 });
 
-const streamUploadAudioToCloudinary = (buffer) => {
+const streamUploadRawToCloudinary = (buffer, filename) => {
   return new Promise((resolve, reject) => {
+    const ext = (path.extname(filename || 'resource.zip') || '.zip').toLowerCase();
+    const rawBase = path.basename(filename || 'resource', ext);
+    const cleanBase = rawBase.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const publicId = `${cleanBase}_${Date.now()}${ext}`; // Include extension to preserve file format!
+
     let stream = cloudinary.uploader.upload_stream(
-      { folder: "mvd-portfolio", resource_type: "video" }, // Cloudinary uses "video" for audio files
+      { 
+        folder: "mvd-academy-resources", 
+        resource_type: "raw", // CRITICAL: strictly raw binary to avoid converting or corrupting files!
+        public_id: publicId,
+        use_filename: true,
+        unique_filename: false
+      },
       (error, result) => {
         if (result) {
           resolve(result);
@@ -316,19 +283,56 @@ app.post('/api/upload-multiple', requireAuth, upload.array('images', 20), async 
   }
 });
 
-app.post('/api/upload-audio', requireAuth, uploadAudio.single('audio'), async (req, res) => {
+app.post('/api/upload-resource-file', requireAuth, (req, res, next) => {
+  uploadResourceFile.single('file')(req, res, (err) => {
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File vượt quá dung lượng 6MB! Với file từ 6MB trở lên, bạn hãy chọn phương thức "Liên kết Google Drive".' });
+    } else if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No audio file uploaded' });
+      return res.status(400).json({ error: 'Chưa có file nào được tải lên' });
     }
 
-    const result = await streamUploadAudioToCloudinary(req.file.buffer);
-    // Inject bitrate compression transformation (96kbps) to heavily compress the MP3 file on download
-    const compressedUrl = result.secure_url.replace('/upload/', '/upload/br_96k/');
-    
-    res.json({ url: compressedUrl });
+    const originalName = req.file.originalname;
+    const ext = (path.extname(originalName) || '.zip').toLowerCase();
+    const rawBase = path.basename(originalName, ext);
+    const cleanBase = rawBase.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const savedFilename = `${Date.now()}_${cleanBase}${ext}`;
+    const localFilePath = path.join(resourcesUploadDir, savedFilename);
+
+    // 1. Write exact binary bytes to local disk (100% byte fidelity)
+    fs.writeFileSync(localFilePath, req.file.buffer);
+
+    // 2. Upload to Cloudinary with resource_type: "raw" as cloud backup
+    let cloudinaryResult = null;
+    try {
+      cloudinaryResult = await streamUploadRawToCloudinary(req.file.buffer, originalName);
+    } catch (cldErr) {
+      console.warn('Cloudinary upload warning (local file saved successfully):', cldErr.message);
+    }
+
+    const sizeInMb = (req.file.size / (1024 * 1024)).toFixed(1) + ' MB';
+    const localUrl = `/uploads/resources/${savedFilename}`;
+    const primaryUrl = cloudinaryResult?.secure_url || localUrl;
+
+    res.json({
+      url: primaryUrl,
+      localUrl,
+      cloudinaryUrl: cloudinaryResult?.secure_url || '',
+      localFilePath,
+      savedFilename,
+      fileSize: sizeInMb,
+      fileType: ext.toUpperCase(),
+      originalName,
+      originalFilename: originalName
+    });
   } catch (err) {
-    console.error('Upload Audio Error:', err);
+    console.error('Upload Resource File Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -369,6 +373,41 @@ app.post('/api/promo', requireAuth, async (req, res) => {
     await promo.save();
     emitDataUpdate('promo');
     res.json(promo);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Page Settings (All Page Headings, Descriptions & Banner Images)
+app.get('/api/page-settings', async (req, res) => {
+  try {
+    let settings = await PageSettings.findOne();
+    if (!settings) {
+      settings = await PageSettings.create({});
+    }
+    res.json(settings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/page-settings', requireAuth, async (req, res) => {
+  try {
+    let settings = await PageSettings.findOne();
+    if (settings) {
+      for (const key of Object.keys(req.body)) {
+        if (typeof req.body[key] === 'object' && req.body[key] !== null && !Array.isArray(req.body[key])) {
+          settings[key] = { ...(settings[key] ? settings[key].toObject?.() || settings[key] : {}), ...req.body[key] };
+        } else {
+          settings[key] = req.body[key];
+        }
+      }
+    } else {
+      settings = new PageSettings(req.body);
+    }
+    await settings.save();
+    emitDataUpdate('pageSettings');
+    res.json(settings);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -682,6 +721,201 @@ app.delete('/api/collaborations/:id', requireAuth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ==================== RESOURCES (Kho Tài Nguyên) ====================
+app.get('/api/resources', async (req, res) => {
+  try {
+    const { category, tag, search, vip, hot } = req.query;
+    let query = {};
+
+    if (category && category !== 'Tất cả') {
+      query.category = category;
+    }
+    if (tag) {
+      query.tags = { $in: [tag] };
+    }
+    if (vip === 'true') {
+      query.isVip = true;
+    }
+    if (hot === 'true') {
+      query.isHot = true;
+    }
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { title: searchRegex },
+        { description: searchRegex },
+        { tags: searchRegex },
+        { category: searchRegex },
+        { fileType: searchRegex }
+      ];
+    }
+
+    const resources = await Resource.find(query).sort({ createdAt: -1 });
+    res.json(resources);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/resources/:id', async (req, res) => {
+  try {
+    const resource = await Resource.findById(req.params.id);
+    if (!resource) return res.status(404).json({ error: 'Không tìm thấy tài nguyên' });
+    res.json(resource);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/resources', requireAuth, async (req, res) => {
+  try {
+    let resource;
+    if (req.body._id) {
+      resource = await Resource.findByIdAndUpdate(req.body._id, req.body, { new: true });
+    } else {
+      resource = new Resource(req.body);
+      await resource.save();
+    }
+    emitDataUpdate('resources');
+    res.status(201).json(resource);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/resources/:id', requireAuth, async (req, res) => {
+  try {
+    const resource = await Resource.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    emitDataUpdate('resources');
+    res.json(resource);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/resources/:id', requireAuth, async (req, res) => {
+  try {
+    await Resource.findByIdAndDelete(req.params.id);
+    emitDataUpdate('resources');
+    res.json({ success: true, message: 'Đã xóa tài nguyên thành công' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/resources/:id/download', async (req, res) => {
+  try {
+    const resource = await Resource.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { downloadsCount: 1 } },
+      { new: true }
+    );
+
+    if (!resource) {
+      return res.status(404).json({ error: 'Không tìm thấy tài nguyên' });
+    }
+
+    // Google Drive link redirection
+    if (resource.downloadType === 'drive') {
+      const driveLink = resource.driveUrl || resource.downloadUrl;
+      if (driveLink && driveLink.startsWith('http')) {
+        return res.redirect(driveLink);
+      }
+      return res.status(400).json({ error: 'Liên kết Google Drive không hợp lệ' });
+    }
+
+    // Direct download
+    // 1. Determine exact file extension
+    const ext = (resource.fileType?.startsWith('.') 
+      ? resource.fileType.toLowerCase() 
+      : ('.' + (resource.fileType || 'zip').toLowerCase()));
+    
+    let baseFilename = resource.originalFilename || resource.title || 'MVD_Resource';
+    // Clean dangerous characters for file naming
+    baseFilename = baseFilename.replace(/[/\\?%*:|"<>]/g, '_').trim();
+    const downloadFilename = baseFilename.toLowerCase().endsWith(ext) 
+      ? baseFilename 
+      : `${baseFilename}${ext}`;
+
+    // Clean ascii filename fallback for headers
+    const asciiFilename = downloadFilename.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_');
+
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length');
+
+    // 2. Check if local file exists on server disk
+    let diskPath = resource.localFilePath;
+    if (!diskPath || !fs.existsSync(diskPath)) {
+      if (resource.downloadUrl && resource.downloadUrl.includes('/uploads/resources/')) {
+        const fname = path.basename(resource.downloadUrl);
+        const testPath = path.join(resourcesUploadDir, fname);
+        if (fs.existsSync(testPath)) diskPath = testPath;
+      }
+    }
+
+    if (diskPath && fs.existsSync(diskPath)) {
+      return res.download(diskPath, downloadFilename);
+    }
+
+    // 3. Fallback to Cloudinary / remote URL
+    const remoteUrl = resource.cloudinaryUrl || resource.downloadUrl || resource.fileUrl;
+    if (remoteUrl && remoteUrl.startsWith('http')) {
+      const response = await fetch(remoteUrl);
+      if (!response.ok) {
+        throw new Error(`Lỗi khi tải tệp từ đám mây: ${response.statusText}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${asciiFilename}"; filename*=UTF-8''${encodeURIComponent(downloadFilename)}`
+      );
+      res.setHeader('Content-Length', buffer.length);
+      return res.send(buffer);
+    }
+
+    return res.status(404).json({ error: 'Tài nguyên chưa có file tải về' });
+  } catch (err) {
+    console.error('Resource Download Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/resources/:id/download', async (req, res) => {
+  try {
+    const resource = await Resource.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { downloadsCount: 1 } },
+      { new: true }
+    );
+    res.json({ success: true, downloadsCount: resource ? resource.downloadsCount : 0 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==================== GLOBAL SEARCH (Toàn trang) ====================
+app.get('/api/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || !q.trim()) {
+      return res.json({ resources: [], services: [], courses: [], portfolios: [], projects: [] });
+    }
+    const regex = new RegExp(q.trim(), 'i');
+    const [resources, services, portfolios] = await Promise.all([
+      Resource.find({ $or: [{ title: regex }, { description: regex }, { tags: regex }] }).limit(6),
+      Service.find({ $or: [{ name: regex }, { type: regex }] }).limit(4),
+      Portfolio.find({ $or: [{ title: regex }, { category: regex }] }).limit(4)
+    ]);
+    res.json({ resources, services, courses: services, portfolios, projects });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // Connect to MongoDB & Start Server
 const PORT = process.env.PORT || 5000;

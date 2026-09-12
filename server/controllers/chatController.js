@@ -7,7 +7,7 @@ const BASE_PROMPT = `
 Bạn là trợ lý ảo chính thức của MVD Photoshop - một dịch vụ chuyên nghiệp về Photoshop, Blending và Retouch ảnh (ảnh chân dung, ảnh cưới, nàng thơ, phục hồi ảnh cũ) do chuyên gia với hơn 5 năm kinh nghiệm thực hiện.
 `;
 
-const MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"];
+const MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1000;
 

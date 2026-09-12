@@ -13,7 +13,7 @@ const CollabSection = () => {
   if (!loading && (!collaborations || collaborations.length === 0)) return null;
 
   return (
-    <section id="collaborations" className="py-[100px] bg-bg-secondary border-t border-white/5">
+    <section id="collaborations" className="py-[100px] bg-bg-secondary border-t border-glass">
       <div className="container-custom">
         <div className="text-center mb-12">
           <h2 className="text-[40px] mb-4 text-accent">Dành cho các nhà tuyển dụng và Studio</h2>
@@ -40,7 +40,7 @@ const CollabSection = () => {
             >
               {collaborations.map(item => (
                 <SwiperSlide key={item._id} className="!h-auto">
-                  <div className="group relative overflow-hidden transition-all duration-500 bg-white/5 border border-glass rounded-xl flex flex-col h-full shadow-lg">
+                  <div className="group relative overflow-hidden transition-all duration-500 glass-panel border border-glass rounded-xl flex flex-col h-full shadow-lg">
                     <div className="overflow-hidden">
                       <img
                         src={item.image}
@@ -51,7 +51,7 @@ const CollabSection = () => {
                     </div>
                     <div className="p-6 flex-1 flex flex-col justify-between">
                       <div>
-                        <h3 className="font-secondary text-2xl mb-1 text-white">{item.title}</h3>
+                        <h3 className="font-secondary text-2xl mb-1 text-text-primary">{item.title}</h3>
                         {item.location && <p className="text-sm text-accent mb-5">Location: {item.location}</p>}
                       </div>
                       <div className="flex flex-col gap-3 mt-auto">
@@ -60,7 +60,7 @@ const CollabSection = () => {
                             href={item.originalDriveLink || item.driveLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block w-full py-3 text-center border border-accent text-accent rounded-lg transition-all duration-300 hover:bg-accent hover:text-bg-main font-medium text-sm shadow-[0_0_15px_rgba(192,155,104,0.1)] hover:shadow-[0_0_20px_rgba(192,155,104,0.3)]"
+                            className="block w-full py-3 text-center border border-accent text-accent rounded-lg transition-all duration-300 hover:bg-accent hover:text-neutral-950 font-medium text-sm shadow-[0_0_15px_rgba(192,155,104,0.1)] hover:shadow-[0_0_20px_rgba(192,155,104,0.3)]"
                             title="Link Drive ảnh gốc"
                           >
                             Link Drive ảnh gốc
@@ -71,7 +71,7 @@ const CollabSection = () => {
                             href={item.editedDriveLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block w-full py-3 text-center border border-accent text-accent rounded-lg transition-all duration-300 hover:bg-accent hover:text-bg-main font-medium text-sm shadow-[0_0_15px_rgba(192,155,104,0.1)] hover:shadow-[0_0_20px_rgba(192,155,104,0.3)]"
+                            className="block w-full py-3 text-center border border-accent text-accent rounded-lg transition-all duration-300 hover:bg-accent hover:text-neutral-950 font-medium text-sm shadow-[0_0_15px_rgba(192,155,104,0.1)] hover:shadow-[0_0_20px_rgba(192,155,104,0.3)]"
                             title="Link Drive ảnh sửa"
                           >
                             Link Drive ảnh sửa

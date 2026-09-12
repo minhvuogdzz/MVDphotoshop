@@ -4,32 +4,33 @@
 
 /* ==================== THEME VARIABLES ==================== */
 :root {
-  /* Dark Mode (default) */
+  /* Light Mode (default) */
+  --bg-main: #f8f6f3;
+  --bg-secondary: #f0ece6;
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --text-primary: #1a1a1a;
+  --text-secondary: #5a5a5a;
+  --accent: #a3753b;
+  --accent-hover: #8e632e;
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+  --body-bg: linear-gradient(135deg, #faf8f5 0%, #f0ece6 50%, #e8e2d8 100%);
+  --sidebar-bg: #f5f2ec;
+}
+
+html.dark {
+  /* Dark Mode */
   --bg-main: #0a0a0a;
-  --bg-secondary: rgba(0, 0, 0, 0.2);
+  --bg-secondary: rgba(0, 0, 0, 0.25);
   --bg-glass: rgba(30, 25, 20, 0.65);
   --text-primary: #ffffff;
   --text-secondary: #a3a3a3;
   --accent: #c09b68;
   --accent-hover: #e0b67e;
   --glass-border: rgba(255, 255, 255, 0.05);
-  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
   --body-bg: radial-gradient(circle at top center, #2e2621 0%, #151515 50%, #0a0a0a 100%);
   --sidebar-bg: #1a1715;
-}
-
-html.light {
-  --bg-main: #f8f6f3;
-  --bg-secondary: rgba(0, 0, 0, 0.03);
-  --bg-glass: rgba(255, 255, 255, 0.75);
-  --text-primary: #1a1a1a;
-  --text-secondary: #6b6b6b;
-  --accent: #b38850;
-  --accent-hover: #c9a06a;
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
-  --body-bg: linear-gradient(135deg, #faf8f5 0%, #f0ece6 50%, #e8e2d8 100%);
-  --sidebar-bg: #f0ece6;
 }
 
 html {
@@ -64,22 +65,22 @@ html {
   body::before {
     z-index: -2;
     background: radial-gradient(circle at top center, #2e2621 0%, #151515 50%, #0a0a0a 100%);
-    opacity: 1;
+    opacity: 0;
   }
 
-  /* Light mode gradient */
+  /* Light mode gradient (active by default) */
   body::after {
     z-index: -1;
     background: linear-gradient(135deg, #faf8f5 0%, #f0ece6 50%, #e8e2d8 100%);
-    opacity: 0;
-  }
-
-  html.light body::before {
-    opacity: 0;
-  }
-
-  html.light body::after {
     opacity: 1;
+  }
+
+  html.dark body::before {
+    opacity: 1;
+  }
+
+  html.dark body::after {
+    opacity: 0;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -113,11 +114,27 @@ html {
   }
 
   .container-custom {
-    @apply max-w-[1200px] mx-auto px-6;
+    @apply max-w-[880px] md:max-w-[900px] xl:max-w-[920px] 2xl:max-w-[1080px] mx-auto px-4 sm:px-5;
   }
 }
 
 @layer utilities {
+  @keyframes pageEnter {
+    0% {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .page-enter-transition {
+    animation: pageEnter 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: opacity, transform;
+  }
+
   .animate-fade-in {
     animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
@@ -161,62 +178,72 @@ html {
   .border-glass {
     border-color: var(--glass-border) !important;
   }
-  .text-white {
-    color: var(--text-primary) !important;
-  }
 }
 
 /* ==================== Light mode specific overrides ==================== */
-html.light .bg-white\/5,
-html.light .bg-white\/10 {
-  background-color: rgba(0, 0, 0, 0.05) !important;
+html:not(.dark) .glass-panel,
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
 }
 
+/* Transform hardcoded dark cards to clean light glass cards in Light Mode */
+html:not(.dark) .bg-\[\#141210\],
+html.light .bg-\[\#141210\],
+html:not(.dark) .bg-\[\#12100e\],
+html.light .bg-\[\#12100e\],
+html:not(.dark) .bg-\[\#161311\],
+html.light .bg-\[\#161311\],
+html:not(.dark) .bg-\[\#131110\],
+html.light .bg-\[\#131110\],
+html:not(.dark) .bg-\[\#0c0a09\],
+html.light .bg-\[\#0c0a09\] {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+}
+
+html:not(.dark) .bg-white\/5,
+html.light .bg-white\/5,
+html:not(.dark) .bg-white\/10,
+html.light .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+html:not(.dark) .hover\:bg-white\/5:hover,
+html.light .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+html:not(.dark) .hover\:bg-white\/10:hover,
 html.light .hover\:bg-white\/10:hover {
   background-color: rgba(0, 0, 0, 0.08) !important;
 }
 
+html:not(.dark) .hover\:bg-white\/20:hover,
 html.light .hover\:bg-white\/20:hover {
   background-color: rgba(0, 0, 0, 0.12) !important;
 }
 
-html.light .border-white\/10 {
+html:not(.dark) .border-white\/10,
+html.light .border-white\/10,
+html:not(.dark) .border-white\/5,
+html.light .border-white\/5 {
   border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-html.light .bg-black\/60,
-html.light .bg-black\/70,
-html.light .bg-black\/80 {
-  background-color: rgba(0, 0, 0, 0.6) !important;
-}
-
-/* Light mode mobile sidebar */
+html:not(.dark) .bg-\[\#1a1715\],
 html.light .bg-\[\#1a1715\] {
   background-color: var(--sidebar-bg) !important;
 }
 
-/* Light mode hover:bg-accent text fix */
-html.light .hover\:bg-accent:hover {
-  background-color: var(--accent) !important;
-}
-
-html.light .hover\:text-accent:hover {
-  color: var(--accent) !important;
-}
-
-html.light .bg-accent-hover,
-html.light .hover\:bg-accent-hover:hover {
-  background-color: var(--accent-hover) !important;
-}
-
-/* Light mode chatbot */
-html.light .bg-white\/50 {
-  background-color: rgba(0, 0, 0, 0.3) !important;
-}
-
-/* Light mode glass panel enhancements */
-html.light .glass-panel {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+/* Ensure form inputs have dark text and clean light backgrounds in Light Mode */
+html:not(.dark) input,
+html.light input,
+html:not(.dark) textarea,
+html.light textarea {
+  color: #1a1a1a;
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -291,6 +318,7 @@ html.light .glass-panel {
   }
 }
 
+html:not(.dark) .swiper-pagination-progressbar,
 html.light .swiper-pagination-progressbar {
   background: rgba(0, 0, 0, 0.08) !important;
 }
@@ -298,7 +326,7 @@ html.light .swiper-pagination-progressbar {
 .swiper-pagination-progressbar .swiper-pagination-progressbar-fill {
   background: var(--accent) !important;
   border-radius: 3px !important;
-  box-shadow: 0 0 8px rgba(192, 155, 104, 0.4);
+  box-shadow: 0 0 8px rgba(163, 117, 59, 0.4);
 }
 
 /* Custom Swiper Navigation */
@@ -312,20 +340,21 @@ html.light .swiper-pagination-progressbar {
   width: 48px !important;
   height: 48px !important;
   padding: 12px !important; /* p-3 */
-  background: rgba(18, 18, 18, 0.8) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(8px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
   color: var(--accent) !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   z-index: 100 !important;
 }
 
-html.light .swiper-button-next,
-html.light .swiper-button-prev {
-  background: rgba(255, 255, 255, 0.9) !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+html.dark .swiper-button-next,
+html.dark .swiper-button-prev {
+  background: rgba(18, 18, 18, 0.85) !important;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
 .swiper-button-next:after,
@@ -444,6 +473,10 @@ html.light .swiper-button-prev {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+html.dark .chatbot-peek-bubble {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
               0 0 0 1px rgba(255, 255, 255, 0.05);
 }
@@ -485,15 +518,19 @@ html.light .swiper-button-prev {
   height: 520px;
   max-height: 75vh;
   background: var(--bg-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.6),
-              0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+html.dark .chatbot-desktop-panel {
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.6),
+              0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 /* ==================== MOBILE CHATBOT ==================== */

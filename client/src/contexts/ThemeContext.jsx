@@ -7,13 +7,8 @@ export const ThemeProvider = ({ children }) => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('mvd-theme');
       if (savedTheme) return savedTheme;
-      
-      // Fallback to system preference
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        return 'light';
-      }
     }
-    return 'dark';
+    return 'light';
   });
 
   useEffect(() => {
