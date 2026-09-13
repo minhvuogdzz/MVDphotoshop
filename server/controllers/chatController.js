@@ -2,9 +2,15 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import Service from '../models/Service.js';
 import FAQ from '../models/FAQ.js';
 import About from '../models/About.js';
+import Portfolio from '../models/Portfolio.js';
+import Resource from '../models/Resource.js';
 
 const BASE_PROMPT = `
-Bạn là trợ lý ảo chính thức của MVD Photoshop - một dịch vụ chuyên nghiệp về Photoshop, Blending và Retouch ảnh (ảnh chân dung, ảnh cưới, nàng thơ, phục hồi ảnh cũ) do chuyên gia với hơn 5 năm kinh nghiệm thực hiện.
+Bạn là MVD AI - Trợ lý trí tuệ nhân tạo độc quyền của MVD Photoshop Academy & Studio (Founder: Mai Văn Đạt / Dương Minh Vương).
+Bạn hỗ trợ tư vấn học viên, khách hàng về các Concept bộ ảnh nghệ thuật, Kho tài nguyên Photoshop/Lightroom, Khóa học đào tạo Retouching và Dịch vụ hậu kỳ chuyên nghiệp.
+QUY TẮC QUAN TRỌNG:
+- Tên bạn là MVD AI. Tuyệt đối KHÔNG BAO GIỜ nói mình là Gemini hay ChatGPT hay do Google/OpenAI tạo ra. Bạn là trí tuệ nhân tạo do hệ thống MVD cấu hình riêng.
+- Hướng dẫn chi tiết người dùng thao tác khi được hỏi: tải tài nguyên tại mục "Tài nguyên", xem các concept bộ ảnh tại "Showcase", xem so sánh trước sau, đặt khóa học hoặc liên hệ trực tiếp qua Zalo/Messenger/Hotline.
 `;
 
 const MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
@@ -49,32 +55,10 @@ async function callGeminiWithRetry(genAI, systemInstruction, cleanHistory, curre
             errMsg.includes('User location is not supported') || errMsg.includes('PERMISSION_DENIED')) {
           throw err;
         }
-        
-        // Nếu lỗi SAFETY → không retry, không đổi model
-        if (errMsg.includes('SAFETY')) {
-          throw err;
-        }
 
-        // Nếu lỗi quota/rate-limit → retry với delay hoặc đổi model
-        if (errMsg.includes('429') || errMsg.includes('quota') || 
-            errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('rate') ||
-            errMsg.includes('overloaded') || errMsg.includes('503')) {
-          if (attempt < MAX_RETRIES) {
-            const delay = RETRY_DELAY_MS * Math.pow(2, attempt);
-            console.log(`[Chatbot] Rate limited, retrying in ${delay}ms...`);
-            await sleep(delay);
-            continue;
-          }
-          console.log(`[Chatbot] Model ${modelName} exhausted retries, trying next model...`);
-          break;
-        }
-
-        // Lỗi khác → retry 1 lần rồi đổi model
         if (attempt < MAX_RETRIES) {
-          await sleep(RETRY_DELAY_MS);
-          continue;
+          await sleep(RETRY_DELAY_MS * (attempt + 1));
         }
-        break;
       }
     }
   }
@@ -86,7 +70,7 @@ export const handleChat = async (req, res) => {
   try {
     if (!process.env.GEMINI_API_KEY) {
       console.error('Lỗi: Chưa cấu hình GEMINI_API_KEY');
-      return res.status(500).json({ error: 'Tính năng Chatbot đang bảo trì. Vui lòng liên hệ qua Zalo hoặc Messenger.' });
+      return res.status(500).json({ error: 'Tính năng Chatbot MVD AI đang bảo trì. Vui lòng liên hệ qua Zalo hoặc Messenger.' });
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -97,9 +81,13 @@ export const handleChat = async (req, res) => {
     }
 
     // Lấy dữ liệu thực tế từ Database
-    const services = await Service.find();
-    const faqs = await FAQ.find();
-    const aboutData = await About.findOne();
+    const [services, faqs, aboutData, portfolios, resources] = await Promise.all([
+      Service.find(),
+      FAQ.find(),
+      About.findOne(),
+      Portfolio.find({}, 'title category location').limit(25),
+      Resource.find({}, 'title category tags fileType isVip').limit(25)
+    ]);
 
     // Tạo cấu trúc danh sách dịch vụ và giá
     let servicesText = "Thông tin bảng giá và dịch vụ hiện tại:\n";
@@ -111,6 +99,22 @@ export const handleChat = async (req, res) => {
       servicesText += "- Hiện chưa có thông tin dịch vụ trên hệ thống.\n";
     }
 
+    // Tạo cấu trúc danh sách Portfolio / Concept
+    let portfolioText = "\nCác concept bộ ảnh nổi bật tại Studio / Showcase:\n";
+    if (portfolios.length > 0) {
+      portfolios.forEach(p => {
+        portfolioText += `- "${p.title}" | Thể loại: ${p.category} | Địa điểm: ${p.location || 'Studio'}\n`;
+      });
+    }
+
+    // Tạo cấu trúc danh sách Tài nguyên
+    let resourcesText = "\nKho tài nguyên nổi bật (Action, Preset, Brush, Font):\n";
+    if (resources.length > 0) {
+      resources.forEach(r => {
+        resourcesText += `- "${r.title}" | Loại: ${r.category} | ${r.isVip ? 'VIP' : 'Miễn phí'} | Đuôi: ${r.fileType}\n`;
+      });
+    }
+
     // Tạo cấu trúc danh sách FAQ
     let faqsText = "\nCâu hỏi thường gặp (FAQ):\n";
     if (faqs.length > 0) {
@@ -120,9 +124,9 @@ export const handleChat = async (req, res) => {
     }
 
     // Tạo cấu trúc thông tin CV
-    let aboutText = "\nThông tin về chuyên gia Retouching (người thực hiện dịch vụ):\n";
+    let aboutText = "\nThông tin về Founder & Đội ngũ MVD Academy:\n";
     if (aboutData) {
-      aboutText += `- Tên: ${aboutData.name || 'Đang cập nhật'}\n`;
+      aboutText += `- Tên: ${aboutData.name || 'Mai Văn Đạt / Dương Minh Vương'}\n`;
       aboutText += `- Kinh nghiệm/Học vấn: ${aboutData.education || 'Đang cập nhật'}\n`;
       aboutText += `- Kỹ năng: ${aboutData.skills ? aboutData.skills.join(', ') : 'Đang cập nhật'}\n`;
       aboutText += `- Thông tin thêm: ${aboutData.description || ''}\n`;
@@ -133,6 +137,8 @@ ${BASE_PROMPT}
 
 [DỮ LIỆU ĐỘNG TỪ WEBSITE]
 ${servicesText}
+${portfolioText}
+${resourcesText}
 ${faqsText}
 ${aboutText}
 [KẾT THÚC DỮ LIỆU ĐỘNG]

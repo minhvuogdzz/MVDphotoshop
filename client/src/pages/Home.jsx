@@ -5,7 +5,6 @@ import ResourcesSpotlightSection from '../components/Resources/ResourcesSpotligh
 import TestimonialSection from '../components/TestimonialSection/TestimonialSection';
 import FAQSection from '../components/FAQSection/FAQSection';
 import ContactSection from '../components/ContactSection/ContactSection';
-import FloatingSocials from '../components/FloatingSocials/FloatingSocials';
 
 const Home = () => {
   useEffect(() => {
@@ -54,9 +53,6 @@ const Home = () => {
       <div className="reveal-on-scroll">
         <ContactSection />
       </div>
-
-      {/* Floating Chatbot & Socials */}
-      <FloatingSocials />
     </>
   );
 };

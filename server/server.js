@@ -15,6 +15,8 @@ import { handleContact } from './controllers/contactController.js';
 import { requireAuth } from './middlewares/authMiddleware.js';
 import { v2 as cloudinary } from 'cloudinary';
 import { sendEmail } from './utils/emailService.js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import Fuse from 'fuse.js';
 
 // Models
 import Hero from './models/Hero.js';
@@ -904,15 +906,241 @@ app.get('/api/search', async (req, res) => {
     if (!q || !q.trim()) {
       return res.json({ resources: [], services: [], courses: [], portfolios: [], projects: [] });
     }
-    const regex = new RegExp(q.trim(), 'i');
+    const escaped = q.trim().replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
     const [resources, services, portfolios] = await Promise.all([
-      Resource.find({ $or: [{ title: regex }, { description: regex }, { tags: regex }] }).limit(6),
-      Service.find({ $or: [{ name: regex }, { type: regex }] }).limit(4),
-      Portfolio.find({ $or: [{ title: regex }, { category: regex }] }).limit(4)
+      Resource.find({ 
+        $or: [
+          { title: regex }, 
+          { description: regex }, 
+          { tags: regex },
+          { category: regex },
+          { fileType: regex }
+        ] 
+      }).limit(6),
+      Service.find({ $or: [{ name: regex }, { type: regex }, { description: regex }] }).limit(4),
+      Portfolio.find({ $or: [{ title: regex }, { category: regex }, { location: regex }] }).limit(6)
     ]);
-    res.json({ resources, services, courses: services, portfolios, projects });
+    res.json({ resources, services, courses: services, portfolios, projects: portfolios });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ==================== MVD AI SMART SEARCH (Trí tuệ nhân tạo MVD AI) ====================
+app.post('/api/search/ai', async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query || !query.trim()) {
+      return res.status(400).json({ error: 'Vui lòng nhập câu hỏi tìm kiếm cho MVD AI' });
+    }
+
+    const trimmedQuery = query.trim();
+
+    // Fetch database items across the ENTIRE website to ground MVD AI
+    const [allPortfolios, allResources, allServices, allComparisons, allFaqs, aboutData] = await Promise.all([
+      Portfolio.find({}, 'title category location coverImage images order').sort({ order: 1 }).limit(40),
+      Resource.find({}, 'title category tags isVip isHot fileType fileSize description instructions').limit(40),
+      Service.find({}, 'name type image price details').limit(20),
+      Comparison.find({}, 'title beforeImage afterImage order').sort({ order: 1 }).limit(10),
+      FAQ.find({}, 'question answer').limit(20),
+      About.findOne({}, 'name title academyName slogan role skills education instructors description')
+    ]);
+
+    // Format grounding context
+    const portfolioContext = allPortfolios.map(p => 
+      `- [Concept Bộ ảnh / Portfolio] "${p.title}" | Thể loại: ${p.category} | Địa điểm: ${p.location || 'Studio'} | Ảnh bìa: ${p.coverImage || ''} | ID: ${p._id}`
+    ).join('\n');
+
+    const resourceContext = allResources.map(r => 
+      `- [Tài nguyên học liệu] "${r.title}" | Thể loại: ${r.category} | Tags: ${(r.tags || []).join(', ')} | Đuôi: ${r.fileType} | VIP: ${r.isVip ? 'Có' : 'Không'} | Mô tả: ${r.description || ''} | Hướng dẫn sử dụng: ${r.instructions ? 'Có sẵn trong chi tiết' : 'N/A'} | ID: ${r._id}`
+    ).join('\n');
+
+    const serviceContext = allServices.map(s => 
+      `- [Khóa học & Dịch vụ] "${s.name}" | Loại: ${s.type} | Giá: ${s.price} | Chi tiết: ${(s.details || []).join('; ')} | Ảnh: ${s.image || ''} | ID: ${s._id}`
+    ).join('\n');
+
+    const comparisonContext = allComparisons.map(c => 
+      `- [So sánh Trước Sau Retouch] "${c.title}" | Ảnh trước: ${c.beforeImage || ''} | Ảnh sau: ${c.afterImage || ''} | ID: ${c._id}`
+    ).join('\n');
+
+    const faqContext = allFaqs.map(f => 
+      `- [FAQ Hỏi đáp] Q: ${f.question} -> A: ${f.answer}`
+    ).join('\n');
+
+    const aboutContext = aboutData ? `
+Học viện: ${aboutData.academyName || 'MVD Photoshop Academy'} | Founder: ${aboutData.name || 'Dương Minh Vương / Mai Văn Đạt'} (${aboutData.role || 'Head Retoucher'})
+Slogan: ${aboutData.slogan || ''}
+Kỹ năng & Chuyên môn: ${(aboutData.skills || []).join(', ')}
+Đội ngũ giảng viên: ${(aboutData.instructors || []).map(i => i.name + ' (' + i.role + ')').join(', ')}
+` : '';
+
+    let aiResult = null;
+
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+        
+        const systemPrompt = `Bạn là MVD AI - Trí tuệ nhân tạo chuyên gia độc quyền của Học viện & Studio MVD Photoshop Academy (Sáng lập: Mai Văn Đạt / Dương Minh Vương).
+Bạn nắm rõ 100% dữ liệu toàn bộ website: các Concept bộ ảnh nghệ thuật, Kho tài nguyên Photoshop/Lightroom, Kỹ thuật Retouch Before/After, Khóa học & Dịch vụ, và cách hướng dẫn người dùng thực hiện các thao tác trên website.
+
+QUY TẮC BẮT BUỘC:
+1. Danh xưng của bạn là MVD AI. Tuyệt đối KHÔNG ĐƯỢC nhắc đến bất kỳ bên thứ ba nào (như Gemini, Google, OpenAI, ChatGPT). Bạn là công nghệ trí tuệ nhân tạo được cấu hình riêng cho MVD.
+2. Trả lời câu hỏi người dùng: "${trimmedQuery}".
+3. Khả năng tư vấn toàn diện:
+   - Nếu hỏi về CONCEPT BỘ ẢNH / TÁC PHẨM (Nàng thơ, Beauty, Couple, Cưới, Ngoài trời, Cổ điển...): Giới thiệu concept phù hợp, phong cách màu sắc, bối cảnh, trích xuất chính xác ID và link ảnh bìa (coverImage) để người dùng xem ngay.
+   - Nếu hỏi về TÀI NGUYÊN (Action làm da, Preset màu cưới, Brush mây khói, Font chữ...): Phân tích công dụng, định dạng file, giải thích cách tải và áp dụng.
+   - Nếu hỏi về HƯỚNG DẪN SỬ DỤNG WEBSITE (Cách tải tài nguyên, cách xem so sánh before/after, cách đăng ký khóa học, cách liên hệ...): Hãy chỉ dẫn từng bước ngắn gọn (ví dụ: truy cập mục Tài nguyên -> bấm xem chi tiết -> bấm Tải về ngay; hoặc mục Showcase -> chọn tab concept).
+   - Nếu hỏi về KHÓA HỌC / DỊCH VỤ / GIẢNG VIÊN: Báo giá thực tế, giới thiệu lộ trình đào tạo và đội ngũ giảng viên MVD Academy.
+4. Đối chiếu với kho dữ liệu thực tế của website:
+[DANH SÁCH CONCEPT BỘ ẢNH / PORTFOLIO]
+${portfolioContext}
+
+[DANH SÁCH TÀI NGUYÊN HỌC LIỆU]
+${resourceContext}
+
+[DANH SÁCH KHÓA HỌC & DỊCH VỤ]
+${serviceContext}
+
+[SO SÁNH TRƯỚC VÀ SAU RETOUCH]
+${comparisonContext}
+
+[THÔNG TIN HỌC VIỆN & GIẢNG VIÊN]
+${aboutContext}
+
+[CÂU HỎI THƯỜNG GẶP FAQ]
+${faqContext}
+
+5. Trả về định dạng JSON thuần túy KHÔNG bọc markdown (không dùng \`\`\`json hay \`\`\`), theo định dạng:
+{
+  "answer": "Câu trả lời tư vấn / hướng dẫn chi tiết, chuyên nghiệp, súc tích bằng tiếng Việt, giải thích lý do đề xuất và mẹo áp dụng thực tế...",
+  "recommendations": [
+    {
+      "id": "ID tương ứng từ dữ liệu trên",
+      "title": "Tên concept bộ ảnh, tài nguyên, khóa học hoặc hướng dẫn",
+      "type": "portfolio" hoặc "resource" hoặc "course" hoặc "comparison" hoặc "guide",
+      "category": "Thể loại (VD: Concept nàng thơ, Beauty, Action Photoshop, Khóa học...)",
+      "highlight": "Điểm nổi bật hoặc mẹo thực chiến (1 câu ngắn súc tích)",
+      "image": "URL hình ảnh coverImage/ảnh minh họa từ dữ liệu trên (nếu có)",
+      "actionUrl": "/showcase?id=[ID]&album=[TITLE] (nếu là portfolio) hoặc /resources?search=... hoặc /courses hoặc /contact",
+      "fileType": "Đuôi file nếu là resource",
+      "isVip": true hoặc false
+    }
+  ]
+}`;
+
+        for (const modelName of models) {
+          try {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            const result = await model.generateContent(systemPrompt);
+            const text = result.response.text();
+            if (text) {
+              const cleanedText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+              const parsed = JSON.parse(cleanedText);
+              if (parsed && parsed.answer) {
+                aiResult = parsed;
+                break;
+              }
+            }
+          } catch (modelErr) {
+            console.warn(`[MVD AI Search] Model ${modelName} error:`, modelErr.message);
+          }
+        }
+      } catch (geminiErr) {
+        console.error('[MVD AI Search] Gemini error:', geminiErr.message);
+      }
+    }
+
+    // ==================== SMART FUZZY SEARCH (Fuse.js Fallback) ====================
+    if (!aiResult) {
+      // Build unified searchable catalog across the entire website
+      const unifiedCatalog = [
+        ...allPortfolios.map(p => ({
+          id: p._id,
+          title: p.title,
+          type: 'portfolio',
+          category: p.category || 'Concept',
+          description: `${p.category} ${p.location || 'Studio'} concept bộ ảnh tác phẩm`,
+          image: p.coverImage || (p.images && p.images[0]) || '',
+          actionUrl: `/showcase?id=${p._id}&album=${encodeURIComponent(p.title)}`,
+          highlight: `Bộ ảnh concept ${p.category} đặc sắc tại ${p.location || 'Studio MVD'}.`,
+          fileType: '',
+          isVip: false
+        })),
+        ...allResources.map(r => ({
+          id: r._id,
+          title: r.title,
+          type: 'resource',
+          category: r.category,
+          description: `${r.description || ''} ${(r.tags || []).join(' ')} ${r.category}`,
+          image: '',
+          actionUrl: `/resources?search=${encodeURIComponent(r.title)}`,
+          highlight: `Tài nguyên ${r.category} chuẩn kỹ thuật phòng lab MVD.`,
+          fileType: r.fileType,
+          isVip: r.isVip
+        })),
+        ...allServices.map(s => ({
+          id: s._id,
+          title: s.name,
+          type: 'course',
+          category: s.type || 'Khóa học',
+          description: `${s.type} ${(s.details || []).join(' ')} ${s.price}`,
+          image: s.image || '',
+          actionUrl: '/courses',
+          highlight: `Đào tạo thực chiến từ giảng viên MVD Academy (${s.price}).`,
+          fileType: '',
+          isVip: false
+        })),
+        ...allComparisons.map(c => ({
+          id: c._id,
+          title: c.title,
+          type: 'comparison',
+          category: 'So sánh Before/After',
+          description: `So sánh trước sau retouching ${c.title}`,
+          image: c.afterImage || c.beforeImage || '',
+          actionUrl: '/showcase',
+          highlight: 'Kỹ thuật xử lý da & ánh sáng trước và sau hậu kỳ.',
+          fileType: '',
+          isVip: false
+        }))
+      ];
+
+      const fuse = new Fuse(unifiedCatalog, {
+        keys: [
+          { name: 'title', weight: 0.5 },
+          { name: 'category', weight: 0.25 },
+          { name: 'description', weight: 0.25 }
+        ],
+        threshold: 0.45,
+        includeScore: true
+      });
+
+      const matchedResults = fuse.search(trimmedQuery).slice(0, 4).map(res => res.item);
+
+      // Check if query is about website usage guide
+      const qLower = trimmedQuery.toLowerCase();
+      let guideAnswer = '';
+      if (qLower.includes('tải') || qLower.includes('download')) {
+        guideAnswer = 'Để tải tài nguyên: Bạn hãy vào mục "Tài nguyên", nhấp vào tài nguyên muốn lấy để xem hướng dẫn sử dụng và bấm "Tải về ngay". Các tài nguyên VIP có thể cần liên hệ nâng cấp tài khoản.';
+      } else if (qLower.includes('concept') || qLower.includes('bộ ảnh') || qLower.includes('tác phẩm')) {
+        guideAnswer = 'Bạn có thể xem các concept bộ ảnh thực tế tại mục "Showcase", hỗ trợ lọc theo Beauty, Concept nàng thơ, Couple / Gia đình và phóng to từng ảnh chất lượng cao.';
+      } else if (qLower.includes('học') || qLower.includes('khóa học') || qLower.includes('giá') || qLower.includes('dịch vụ')) {
+        guideAnswer = 'MVD Photoshop Academy cung cấp các khóa học Retouching từ cơ bản đến chuyên nghiệp và dịch vụ hậu kỳ cao cấp. Mời bạn tham khảo chi tiết tại mục "Khóa học" và "Dịch vụ".';
+      }
+
+      aiResult = {
+        answer: matchedResults.length > 0 
+          ? `MVD AI đã rà soát toàn bộ tác phẩm, concept, tài nguyên và dịch vụ trên hệ thống. Dưới đây là ${matchedResults.length} đề xuất chuẩn xác nhất cho "${trimmedQuery}". ${guideAnswer}`
+          : (guideAnswer || `MVD AI đã tìm kiếm trên toàn bộ hệ thống nhưng chưa thấy kết quả trùng khớp 100% với "${trimmedQuery}". Bạn có thể duyệt qua mục Tác phẩm (Showcase) hoặc liên hệ đội ngũ MVD để được hỗ trợ trực tiếp.`),
+        recommendations: matchedResults
+      };
+    }
+
+    res.json(aiResult);
+  } catch (err) {
+    console.error('[MVD AI Search] Fatal error:', err);
+    res.status(500).json({ error: 'Lỗi trong quá trình xử lý MVD AI Search: ' + err.message });
   }
 });
 

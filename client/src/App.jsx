@@ -13,17 +13,23 @@ import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import SideBanners from './components/Promo/SideBanners';
 import MobilePopup from './components/Promo/MobilePopup';
+import FloatingSocials from './components/FloatingSocials/FloatingSocials';
 
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
 
   useEffect(() => {
+    // If navigation targets a specific album or search item, do not force scroll to top
+    const params = new URLSearchParams(search);
+    if (params.get('id') || params.get('album') || params.get('search')) {
+      return;
+    }
     window.scrollTo({
       top: 0,
       left: 0,
       behavior: 'instant'
     });
-  }, [pathname]);
+  }, [pathname, search]);
 
   return null;
 }
@@ -57,6 +63,7 @@ function App() {
       </main>
       
       {!isAdmin && <Footer />}
+      {!isAdmin && <FloatingSocials />}
     </>
   );
 }

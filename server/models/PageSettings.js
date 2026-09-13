@@ -51,7 +51,36 @@ const PageSettingsSchema = new mongoose.Schema({
     badge: { type: String, default: 'Học Liệu & Công Cụ Độc Quyền' },
     title: { type: String, default: 'Kho Tài Nguyên MVD Academy' },
     description: { type: String, default: 'Trọn bộ Action, Preset, Brush, Font và Mockup cao cấp phục vụ cho quá trình học tập và làm nghề Retoucher chuyên nghiệp.' },
-    bannerImage: { type: String, default: '' }
+    bannerImage: { type: String, default: '' },
+    categories: {
+      type: [String],
+      default: [
+        'Photoshop Action',
+        'Preset Lightroom',
+        'Brush Pack',
+        'Texture & Overlay',
+        'PSD Mockup',
+        'Font Việt Hóa',
+        'Tài liệu Giáo trình'
+      ]
+    },
+    popularTags: {
+      type: [String],
+      default: [
+        'Retouch Da',
+        'High-End',
+        'Dodge & Burn',
+        'Nàng Thơ',
+        'Stock RAW',
+        'Font Việt Hóa',
+        'Cinematic',
+        'Màu Cưới'
+      ]
+    },
+    defaultInstructions: {
+      type: String,
+      default: '• Khởi động phần mềm Adobe Photoshop hoặc Lightroom phiên bản tương thích.\n• Click đúp vào file đã tải về (hoặc vào menu File > Load Actions / Presets / Brushes).\n• Áp dụng vào ảnh của bạn và tinh chỉnh Opacity hoặc thông số theo mong muốn.'
+    }
   },
   about: {
     badge: { type: String, default: 'Học Viện Hậu Kỳ Chuyên Nghiệp' },

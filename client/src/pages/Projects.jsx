@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
-import { Link } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 
 const Projects = () => {
@@ -8,11 +8,14 @@ const Projects = () => {
   const page = pageSettings?.showcase || {};
   const [portfolios, setPortfolios] = useState([]);
   const [activeTab, setActiveTab] = useState('Tất cả');
+  const [searchParams] = useSearchParams();
+  const [highlightedId, setHighlightedId] = useState(null);
   
   // Lightbox states
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentGallery, setCurrentGallery] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [activeAlbum, setActiveAlbum] = useState(null);
 
   useEffect(() => {
     // Scroll to top when mounting
@@ -28,6 +31,35 @@ const Projects = () => {
     };
     fetchPortfolios();
   }, []);
+
+  // Auto-focus album from URL params
+  useEffect(() => {
+    if (!portfolios || portfolios.length === 0) return;
+    const targetId = searchParams.get('id');
+    const targetAlbum = searchParams.get('album');
+
+    if (targetId || targetAlbum) {
+      const match = portfolios.find(p => 
+        (targetId && String(p._id) === String(targetId)) ||
+        (targetAlbum && p.title.toLowerCase().trim() === targetAlbum.toLowerCase().trim())
+      );
+
+      if (match) {
+        if (match.category) setActiveTab(match.category);
+        setHighlightedId(match._id);
+        setActiveAlbum(match);
+        const gallery = (match.images && match.images.length > 0) ? match.images : [match.coverImage];
+        setCurrentGallery(gallery);
+        setCurrentIndex(0);
+        setIsLightboxOpen(true);
+
+        setTimeout(() => {
+          const el = document.getElementById(`portfolio-${match._id}`);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 350);
+      }
+    }
+  }, [searchParams, portfolios]);
 
   // Keyboard navigation for Lightbox
   useEffect(() => {
@@ -112,7 +144,15 @@ const Projects = () => {
         {filteredData.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredData.map(item => (
-              <div key={item._id} className="group relative rounded-lg overflow-hidden cursor-pointer bg-bg-glass border border-glass shadow-md">
+              <div 
+                key={item._id} 
+                id={`portfolio-${item._id}`}
+                className={`group relative rounded-lg overflow-hidden cursor-pointer bg-bg-glass border transition-all duration-500 shadow-md ${
+                  highlightedId === item._id 
+                    ? 'ring-4 ring-accent border-accent shadow-[0_0_35px_rgba(192,155,104,0.8)] scale-[1.02]' 
+                    : 'border-glass'
+                }`}
+              >
                 <img 
                   src={item.coverImage || (item.images && item.images[0])} 
                   alt={item.title} 

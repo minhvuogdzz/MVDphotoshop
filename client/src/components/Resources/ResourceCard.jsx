@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ResourceCard = ({ item, onSelect }) => {
+const ResourceCard = ({ item, onSelect, onSelectTag }) => {
   if (!item) return null;
 
   return (
@@ -44,17 +44,26 @@ const ResourceCard = ({ item, onSelect }) => {
           {item.description || 'Tài nguyên hậu kỳ độc quyền từ MVD Photoshop Academy dành cho học viên và cộng đồng.'}
         </p>
 
-        {/* Hashtags Row */}
+        {/* Hashtags Row - Clickable for Instant Tag Filtering */}
         {item.tags && item.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-5">
-            {item.tags.map((tag, idx) => (
-              <span 
-                key={idx}
-                className="bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 text-text-secondary text-xs px-2.5 py-1 rounded-full hover:border-accent/40 hover:text-accent transition-colors"
-              >
-                {tag.startsWith('#') ? tag : `#${tag}`}
-              </span>
-            ))}
+            {item.tags.map((tag, idx) => {
+              const formattedTag = tag.startsWith('#') ? tag : `#${tag}`;
+              return (
+                <button 
+                  type="button"
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSelectTag) onSelectTag(formattedTag);
+                  }}
+                  className="bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 text-text-secondary hover:text-accent hover:border-accent/40 text-xs px-2.5 py-1 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  title={`Lọc tài nguyên theo thẻ ${formattedTag}`}
+                >
+                  {formattedTag}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

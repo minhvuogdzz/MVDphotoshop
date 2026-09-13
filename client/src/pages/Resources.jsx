@@ -1,33 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import ResourceCard from '../components/Resources/ResourceCard';
 import api from '../services/api';
 
-const CATEGORIES = [
-  'Tất cả',
-  'Photoshop Action',
-  'Preset Lightroom',
-  'Brush',
-  'Font',
-  'Overlay',
-  'Mockup',
-  'Tài liệu & PSD'
-];
-
-const POPULAR_TAGS = [
-  'Tất cả tags',
-  '#Retouch Da',
-  '#High-End',
-  '#Dodge & Burn',
-  '#Nàng Thơ',
-  '#Stock RAW',
-  '#Font Việt Hóa',
-  '#Cinematic'
-];
-
 const Resources = () => {
   const { resources, pageSettings, loading, refetch } = useData();
   const page = pageSettings?.resources || {};
+  const [searchParams] = useSearchParams();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
   const [selectedTag, setSelectedTag] = useState('Tất cả tags');
@@ -35,6 +16,84 @@ const Resources = () => {
   const [hotOnly, setHotOnly] = useState(false);
   const [selectedResource, setSelectedResource] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Dynamic Categories: Admin custom + extracted from existing resources
+  const categoriesList = useMemo(() => {
+    const defaultCats = [
+      'Photoshop Action',
+      'Preset Lightroom',
+      'Brush Pack',
+      'Texture & Overlay',
+      'PSD Mockup',
+      'Font Việt Hóa',
+      'Tài liệu Giáo trình'
+    ];
+    const configCats = page?.categories && page.categories.length > 0 ? page.categories : defaultCats;
+    const resourceCats = (resources || []).map(r => r.category).filter(Boolean);
+    const unique = Array.from(new Set([...configCats, ...resourceCats]));
+    return ['Tất cả', ...unique];
+  }, [page?.categories, resources]);
+
+  // Dynamic Popular Tags: Admin custom + extracted from existing resources
+  const popularTagsList = useMemo(() => {
+    const defaultTags = [
+      'Retouch Da',
+      'High-End',
+      'Dodge & Burn',
+      'Nàng Thơ',
+      'Stock RAW',
+      'Font Việt Hóa',
+      'Cinematic',
+      'Màu Cưới'
+    ];
+    const configTags = page?.popularTags && page.popularTags.length > 0 ? page.popularTags : defaultTags;
+    const resourceTags = (resources || []).flatMap(r => r.tags || []).filter(Boolean);
+    const unique = Array.from(new Set([...configTags, ...resourceTags])).map(t => 
+      t.startsWith('#') ? t : `#${t}`
+    );
+    return ['Tất cả tags', ...unique];
+  }, [page?.popularTags, resources]);
+
+  // Sync URL search params
+  useEffect(() => {
+    const qParam = searchParams.get('search');
+    if (qParam !== null) setSearchQuery(qParam);
+
+    const tagParam = searchParams.get('tag');
+    if (tagParam) setSelectedTag(tagParam.startsWith('#') ? tagParam : `#${tagParam}`);
+
+    const catParam = searchParams.get('category');
+    if (catParam) setSelectedCategory(catParam);
+  }, [searchParams]);
+
+  // Lock body scroll when modal is open and handle Escape key to close
+  useEffect(() => {
+    if (selectedResource) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setSelectedResource(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [selectedResource]);
+
+  const handleSelectTag = (tag) => {
+    const formattedTag = tag.startsWith('#') ? tag : `#${tag}`;
+    if (selectedTag.toLowerCase() === formattedTag.toLowerCase()) {
+      setSelectedTag('Tất cả tags');
+    } else {
+      setSelectedTag(formattedTag);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -185,7 +244,7 @@ const Resources = () => {
       <div className="container-custom">
         {/* Category Pills Bar */}
         <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-3 mb-6 no-scrollbar">
-          {CATEGORIES.map(cat => (
+          {categoriesList.map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -204,13 +263,13 @@ const Resources = () => {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-3 rounded-2xl glass-panel border border-glass">
           {/* Quick Tags */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-            {POPULAR_TAGS.map(tag => (
+            {popularTagsList.map(tag => (
               <button
                 key={tag}
-                onClick={() => setSelectedTag(tag)}
+                onClick={() => handleSelectTag(tag)}
                 className={`text-xs px-3 py-1 rounded-full transition-colors whitespace-nowrap cursor-pointer ${
                   selectedTag === tag
-                    ? 'bg-accent/20 text-accent font-bold'
+                    ? 'bg-accent/20 text-accent font-bold border border-accent/40'
                     : 'text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
               >
@@ -302,25 +361,26 @@ const Resources = () => {
                 key={item._id}
                 item={item}
                 onSelect={(res) => setSelectedResource(res)}
+                onSelectTag={handleSelectTag}
               />
             ))}
           </div>
         )}
       </div>
 
-      {/* Resource Detail Modal */}
+      {/* Resource Detail Modal - Fixed Center, Prevent Page Shift */}
       {selectedResource && (
         <div 
-          className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl animate-fade-in"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-hidden"
           onClick={() => setSelectedResource(null)}
         >
           <div 
-            className="relative w-full max-w-[580px] bg-white dark:bg-[#161311] border border-black/10 dark:border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-[560px] max-h-[85vh] sm:max-h-[88vh] my-auto bg-white dark:bg-[#161311] border border-black/10 dark:border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-black/10 dark:border-white/5 bg-black/5 dark:bg-black/40">
-              <div className="flex items-center gap-2">
+            {/* Modal Header (Pinned) */}
+            <div className="shrink-0 flex items-center justify-between px-6 py-4.5 border-b border-black/10 dark:border-white/5 bg-black/5 dark:bg-black/40">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="bg-black/10 dark:bg-white/10 text-text-primary text-xs font-semibold px-3 py-1 rounded-full">
                   {selectedResource.category}
                 </span>
@@ -341,16 +401,17 @@ const Resources = () => {
 
               <button
                 onClick={() => setSelectedResource(null)}
-                className="w-8 h-8 rounded-full bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 text-text-primary flex items-center justify-center text-sm font-bold transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 text-text-primary flex items-center justify-center text-sm font-bold transition-colors cursor-pointer shrink-0 ml-2"
+                aria-label="Đóng popup"
               >
                 ✕
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto flex flex-col gap-5">
+            {/* Modal Body (Scrollable inside only) */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
               <div>
-                <h2 className="text-2xl font-bold font-secondary text-text-primary mb-3">
+                <h2 className="text-xl sm:text-2xl font-bold font-secondary text-text-primary mb-3">
                   {selectedResource.title}
                 </h2>
                 <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-line">
@@ -358,14 +419,26 @@ const Resources = () => {
                 </p>
               </div>
 
-              {/* Tags */}
+              {/* Tags - Clickable to filter */}
               {selectedResource.tags && selectedResource.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
-                  {selectedResource.tags.map((tag, i) => (
-                    <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/5 text-text-secondary border border-black/5 dark:border-white/5">
-                      {tag.startsWith('#') ? tag : `#${tag}`}
-                    </span>
-                  ))}
+                  {selectedResource.tags.map((tag, i) => {
+                    const formattedTag = tag.startsWith('#') ? tag : `#${tag}`;
+                    return (
+                      <button
+                        type="button"
+                        key={i}
+                        onClick={() => {
+                          handleSelectTag(formattedTag);
+                          setSelectedResource(null);
+                        }}
+                        className="text-xs px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/5 text-text-secondary hover:text-accent hover:border-accent/40 border border-black/5 dark:border-white/5 cursor-pointer transition-colors"
+                        title={`Lọc theo thẻ ${formattedTag}`}
+                      >
+                        {formattedTag}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
@@ -385,19 +458,30 @@ const Resources = () => {
                 </div>
               </div>
 
-              {/* Usage Guide */}
-              <div className="p-4 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-accent mb-2">Hướng dẫn sử dụng nhanh</h4>
-                <ul className="text-xs text-text-secondary space-y-1.5 list-disc list-inside">
-                  <li>Khởi động Adobe Photoshop hoặc Lightroom phiên bản tương ứng.</li>
-                  <li>Click đúp vào file đã tải về (hoặc vào menu File &gt; Load Actions / Presets).</li>
-                  <li>Áp dụng vào ảnh của bạn và tinh chỉnh Opacity theo mong muốn.</li>
-                </ul>
-              </div>
+              {/* Usage Guide (Admin Custom or Default) */}
+              {(selectedResource.instructions || page.defaultInstructions) && (
+                <div className="p-4 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-accent mb-2.5 flex items-center gap-1.5">
+                    <span>💡 Hướng dẫn sử dụng nhanh</span>
+                  </h4>
+                  <div className="text-xs text-text-secondary space-y-1.5 leading-relaxed">
+                    {(selectedResource.instructions || page.defaultInstructions)
+                      .split('\n')
+                      .map(line => line.trim())
+                      .filter(Boolean)
+                      .map((step, idx) => (
+                        <div key={idx} className="flex items-start gap-2">
+                          <span className="text-accent shrink-0 mt-0.5">•</span>
+                          <span>{step.replace(/^[•\-*]\s*/, '')}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-5 border-t border-black/10 dark:border-white/5 bg-black/5 dark:bg-black/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+            {/* Modal Footer (Pinned) */}
+            <div className="shrink-0 p-5 border-t border-black/10 dark:border-white/5 bg-black/5 dark:bg-black/50 flex flex-col sm:flex-row items-center justify-between gap-3">
               <span className="text-xs text-text-secondary">
                 {selectedResource.downloadType === 'drive'
                   ? '⚡ Dung lượng ≥ 6MB: Tải qua Google Drive tốc độ cao'

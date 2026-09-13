@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import api from '../services/api';
 import imageCompression from 'browser-image-compression';
 import VisitorMap from '../components/Admin/VisitorMap';
@@ -331,6 +331,12 @@ const Admin = () => {
       if (activeTab === 'resources') {
         dataToSave.tags = parseArray(dataToSave.tags);
         if (dataToSave.rating) dataToSave.rating = Number(dataToSave.rating);
+        if (dataToSave.category && !availableCategories.includes(dataToSave.category)) {
+          const currentCats = pageResourceSettings.categories || defaultCategories;
+          api.post('/page-settings', {
+            resources: { ...pageResourceSettings, categories: [...currentCats, dataToSave.category] }
+          }).catch(console.error);
+        }
       }
       if (dataToSave.images !== undefined) dataToSave.images = parseArray(dataToSave.images);
       if (dataToSave.backgroundUrls !== undefined) dataToSave.backgroundUrls = parseArray(dataToSave.backgroundUrls);
@@ -428,14 +434,115 @@ const Admin = () => {
     heroDragOverItem.current = null;
   };
 
+  // Available custom categories & popular tags
+  const defaultCategories = useMemo(() => [
+    'Photoshop Action',
+    'Preset Lightroom',
+    'Brush Pack',
+    'Texture & Overlay',
+    'PSD Mockup',
+    'Font Việt Hóa',
+    'Tài liệu Giáo trình'
+  ], []);
+
+  const pageResourceSettings = allData.pageSettings?.resources || {};
+
+  const availableCategories = useMemo(() => {
+    const configCats = pageResourceSettings.categories && pageResourceSettings.categories.length > 0
+      ? pageResourceSettings.categories
+      : defaultCategories;
+    const resourceCats = (allData.resources || []).map(r => r.category).filter(Boolean);
+    return Array.from(new Set([...configCats, ...resourceCats]));
+  }, [pageResourceSettings.categories, allData.resources, defaultCategories]);
+
+  const availableTags = useMemo(() => {
+    const defaultTags = ['Retouch Da', 'High-End', 'Dodge & Burn', 'Nàng Thơ', 'Stock RAW', 'Font Việt Hóa', 'Cinematic', 'Màu Cưới'];
+    const configTags = pageResourceSettings.popularTags && pageResourceSettings.popularTags.length > 0
+      ? pageResourceSettings.popularTags
+      : defaultTags;
+    const resourceTags = (allData.resources || []).flatMap(r => r.tags || []);
+    return Array.from(new Set([...configTags, ...resourceTags]));
+  }, [pageResourceSettings.popularTags, allData.resources]);
+
+  const [newCatInput, setNewCatInput] = useState('');
+  const [newTagInput, setNewTagInput] = useState('');
+
+  const handleAddCategory = async (catName) => {
+    const name = (catName || newCatInput).trim();
+    if (!name) return;
+    const currentCats = pageResourceSettings.categories || defaultCategories;
+    if (currentCats.includes(name)) return;
+    const updated = [...currentCats, name];
+    try {
+      await api.post('/page-settings', {
+        resources: { ...pageResourceSettings, categories: updated }
+      });
+      setNewCatInput('');
+      setMessage(`Đã thêm thể loại: ${name}`);
+      fetchAllData();
+    } catch (err) {
+      setMessage('Lỗi khi thêm thể loại!');
+    }
+  };
+
+  const handleDeleteCategory = async (catName) => {
+    if (!window.confirm(`Xóa thể loại "${catName}" khỏi danh mục tùy biến?`)) return;
+    const currentCats = pageResourceSettings.categories || defaultCategories;
+    const updated = currentCats.filter(c => c !== catName);
+    try {
+      await api.post('/page-settings', {
+        resources: { ...pageResourceSettings, categories: updated }
+      });
+      setMessage(`Đã xóa thể loại: ${catName}`);
+      fetchAllData();
+    } catch (err) {
+      setMessage('Lỗi khi xóa thể loại!');
+    }
+  };
+
+  const handleAddPopularTag = async (tagName) => {
+    const name = (tagName || newTagInput).trim().replace(/^#/, '');
+    if (!name) return;
+    const currentTags = pageResourceSettings.popularTags || ['Retouch Da', 'High-End', 'Dodge & Burn', 'Nàng Thơ', 'Stock RAW', 'Font Việt Hóa', 'Cinematic', 'Màu Cưới'];
+    if (currentTags.includes(name)) return;
+    const updated = [...currentTags, name];
+    try {
+      await api.post('/page-settings', {
+        resources: { ...pageResourceSettings, popularTags: updated }
+      });
+      setNewTagInput('');
+      setMessage(`Đã thêm hashtag: #${name}`);
+      fetchAllData();
+    } catch (err) {
+      setMessage('Lỗi khi thêm hashtag!');
+    }
+  };
+
+  const handleDeletePopularTag = async (tagName) => {
+    const clean = tagName.replace(/^#/, '');
+    if (!window.confirm(`Xóa hashtag "#${clean}" khỏi danh sách nổi bật?`)) return;
+    const currentTags = pageResourceSettings.popularTags || ['Retouch Da', 'High-End', 'Dodge & Burn', 'Nàng Thơ', 'Stock RAW', 'Font Việt Hóa', 'Cinematic', 'Màu Cưới'];
+    const updated = currentTags.filter(t => t.replace(/^#/, '') !== clean);
+    try {
+      await api.post('/page-settings', {
+        resources: { ...pageResourceSettings, popularTags: updated }
+      });
+      setMessage(`Đã xóa hashtag: #${clean}`);
+      fetchAllData();
+    } catch (err) {
+      setMessage('Lỗi khi xóa hashtag!');
+    }
+  };
+
   const openAddModal = () => {
     if (activeTab === 'resources') {
       setFormData({
         title: '',
-        category: 'Photoshop Action',
+        category: availableCategories[0] || 'Photoshop Action',
         fileType: '.ATN',
         fileSize: '1.0 MB',
         description: '',
+        instructions: '',
         tags: 'Retouch Da, High-End',
         isVip: false,
         isHot: true,
@@ -523,9 +630,112 @@ const Admin = () => {
           ) : isListType ? (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl">Danh sách dữ liệu</h3>
-                <button onClick={openAddModal} className="px-4 py-2 bg-accent text-bg-main rounded-lg font-bold hover:bg-accent-hover transition-colors">+ Thêm mới</button>
+                <h3 className="text-xl font-bold">Danh sách dữ liệu {activeTab === 'resources' ? 'Tài Nguyên' : ''}</h3>
+                <button onClick={openAddModal} className="px-4 py-2 bg-accent text-bg-main rounded-lg font-bold hover:bg-accent-hover transition-colors shadow-sm">+ Thêm mới</button>
               </div>
+
+              {/* Resources Custom Categories & Hashtags Manager Panel */}
+              {activeTab === 'resources' && (
+                <div className="mb-8 p-5 rounded-2xl bg-white/5 border border-glass space-y-5">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div>
+                      <h4 className="text-base font-bold text-accent flex items-center gap-2">
+                        <span>🏷️ Quản Lý Thể Loại (Categories) & Hashtags Tùy Biến</span>
+                      </h4>
+                      <p className="text-xs text-text-secondary mt-0.5">
+                        Admin tự do tạo mới, xóa bỏ thể loại và hashtags. Dữ liệu này sẽ tự động cập nhật lên bộ lọc trang Kho Tài Nguyên và gợi ý tìm kiếm.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 1. Categories Manager */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-accent uppercase tracking-wider block">
+                      1. Danh sách Thể loại do Admin quản lý ({availableCategories.length})
+                    </label>
+                    <div className="flex flex-wrap gap-2 items-center">
+                      {availableCategories.map(cat => (
+                        <span 
+                          key={cat}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/15 border border-accent/30 text-accent text-xs font-semibold"
+                        >
+                          <span>{cat}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategory(cat)}
+                            className="hover:text-red-400 text-accent/60 ml-1 cursor-pointer font-bold text-sm leading-none"
+                            title="Xóa thể loại này"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex gap-2 max-w-lg pt-1">
+                      <input
+                        type="text"
+                        placeholder="Nhập tên thể loại mới (VD: Brush Màu Nước, Stock RAW Cưới)..."
+                        value={newCatInput}
+                        onChange={e => setNewCatInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCategory(); } }}
+                        className={inputStyle}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAddCategory()}
+                        className="px-4 py-2 bg-accent text-bg-main font-bold text-xs rounded-lg hover:bg-accent-hover transition-colors shrink-0 cursor-pointer"
+                      >
+                        + Thêm thể loại
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 2. Popular Tags Manager */}
+                  <div className="space-y-2 pt-3 border-t border-white/5">
+                    <label className="text-xs font-semibold text-accent uppercase tracking-wider block">
+                      2. Danh sách Hashtags Nổi bật do Admin quản lý ({availableTags.length})
+                    </label>
+                    <div className="flex flex-wrap gap-2 items-center">
+                      {availableTags.map(tag => {
+                        const clean = tag.replace(/^#/, '');
+                        return (
+                          <span 
+                            key={clean}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-text-secondary hover:text-white text-xs"
+                          >
+                            <span>#{clean}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePopularTag(clean)}
+                              className="hover:text-red-400 text-text-secondary ml-1 cursor-pointer font-bold text-sm leading-none"
+                              title="Xóa hashtag này"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-2 max-w-lg pt-1">
+                      <input
+                        type="text"
+                        placeholder="Nhập hashtag mới (VD: ToneMauAm, PhucHoiAnhCu)..."
+                        value={newTagInput}
+                        onChange={e => setNewTagInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddPopularTag(); } }}
+                        className={inputStyle}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAddPopularTag()}
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-lg transition-colors shrink-0 cursor-pointer"
+                      >
+                        + Thêm hashtag
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <div className="grid gap-4">
                 {dataList.length === 0 ? (
@@ -1626,6 +1836,16 @@ const Admin = () => {
                           </div>
                         </div>
                       </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-text-secondary mb-1">Hướng dẫn sử dụng mặc định (Default Quick Guide)</label>
+                        <textarea
+                          rows="3"
+                          placeholder="Hướng dẫn sử dụng chung cho tài nguyên khi không nhập hướng dẫn riêng..."
+                          value={formData.resources?.defaultInstructions || ''}
+                          onChange={e => updatePageField('resources', 'defaultInstructions', e.target.value)}
+                          className={inputStyle}
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -2047,16 +2267,36 @@ const Admin = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block mb-1 text-xs text-text-secondary font-medium">Phân loại *</label>
-                      <select value={formData.category || 'Photoshop Action'} onChange={e => setFormData({...formData, category: e.target.value})} className={inputStyle}>
-                        <option value="Photoshop Action" className="text-black">Photoshop Action</option>
-                        <option value="Lightroom Preset" className="text-black">Lightroom Preset</option>
-                        <option value="Brush Pack" className="text-black">Brush Pack</option>
-                        <option value="Texture & Overlay" className="text-black">Texture & Overlay</option>
-                        <option value="PSD Mockup" className="text-black">PSD Mockup</option>
-                        <option value="Phông nền Studio" className="text-black">Phông nền Studio</option>
-                        <option value="Tài liệu Giáo trình" className="text-black">Tài liệu Giáo trình</option>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs text-text-secondary font-medium">Phân loại (Thể loại) *</label>
+                        <span className="text-[11px] text-accent">Chọn hoặc gõ mới</span>
+                      </div>
+                      <select 
+                        value={availableCategories.includes(formData.category) ? formData.category : '__custom__'} 
+                        onChange={e => {
+                          if (e.target.value === '__custom__') {
+                            setFormData({...formData, category: ''});
+                          } else {
+                            setFormData({...formData, category: e.target.value});
+                          }
+                        }} 
+                        className={inputStyle}
+                      >
+                        {availableCategories.map(cat => (
+                          <option key={cat} value={cat} className="text-black">{cat}</option>
+                        ))}
+                        <option value="__custom__" className="text-accent font-bold">+ Tạo / Gõ thể loại mới...</option>
                       </select>
+                      {(!availableCategories.includes(formData.category) || formData.category === '') && (
+                        <input 
+                          type="text" 
+                          placeholder="Nhập tên thể loại mới..." 
+                          value={formData.category || ''} 
+                          onChange={e => setFormData({...formData, category: e.target.value})} 
+                          className={`${inputStyle} mt-2 border-accent`} 
+                          required 
+                        />
+                      )}
                     </div>
                     <div>
                       <label className="block mb-1 text-xs text-text-secondary font-medium">Đuôi tệp (Extension)</label>
@@ -2092,8 +2332,67 @@ const Admin = () => {
                   </div>
 
                   <div>
-                    <label className="block mb-1 text-xs text-text-secondary font-medium">Hashtags (phân tách bởi dấu phẩy)</label>
-                    <input type="text" placeholder="VD: Retouch Da, High-End, Dodge & Burn, Studio" value={Array.isArray(formData.tags) ? formData.tags.join(', ') : (formData.tags || '')} onChange={e => setFormData({...formData, tags: e.target.value})} className={inputStyle} />
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs text-text-secondary font-medium">Hashtags (phân tách bởi dấu phẩy)</label>
+                      <span className="text-[11px] text-accent">Bấm tag gợi ý để chèn nhanh</span>
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="VD: Retouch Da, High-End, Dodge & Burn, Studio" 
+                      value={Array.isArray(formData.tags) ? formData.tags.join(', ') : (formData.tags || '')} 
+                      onChange={e => setFormData({...formData, tags: e.target.value})} 
+                      className={inputStyle} 
+                    />
+                    {availableTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {availableTags.slice(0, 10).map(tag => {
+                          const clean = tag.replace(/^#/, '');
+                          const currentTags = Array.isArray(formData.tags) 
+                            ? formData.tags 
+                            : (formData.tags || '').split(',').map(t => t.trim());
+                          const isAdded = currentTags.some(t => t.toLowerCase() === clean.toLowerCase());
+                          return (
+                            <button
+                              type="button"
+                              key={clean}
+                              onClick={() => {
+                                if (isAdded) return;
+                                const existing = formData.tags ? (typeof formData.tags === 'string' ? formData.tags : formData.tags.join(', ')) : '';
+                                const newTagsStr = existing.trim() ? `${existing.trim()}, ${clean}` : clean;
+                                setFormData({ ...formData, tags: newTagsStr });
+                              }}
+                              className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
+                                isAdded 
+                                  ? 'bg-accent/20 border-accent text-accent font-medium' 
+                                  : 'bg-white/5 border-white/10 text-text-secondary hover:text-white hover:border-white/30'
+                              }`}
+                            >
+                              +{clean}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Usage Guide (Instructions) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs text-text-secondary font-medium">
+                        Hướng dẫn sử dụng nhanh (Hiển thị trong popup modal)
+                      </label>
+                      <span className="text-[11px] text-accent">Tùy biến cho riêng tài nguyên này</span>
+                    </div>
+                    <textarea 
+                      rows="3" 
+                      placeholder={"Nhập từng bước trên từng dòng. Ví dụ:\n• Khởi động Adobe Photoshop hoặc Lightroom\n• Kéo thả file .ATN vào Photoshop hoặc vào Window > Actions > Load Actions\n• Chọn Action cần dùng và click nút Play"} 
+                      value={formData.instructions || ''} 
+                      onChange={e => setFormData({...formData, instructions: e.target.value})} 
+                      className={inputStyle} 
+                    />
+                    <span className="text-[11px] text-text-secondary/70 block mt-1">
+                      Hệ thống tự động hiển thị từng dòng thành danh sách có dấu chấm tròn đẹp mắt trên Popup. Nếu để trống, sẽ hiển thị hướng dẫn mặc định của học viện.
+                    </span>
                   </div>
 
                   {/* File Download Mode: Direct Upload (< 6MB) vs Google Drive (>= 6MB) */}
