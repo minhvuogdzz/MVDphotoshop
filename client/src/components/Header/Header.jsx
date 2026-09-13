@@ -65,18 +65,18 @@ const Header = () => {
             : 'py-5 bg-transparent'
         }`}
       >
-        <div className={`w-full px-6 sm:px-8 md:px-12 xl:px-16 2xl:px-20 flex justify-between items-center transition-all duration-300 ${!scrolled ? 'dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]' : ''}`}>
+        <div className={`w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-16 flex justify-between items-center transition-all duration-300 ${!scrolled ? 'dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]' : ''}`}>
           {/* Brand Logo */}
-          <Link to="/" className="font-secondary text-2xl xl:text-[26px] font-bold tracking-wide z-10 flex items-center gap-2 shrink-0">
+          <Link to="/" className="font-secondary text-xl sm:text-2xl xl:text-[26px] font-bold tracking-wide z-10 flex items-center gap-2 shrink-0">
             <span>MVD</span>
             <span className="font-normal italic text-accent">Photoshop</span>
-            <span className="text-[10px] font-sans font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30 hidden sm:inline-block">
+            <span className="text-[10px] font-sans font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30 hidden xl:inline-block">
               Academy
             </span>
           </Link>
 
-          {/* Desktop Nav - Generously Spaced */}
-          <nav className="hidden lg:flex gap-7 xl:gap-9 2xl:gap-11 relative items-center" onMouseLeave={() => setHoveredPath(null)}>
+          {/* Desktop Nav - Responsive Gaps & Prevents Wrapping */}
+          <nav className="hidden lg:flex gap-4 xl:gap-7 2xl:gap-10 relative items-center shrink-0" onMouseLeave={() => setHoveredPath(null)}>
             {/* Sliding Indicator */}
             <div
               className="absolute bottom-[-6px] h-[2px] bg-accent transition-all duration-300 ease-out pointer-events-none rounded-full"
@@ -94,7 +94,7 @@ const Header = () => {
                   ref={el => navRefs.current[idx] = el}
                   to={link.path}
                   onMouseEnter={() => setHoveredPath(link.path)}
-                  className={`relative font-medium text-sm transition-colors py-1 ${
+                  className={`relative font-medium text-xs xl:text-sm whitespace-nowrap transition-colors py-1 ${
                     active ? 'text-accent font-semibold' : (!scrolled ? 'text-text-primary' : 'text-text-secondary')
                   } hover:text-accent flex items-center gap-1.5`}
                 >
@@ -110,7 +110,7 @@ const Header = () => {
           </nav>
 
           {/* Actions: Search, Theme Toggle, Mobile Menu Toggle */}
-          <div className="flex gap-2.5 items-center z-10">
+          <div className="flex gap-2 sm:gap-2.5 items-center z-10 shrink-0">
             {/* Header Real-time Search */}
             <HeaderSearch />
 

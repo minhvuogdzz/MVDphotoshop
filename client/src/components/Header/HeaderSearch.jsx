@@ -136,22 +136,60 @@ const HeaderSearch = () => {
 
   return (
     <div className="relative" ref={containerRef}>
-      {/* Search Trigger Button / Input on Desktop */}
-      <div className="hidden sm:flex items-center gap-2">
+      {/* Compact Search Trigger for Mobile & Tablet (< xl) */}
+      <div className="flex xl:hidden items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => {
+            setIsAiMode(false);
+            setIsOpen(true);
+            setTimeout(() => inputRef.current?.focus(), 50);
+          }}
+          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-text-primary hover:bg-black/5 dark:hover:bg-white/10 hover:text-accent transition-all cursor-pointer"
+          aria-label="Tìm kiếm"
+          title="Tìm kiếm (⌘K)"
+        >
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setIsAiMode(true);
+            setIsOpen(true);
+            setTimeout(() => inputRef.current?.focus(), 50);
+          }}
+          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500/15 via-purple-500/15 to-pink-500/15 border border-purple-500/30 text-purple-400 hover:text-pink-400 hover:shadow-[0_0_12px_rgba(155,114,203,0.3)] transition-all cursor-pointer relative group"
+          aria-label="Hỏi MVD AI"
+          title="Hỏi MVD AI ✨"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span className="absolute -top-0.5 -right-0.5 text-[9px] text-pink-400 animate-pulse">✦</span>
+        </button>
+      </div>
+
+      {/* Full Extended Search Trigger on Desktop (>= xl) */}
+      <div className="hidden xl:flex items-center gap-2">
         <div 
           onClick={() => {
             setIsAiMode(false);
             setIsOpen(true);
             setTimeout(() => inputRef.current?.focus(), 50);
           }}
-          className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/5 border border-glass hover:border-accent/40 text-text-secondary hover:text-text-primary cursor-pointer transition-all duration-300 w-44 md:w-52"
+          className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/5 dark:bg-white/5 border border-glass hover:border-accent/40 text-text-secondary hover:text-text-primary cursor-pointer transition-all duration-300 w-44 2xl:w-52"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-accent shrink-0">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <span className="text-xs truncate">Tìm kiếm tài nguyên...</span>
-          <kbd className="hidden md:inline-flex ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-text-secondary border border-glass">
+          <kbd className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-text-secondary border border-glass">
             ⌘K
           </kbd>
         </div>
@@ -164,7 +202,7 @@ const HeaderSearch = () => {
             setIsOpen(true);
             setTimeout(() => inputRef.current?.focus(), 50);
           }}
-          className="relative px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 via-purple-500/15 to-pink-500/15 hover:from-blue-500/25 hover:via-purple-500/25 hover:to-pink-500/25 border border-purple-500/30 text-xs font-semibold text-text-primary flex items-center gap-1.5 transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(155,114,203,0.3)] cursor-pointer group"
+          className="relative px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 via-purple-500/15 to-pink-500/15 hover:from-blue-500/25 hover:via-purple-500/25 hover:to-pink-500/25 border border-purple-500/30 text-xs font-semibold text-text-primary flex items-center gap-1.5 transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(155,114,203,0.3)] cursor-pointer group shrink-0"
           title="Tìm kiếm thông minh cùng MVD AI"
         >
           {/* Magnifying Glass with AI Sparkle */}
@@ -175,26 +213,11 @@ const HeaderSearch = () => {
             </svg>
             <span className="absolute -top-1.5 -right-1.5 text-[9px] text-pink-400 animate-pulse">✦</span>
           </div>
-          <span className="hidden md:inline bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-bold">
+          <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-bold">
             MVD AI
           </span>
         </button>
       </div>
-
-      {/* Mobile Icon Button */}
-      <button
-        onClick={() => {
-          setIsOpen(!isOpen);
-          setTimeout(() => inputRef.current?.focus(), 50);
-        }}
-        className="sm:hidden w-10 h-10 flex items-center justify-center rounded-full text-text-primary hover:bg-white/10 transition-colors"
-        aria-label="Mở tìm kiếm"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-      </button>
 
       {/* Dropdown / Modal Results Panel */}
       {isOpen && (
