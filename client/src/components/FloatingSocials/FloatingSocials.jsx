@@ -147,7 +147,35 @@ const FloatingSocials = () => {
           </div>
         )}
 
-        {/* Social buttons - STACKED ABOVE CHATBOT, RETRACTS INTO FOOTER */}
+        {/* Chatbot FAB button - AT THE VERY TOP */}
+        <button
+          ref={chatBtnRef}
+          onClick={handleChatClick}
+          onMouseEnter={handleChatHover}
+          onMouseLeave={handleChatLeave}
+          className={`chatbot-fab-btn pointer-events-auto relative shadow-2xl ${isChatOpen ? 'chatbot-fab-active' : ''}`}
+          aria-label="Chatbot AI"
+          title="Trò chuyện cùng MVD AI Assistant"
+        >
+          <div className="chatbot-fab-inner">
+            {isChatOpen ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+            )}
+          </div>
+          {/* Ping animation when not open */}
+          {!isChatOpen && (
+            <span className="chatbot-fab-ping"></span>
+          )}
+        </button>
+
+        {/* Social buttons - PLACED BELOW CHATBOT, RETRACTS INTO FOOTER */}
         <div 
           className={`flex flex-col items-end gap-3 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] p-2 -m-2 ${
             isVisible 
@@ -188,34 +216,6 @@ const FloatingSocials = () => {
             </a>
           </div>
         </div>
-
-        {/* Chatbot FAB button - SOLIDLY LOCKED AT BOTTOM CORNER, NEVER SHIFTS */}
-        <button
-          ref={chatBtnRef}
-          onClick={handleChatClick}
-          onMouseEnter={handleChatHover}
-          onMouseLeave={handleChatLeave}
-          className={`chatbot-fab-btn pointer-events-auto relative shadow-2xl ${isChatOpen ? 'chatbot-fab-active' : ''}`}
-          aria-label="Chatbot AI"
-          title="Trò chuyện cùng MVD AI Assistant"
-        >
-          <div className="chatbot-fab-inner">
-            {isChatOpen ? (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-              </svg>
-            )}
-          </div>
-          {/* Ping animation when not open */}
-          {!isChatOpen && (
-            <span className="chatbot-fab-ping"></span>
-          )}
-        </button>
       </div>
 
       {/* Mobile: fullscreen chat overlay */}
