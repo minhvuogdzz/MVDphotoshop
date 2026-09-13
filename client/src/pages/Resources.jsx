@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import ResourceCard from '../components/Resources/ResourceCard';
@@ -9,6 +10,7 @@ const Resources = () => {
   const page = pageSettings?.resources || {};
   const [searchParams] = useSearchParams();
 
+  const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
   const [selectedTag, setSelectedTag] = useState('Tất cả tags');
@@ -16,6 +18,10 @@ const Resources = () => {
   const [hotOnly, setHotOnly] = useState(false);
   const [selectedResource, setSelectedResource] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Dynamic Categories: Admin custom + extracted from existing resources
   const categoriesList = useMemo(() => {
@@ -64,7 +70,13 @@ const Resources = () => {
 
     const catParam = searchParams.get('category');
     if (catParam) setSelectedCategory(catParam);
-  }, [searchParams]);
+
+    const idParam = searchParams.get('id');
+    if (idParam && resources && resources.length > 0) {
+      const match = resources.find(r => r._id === idParam);
+      if (match) setSelectedResource(match);
+    }
+  }, [searchParams, resources]);
 
   // Lock body scroll when modal is open and handle Escape key to close
   useEffect(() => {
@@ -99,54 +111,72 @@ const Resources = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Filtered resources calculation
+  // Filtered resources list
   const filteredList = useMemo(() => {
-    const list = resources || [];
-    return list.filter(item => {
-      // Category filter
-      if (selectedCategory !== 'Tất cả' && item.category !== selectedCategory) {
-        return false;
-      }
-      // VIP / HOT filter
-      if (vipOnly && !item.isVip) return false;
-      if (hotOnly && !item.isHot) return false;
+    let list = resources || [];
 
-      // Tag filter
-      if (selectedTag !== 'Tất cả tags') {
-        const cleanTag = selectedTag.replace('#', '').toLowerCase();
-        const hasTag = (item.tags || []).some(t => t.toLowerCase().includes(cleanTag));
-        if (!hasTag) return false;
-      }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(item => 
+        (item.title && item.title.toLowerCase().includes(q)) ||
+        (item.description && item.description.toLowerCase().includes(q)) ||
+        (item.tags && item.tags.some(t => t.toLowerCase().includes(q))) ||
+        (item.category && item.category.toLowerCase().includes(q))
+      );
+    }
 
-      // Search query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const inTitle = item.title?.toLowerCase().includes(q);
-        const inDesc = item.description?.toLowerCase().includes(q);
-        const inCat = item.category?.toLowerCase().includes(q);
-        const inExt = item.fileType?.toLowerCase().includes(q);
-        const inTags = (item.tags || []).some(t => t.toLowerCase().includes(q));
-        return inTitle || inDesc || inCat || inExt || inTags;
-      }
+    if (selectedCategory !== 'Tất cả') {
+      list = list.filter(item => item.category === selectedCategory);
+    }
 
-      return true;
-    });
-  }, [resources, selectedCategory, selectedTag, vipOnly, hotOnly, searchQuery]);
+    if (selectedTag !== 'Tất cả tags') {
+      const cleanTag = selectedTag.replace(/^#/, '').toLowerCase();
+      list = list.filter(item => 
+        item.tags && item.tags.some(t => t.replace(/^#/, '').toLowerCase() === cleanTag)
+      );
+    }
+
+    if (vipOnly) {
+      list = list.filter(item => item.isVip);
+    }
+
+    if (hotOnly) {
+      list = list.filter(item => item.isHot);
+    }
+
+    return list;
+  }, [resources, searchQuery, selectedCategory, selectedTag, vipOnly, hotOnly]);
 
   const handleDownload = async (resource) => {
-    if (!resource) return;
-    setIsDownloading(true);
+    if (!resource || isDownloading) return;
 
     try {
-      const targetUrl = resource.downloadUrl || resource.driveUrl || resource.fileUrl;
+      setIsDownloading(true);
 
-      // Handle Google Drive links
-      if (resource.downloadType === 'drive' || targetUrl?.includes('drive.google.com')) {
-        await api.post(`/resources/${resource._id}/download`).catch(() => {});
-        if (targetUrl && targetUrl !== '#' && targetUrl.startsWith('http')) {
-          window.open(targetUrl, '_blank', 'noopener,noreferrer');
-        } else {
-          alert('Liên kết Google Drive chưa được cập nhật cho tài nguyên này.');
+      // Handle Google Drive link (>= 6MB or downloadType === 'drive')
+      if (resource.downloadType === 'drive' || (resource.driveUrl && resource.driveUrl.trim())) {
+        const driveTarget = resource.driveUrl || resource.downloadUrl;
+        if (driveTarget) {
+          window.open(driveTarget, '_blank', 'noopener,noreferrer');
+        }
+        try {
+          await api.post(`/resources/${resource._id}/track-download`);
+        } catch {
+          // ignore tracking error
+        }
+        setSelectedResource(prev => prev ? { ...prev, downloadsCount: (prev.downloadsCount || 0) + 1 } : null);
+        if (refetch) refetch('resources');
+        return;
+      }
+
+      // If resource has a direct file URL / cloudinary URL fallback
+      if (resource.fileUrl || resource.cloudinaryUrl) {
+        const targetUrl = resource.fileUrl || resource.cloudinaryUrl;
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        try {
+          await api.post(`/resources/${resource._id}/track-download`);
+        } catch {
+          // ignore tracking error
         }
         if (refetch) refetch('resources');
         return;
@@ -248,10 +278,10 @@ const Resources = () => {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              className={`text-xs px-4 py-2 rounded-full transition-all whitespace-nowrap cursor-pointer font-medium ${
                 selectedCategory === cat
                   ? 'bg-accent text-neutral-950 font-bold shadow-[0_0_15px_rgba(192,155,104,0.4)]'
-                  : 'bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-text-secondary hover:text-text-primary border border-black/5 dark:border-white/5'
+                  : 'bg-white/80 dark:bg-[#161311] text-text-secondary hover:text-text-primary border border-black/5 dark:border-white/10 hover:border-accent/40'
               }`}
             >
               {cat}
@@ -259,10 +289,38 @@ const Resources = () => {
           ))}
         </div>
 
-        {/* Filter Badges & Popular Tags Row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-3 rounded-2xl glass-panel border border-glass">
-          {/* Quick Tags */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        {/* Quick Filters Row: VIP, HOT, Popular Tags */}
+        <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white/60 dark:bg-[#161311]/60 border border-black/5 dark:border-white/5 mb-8 backdrop-blur-sm">
+          {/* Quick Badges Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-text-secondary font-medium mr-1">Bộ lọc:</span>
+            <button
+              onClick={() => setVipOnly(!vipOnly)}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer font-bold flex items-center gap-1.5 ${
+                vipOnly
+                  ? 'bg-amber-500/20 text-amber-500 dark:text-amber-300 border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
+                  : 'border-black/10 dark:border-white/10 text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <span>★</span>
+              <span>VIP Only</span>
+            </button>
+            <button
+              onClick={() => setHotOnly(!hotOnly)}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer font-bold flex items-center gap-1.5 ${
+                hotOnly
+                  ? 'bg-rose-500/20 text-rose-500 dark:text-rose-400 border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.2)]'
+                  : 'border-black/10 dark:border-white/10 text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <span>🔥</span>
+              <span>HOT</span>
+            </button>
+          </div>
+
+          {/* Popular Hashtags */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-full">
+            <span className="text-xs text-text-secondary font-medium mr-1 shrink-0">Tags:</span>
             {popularTagsList.map(tag => (
               <button
                 key={tag}
@@ -276,31 +334,6 @@ const Resources = () => {
                 {tag}
               </button>
             ))}
-          </div>
-
-          {/* VIP & HOT Toggles */}
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setVipOnly(!vipOnly)}
-              className={`text-xs px-3 py-1 rounded-full font-bold transition-all cursor-pointer ${
-                vipOnly
-                  ? 'bg-amber-500 text-black shadow-md'
-                  : 'bg-black/5 dark:bg-white/5 text-amber-500 dark:text-amber-300/70 border border-amber-500/20 hover:border-amber-500/50'
-              }`}
-            >
-              ★ VIP
-            </button>
-
-            <button
-              onClick={() => setHotOnly(!hotOnly)}
-              className={`text-xs px-3 py-1 rounded-full font-bold transition-all cursor-pointer ${
-                hotOnly
-                  ? 'bg-rose-500 text-white shadow-md'
-                  : 'bg-black/5 dark:bg-white/5 text-rose-500 dark:text-rose-300/70 border border-rose-500/20 hover:border-rose-500/50'
-              }`}
-            >
-              🔥 HOT
-            </button>
           </div>
         </div>
 
@@ -323,20 +356,20 @@ const Resources = () => {
           )}
         </div>
 
-        {/* Resource Grid */}
-        {filteredList.length === 0 ? (
-          <div className="text-center py-20 glass-panel border border-glass rounded-3xl p-8 max-w-lg mx-auto">
-            <div className="w-16 h-16 rounded-full bg-accent/15 text-accent flex items-center justify-center mx-auto mb-4 text-2xl">
-              {(!resources || resources.length === 0) ? '📦' : '🔍'}
-            </div>
-            <h3 className="text-xl font-bold text-text-primary mb-2">
-              {(!resources || resources.length === 0) 
-                ? 'Kho tài nguyên đang cập nhật' 
-                : 'Không tìm thấy tài nguyên phù hợp'}
-            </h3>
-            <p className="text-text-secondary text-sm max-w-[400px] mx-auto mb-6">
-              {(!resources || resources.length === 0)
-                ? 'Chưa có tài nguyên nào được đăng tải. Ban quản trị có thể thêm và tải file tài nguyên trong trang Admin.'
+        {/* Resources Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="h-64 rounded-2xl bg-black/5 dark:bg-white/5 animate-pulse" />
+            ))}
+          </div>
+        ) : filteredList.length === 0 ? (
+          <div className="text-center py-16 px-4 rounded-3xl bg-white/40 dark:bg-[#161311]/40 border border-black/5 dark:border-white/5 max-w-lg mx-auto">
+            <div className="text-4xl mb-3">🔍</div>
+            <h3 className="text-lg font-bold text-text-primary mb-2">Không tìm thấy tài nguyên phù hợp</h3>
+            <p className="text-text-secondary text-sm max-w-[450px] mx-auto mb-6">
+              {searchQuery 
+                ? `Không có kết quả nào cho từ khóa "${searchQuery}".` 
                 : 'Hãy thử tìm kiếm với từ khóa khác hoặc bỏ các điều kiện lọc đang chọn.'}
             </p>
             {resources && resources.length > 0 && (
@@ -368,54 +401,69 @@ const Resources = () => {
         )}
       </div>
 
-      {/* Resource Detail Modal - Fixed Center, Prevent Page Shift */}
-      {selectedResource && (
+      {/* Resource Detail Modal rendered via React Portal into document.body */}
+      {mounted && selectedResource && createPortal(
         <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-hidden"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-fade-in"
           onClick={() => setSelectedResource(null)}
         >
           <div 
-            className="relative w-full max-w-[560px] max-h-[85vh] sm:max-h-[88vh] my-auto bg-white dark:bg-[#161311] border border-black/10 dark:border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            className="relative w-full max-w-[580px] max-h-[calc(100vh-2rem)] sm:max-h-[88vh] bg-white dark:bg-[#161311] border border-black/10 dark:border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden my-auto"
             onClick={e => e.stopPropagation()}
           >
-            {/* Modal Header (Pinned) */}
-            <div className="shrink-0 flex items-center justify-between px-6 py-4.5 border-b border-black/10 dark:border-white/5 bg-black/5 dark:bg-black/40">
+            {/* Modal Header (Pinned at top) */}
+            <div className="shrink-0 flex items-center justify-between px-5 sm:px-6 py-4 border-b border-black/10 dark:border-white/10 bg-neutral-50/90 dark:bg-[#1c1917]/90 backdrop-blur-sm z-10">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="bg-black/10 dark:bg-white/10 text-text-primary text-xs font-semibold px-3 py-1 rounded-full">
-                  {selectedResource.category}
+                <span className="bg-black/5 dark:bg-white/10 text-text-primary text-xs font-semibold px-3 py-1 rounded-full border border-black/5 dark:border-white/5">
+                  {selectedResource.category || 'Tài nguyên'}
                 </span>
                 {selectedResource.isVip && (
-                  <span className="bg-amber-500/20 text-amber-500 dark:text-amber-300 font-bold px-2.5 py-0.5 rounded-full text-xs border border-amber-500/30">
+                  <span className="bg-amber-500/20 text-amber-600 dark:text-amber-300 font-bold px-2.5 py-0.5 rounded-full text-xs border border-amber-500/30 tracking-wider">
                     VIP
                   </span>
                 )}
                 {selectedResource.isHot && (
-                  <span className="bg-rose-500/20 text-rose-500 dark:text-rose-400 font-bold px-2.5 py-0.5 rounded-full text-xs border border-rose-500/30">
+                  <span className="bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold px-2.5 py-0.5 rounded-full text-xs border border-rose-500/30 tracking-wider">
                     HOT
                   </span>
                 )}
-                <span className="font-mono text-xs font-bold text-text-secondary">
-                  {selectedResource.fileType}
-                </span>
+                {selectedResource.fileType && (
+                  <span className="font-mono text-xs font-bold text-text-secondary uppercase tracking-wider">
+                    {selectedResource.fileType.startsWith('.') ? selectedResource.fileType : `.${selectedResource.fileType}`}
+                  </span>
+                )}
               </div>
 
               <button
+                type="button"
                 onClick={() => setSelectedResource(null)}
-                className="w-8 h-8 rounded-full bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 text-text-primary flex items-center justify-center text-sm font-bold transition-colors cursor-pointer shrink-0 ml-2"
+                className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-rose-500/20 hover:text-rose-500 dark:hover:bg-white/20 text-text-primary flex items-center justify-center text-sm font-bold transition-all cursor-pointer shrink-0 ml-2"
                 aria-label="Đóng popup"
+                title="Đóng (Esc)"
               >
                 ✕
               </button>
             </div>
 
-            {/* Modal Body (Scrollable inside only) */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+            {/* Modal Body (Scrollable inside only, min-h-0 ensures shrinkage on short viewports) */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-6 space-y-5 custom-scrollbar">
+              {/* Optional Cover/Preview image */}
+              {(selectedResource.coverImage || selectedResource.previewImage) && (
+                <div className="w-full h-44 sm:h-52 rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 bg-black/5 dark:bg-black/20 shadow-inner">
+                  <img
+                    src={selectedResource.coverImage || selectedResource.previewImage}
+                    alt={selectedResource.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold font-secondary text-text-primary mb-3">
+                <h2 className="text-xl sm:text-2xl font-bold font-secondary text-text-primary mb-2.5 leading-snug">
                   {selectedResource.title}
                 </h2>
                 <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-line">
-                  {selectedResource.description}
+                  {selectedResource.description || 'Tài nguyên hậu kỳ độc quyền từ MVD Photoshop Academy dành cho học viên và cộng đồng.'}
                 </p>
               </div>
 
@@ -443,18 +491,18 @@ const Resources = () => {
               )}
 
               {/* Resource Info Specs Table */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-black/5 dark:bg-black/40 border border-black/5 dark:border-white/5 text-center">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3.5 sm:p-4 rounded-2xl bg-black/5 dark:bg-black/40 border border-black/5 dark:border-white/5 text-center">
                 <div>
-                  <span className="block text-[11px] uppercase tracking-wider text-text-secondary">Dung lượng</span>
-                  <span className="text-sm font-bold text-text-primary">{selectedResource.fileSize || '0.1 MB'}</span>
+                  <span className="block text-[10px] sm:text-[11px] uppercase tracking-wider text-text-secondary">Dung lượng</span>
+                  <span className="text-xs sm:text-sm font-bold text-text-primary">{selectedResource.fileSize || '0.1 MB'}</span>
                 </div>
                 <div>
-                  <span className="block text-[11px] uppercase tracking-wider text-text-secondary">Định dạng</span>
-                  <span className="text-sm font-bold text-accent">{selectedResource.fileType || '.ATN'}</span>
+                  <span className="block text-[10px] sm:text-[11px] uppercase tracking-wider text-text-secondary">Định dạng</span>
+                  <span className="text-xs sm:text-sm font-bold text-accent">{selectedResource.fileType || '.ATN'}</span>
                 </div>
                 <div>
-                  <span className="block text-[11px] uppercase tracking-wider text-text-secondary">Đánh giá</span>
-                  <span className="text-sm font-bold text-amber-500 dark:text-amber-400">★ {(selectedResource.rating || 5.0).toFixed(1)}</span>
+                  <span className="block text-[10px] sm:text-[11px] uppercase tracking-wider text-text-secondary">Đánh giá</span>
+                  <span className="text-xs sm:text-sm font-bold text-amber-500 dark:text-amber-400">★ {(selectedResource.rating || 5.0).toFixed(1)}</span>
                 </div>
               </div>
 
@@ -480,18 +528,19 @@ const Resources = () => {
               )}
             </div>
 
-            {/* Modal Footer (Pinned) */}
-            <div className="shrink-0 p-5 border-t border-black/10 dark:border-white/5 bg-black/5 dark:bg-black/50 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <span className="text-xs text-text-secondary">
+            {/* Modal Footer (Pinned at bottom) */}
+            <div className="shrink-0 p-4 sm:p-5 border-t border-black/10 dark:border-white/10 bg-neutral-50/90 dark:bg-[#181513]/90 backdrop-blur-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span className="text-xs text-text-secondary text-center sm:text-left">
                 {selectedResource.downloadType === 'drive'
                   ? '⚡ Dung lượng ≥ 6MB: Tải qua Google Drive tốc độ cao'
                   : '⚡ Dung lượng < 6MB: Tải trực tiếp từ hệ thống MVD'}
               </span>
 
               <button
+                type="button"
                 onClick={() => handleDownload(selectedResource)}
                 disabled={isDownloading}
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-accent hover:bg-accent-hover text-neutral-950 font-bold text-sm transition-all shadow-[0_0_20px_rgba(192,155,104,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-full bg-accent hover:bg-accent-hover text-neutral-950 font-bold text-sm transition-all shadow-[0_0_20px_rgba(192,155,104,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -499,14 +548,17 @@ const Resources = () => {
                   <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
                 <span>
-                  {selectedResource.downloadType === 'drive'
-                    ? 'Mở Google Drive để tải'
-                    : 'Tải tài nguyên về máy'}
+                  {isDownloading 
+                    ? 'Đang tải...' 
+                    : (selectedResource.downloadType === 'drive'
+                      ? 'Mở Google Drive để tải'
+                      : 'Tải tài nguyên về máy')}
                 </span>
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

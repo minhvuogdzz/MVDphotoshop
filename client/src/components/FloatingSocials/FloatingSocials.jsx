@@ -149,18 +149,18 @@ const FloatingSocials = () => {
 
         {/* Social buttons - STACKED ABOVE CHATBOT, RETRACTS INTO FOOTER */}
         <div 
-          className={`flex flex-col items-end gap-3 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden ${
+          className={`flex flex-col items-end gap-3 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] p-2 -m-2 ${
             isVisible 
-              ? 'opacity-100 translate-y-0 max-h-[220px] pointer-events-auto' 
-              : 'opacity-0 translate-y-6 max-h-0 pointer-events-none scale-90'
+              ? 'opacity-100 translate-y-0 max-h-[240px] pointer-events-auto' 
+              : 'opacity-0 translate-y-6 max-h-0 pointer-events-none scale-90 overflow-hidden'
           }`}
         >
-          <div className="flex flex-col gap-3 pb-1 pt-1">
+          <div className="flex flex-col gap-3">
             <a 
               href="https://m.me/minhvuog.dev" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="w-12 h-12 rounded-full bg-bg-glass backdrop-blur-md border border-glass flex items-center justify-center text-text-secondary transition-all duration-300 hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] shadow-[0_4px_15px_rgba(0,0,0,0.3)] hover:shadow-[0_0_15px_rgba(24,119,242,0.5)] hover:scale-105" 
+              className="w-12 h-12 rounded-full bg-white/95 dark:bg-[#1a1715]/95 backdrop-blur-md border border-black/10 dark:border-white/10 flex items-center justify-center text-text-secondary transition-all duration-300 hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_16px_rgba(24,119,242,0.45)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:scale-110" 
               aria-label="Facebook"
               title="Nhắn tin Facebook"
             >
@@ -170,7 +170,7 @@ const FloatingSocials = () => {
               href="https://ig.me/m/_http.vuoqdev" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="w-12 h-12 rounded-full bg-bg-glass backdrop-blur-md border border-glass flex items-center justify-center text-text-secondary transition-all duration-300 hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] hover:text-white hover:border-transparent shadow-[0_4px_15px_rgba(0,0,0,0.3)] hover:shadow-[0_0_15px_rgba(220,39,67,0.5)] hover:scale-105" 
+              className="w-12 h-12 rounded-full bg-white/95 dark:bg-[#1a1715]/95 backdrop-blur-md border border-black/10 dark:border-white/10 flex items-center justify-center text-text-secondary transition-all duration-300 hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] hover:text-white hover:border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_16px_rgba(220,39,67,0.45)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:scale-110" 
               aria-label="Instagram"
               title="Nhắn tin Instagram"
             >
@@ -180,7 +180,7 @@ const FloatingSocials = () => {
               href="https://zalo.me/0869528304" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="w-12 h-12 rounded-full bg-bg-glass backdrop-blur-md border border-glass flex items-center justify-center text-text-secondary transition-all duration-300 hover:bg-[#0068FF] hover:text-white hover:border-[#0068FF] shadow-[0_4px_15px_rgba(0,0,0,0.3)] hover:shadow-[0_0_15px_rgba(0,104,255,0.5)] font-bold text-sm hover:scale-105" 
+              className="w-12 h-12 rounded-full bg-white/95 dark:bg-[#1a1715]/95 backdrop-blur-md border border-black/10 dark:border-white/10 flex items-center justify-center text-text-secondary transition-all duration-300 hover:bg-[#0068FF] hover:text-white hover:border-[#0068FF] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_16px_rgba(0,104,255,0.45)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] font-bold text-sm hover:scale-110" 
               aria-label="Zalo"
               title="Chat qua Zalo"
             >
