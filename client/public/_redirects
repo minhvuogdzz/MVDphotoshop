@@ -1,0 +1,3 @@
+# Cloudflare Pages SPA & API rewrite rules
+/api/*  https://mvd-portfolio.onrender.com/api/:splat  200
+/*      /index.html                                     200

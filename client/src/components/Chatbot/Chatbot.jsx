@@ -31,8 +31,12 @@ const Chatbot = ({ onClose, isMobile = false }) => {
 
   // Helper: gọi API với auto-retry
   const fetchWithRetry = async (body, signal, retries = 2) => {
+    const chatEndpoint = import.meta.env.VITE_API_URL 
+      ? `${import.meta.env.VITE_API_URL}/chat` 
+      : '/api/chat';
+
     for (let i = 0; i <= retries; i++) {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(chatEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
