@@ -42,9 +42,10 @@ const VisitorMap = () => {
     const setupSocket = async () => {
       try {
         const { io } = await import('socket.io-client');
+        const defaultBackend = import.meta.env.PROD ? 'https://mvd-backend-zzrs.onrender.com' : 'http://localhost:5001';
         const serverUrl = import.meta.env.VITE_API_URL 
           ? import.meta.env.VITE_API_URL.replace('/api', '')
-          : 'http://localhost:5001';
+          : defaultBackend;
 
         socketRef.current = io(serverUrl, {
           transports: ['websocket', 'polling'],

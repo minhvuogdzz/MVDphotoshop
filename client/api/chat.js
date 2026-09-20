@@ -98,7 +98,7 @@ export default async function handler(req, res) {
     // Lấy context từ Render Backend
     let systemInstruction = "";
     try {
-      const renderApiUrl = process.env.VITE_API_URL || "https://mvd-portfolio.onrender.com/api";
+      const renderApiUrl = process.env.VITE_API_URL || "https://mvd-backend-zzrs.onrender.com/api";
       const contextRes = await fetch(`${renderApiUrl}/chat-context`, {
         signal: AbortSignal.timeout(5000) // Timeout 5s để không chờ quá lâu
       });

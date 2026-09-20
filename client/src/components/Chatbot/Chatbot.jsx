@@ -31,9 +31,10 @@ const Chatbot = ({ onClose, isMobile = false }) => {
 
   // Helper: gọi API với auto-retry
   const fetchWithRetry = async (body, signal, retries = 2) => {
+    const defaultApi = import.meta.env.PROD ? 'https://mvd-backend-zzrs.onrender.com/api' : '/api';
     const chatEndpoint = import.meta.env.VITE_API_URL 
       ? `${import.meta.env.VITE_API_URL}/chat` 
-      : '/api/chat';
+      : `${defaultApi}/chat`;
 
     for (let i = 0; i <= retries; i++) {
       const response = await fetch(chatEndpoint, {

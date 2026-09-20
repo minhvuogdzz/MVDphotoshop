@@ -2,7 +2,7 @@
   "name": "mvd-portfolio-root",
   "private": true,
   "scripts": {
-    "build": "cd client && npm install && npm run build && cp -r dist ../dist",
+    "build": "cd client && npm install && npm run build && rm -rf ../dist && cp -r dist ../dist",
     "deploy": "wrangler deploy"
   }
 }
