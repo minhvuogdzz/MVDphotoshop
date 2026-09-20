@@ -42,10 +42,11 @@ const VisitorMap = () => {
     const setupSocket = async () => {
       try {
         const { io } = await import('socket.io-client');
-        const defaultBackend = import.meta.env.PROD ? 'https://mvd-backend-zzrs.onrender.com' : 'http://localhost:5001';
-        const serverUrl = import.meta.env.VITE_API_URL 
-          ? import.meta.env.VITE_API_URL.replace('/api', '')
-          : defaultBackend;
+        let rawApiUrl = import.meta.env.VITE_API_URL;
+        if (!rawApiUrl || rawApiUrl.includes('mvd-portfolio.onrender.com')) {
+          rawApiUrl = import.meta.env.PROD ? 'https://mvd-backend-zzrs.onrender.com/api' : 'http://localhost:5001/api';
+        }
+        const serverUrl = rawApiUrl.replace('/api', '');
 
         socketRef.current = io(serverUrl, {
           transports: ['websocket', 'polling'],
